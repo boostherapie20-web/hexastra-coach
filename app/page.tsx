@@ -221,18 +221,18 @@ const PRICE_KEYS: Record<string, string> = {
 }
 
 /* ── LOGO ─── */
-function HexLogo({ size = 28 }: { size?: number }) {
+function HexLogo({ size = 28, color = "#C6A35F" }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <polygon points="32,3 59,18 59,46 32,61 5,46 5,18" fill="none" stroke="var(--gold)" strokeWidth="1.8"/>
-      <polygon points="32,13 51,23 51,43 32,53 13,43 13,23" fill="rgba(198,163,95,0.07)" stroke="var(--gold)" strokeWidth="1" opacity="0.5"/>
-      <circle cx="32" cy="32" r="4.5" fill="var(--gold)" opacity="0.9"/>
-      <line x1="32" y1="13" x2="32" y2="27" stroke="var(--gold)" strokeWidth="1.2" opacity="0.55"/>
-      <line x1="32" y1="37" x2="32" y2="51" stroke="var(--gold)" strokeWidth="1.2" opacity="0.55"/>
-      <line x1="13" y1="23" x2="27" y2="29" stroke="var(--gold)" strokeWidth="1.2" opacity="0.55"/>
-      <line x1="37" y1="35" x2="51" y2="43" stroke="var(--gold)" strokeWidth="1.2" opacity="0.55"/>
-      <line x1="51" y1="23" x2="37" y2="29" stroke="var(--gold)" strokeWidth="1.2" opacity="0.55"/>
-      <line x1="27" y1="35" x2="13" y2="43" stroke="var(--gold)" strokeWidth="1.2" opacity="0.55"/>
+      <polygon points="32,3 59,18 59,46 32,61 5,46 5,18" fill="none" stroke={color} strokeWidth="1.8"/>
+      <polygon points="32,13 51,23 51,43 32,53 13,43 13,23" fill="rgba(198,163,95,0.07)" stroke={color} strokeWidth="1" opacity="0.5"/>
+      <circle cx="32" cy="32" r="4.5" fill={color} opacity="0.9"/>
+      <line x1="32" y1="13" x2="32" y2="27" stroke={color} strokeWidth="1.2" opacity="0.55"/>
+      <line x1="32" y1="37" x2="32" y2="51" stroke={color} strokeWidth="1.2" opacity="0.55"/>
+      <line x1="13" y1="23" x2="27" y2="29" stroke={color} strokeWidth="1.2" opacity="0.55"/>
+      <line x1="37" y1="35" x2="51" y2="43" stroke={color} strokeWidth="1.2" opacity="0.55"/>
+      <line x1="51" y1="23" x2="37" y2="29" stroke={color} strokeWidth="1.2" opacity="0.55"/>
+      <line x1="27" y1="35" x2="13" y2="43" stroke={color} strokeWidth="1.2" opacity="0.55"/>
     </svg>
   )
 }
@@ -442,31 +442,32 @@ function Nav({ t, lang, setLang, onCta }: any) {
 }
 
 /* ══════════════════════════════════════════
-   HERO — 2 colonnes titre + chat
+   HERO — centré, sans chat
 ══════════════════════════════════════════ */
-function Hero({ t, threadId, onThreadId }: any) {
+function Hero({ t, onCta }: any) {
   return (
     <section className="hero">
       <div className="hero-bg"><Stars n={90} /></div>
       <div className="hero-glow" />
-      <div className="hero-inner">
-        {/* LEFT */}
-        <div className="hero-left">
-          <div className="eyebrow"><span className="eydot"/>Intelligence personnelle par IA</div>
-          <h1 className="hero-h1">{t.hero.title}</h1>
-          <p className="hero-p">{t.hero.sub}</p>
-          <div className="hero-points">
-            <div className="hp"><span className="hp-dot"/>Analyse conversationnelle</div>
-            <div className="hp"><span className="hp-dot"/>Basée sur vos données de naissance</div>
-            <div className="hp"><span className="hp-dot"/>Claire, précise, personnalisée</div>
-          </div>
-          <a href="#how" className="btn-ghost">Voir comment ça fonctionne</a>
-          <p className="hero-trust">2 400+ analyses réalisées · 4,9 / 5</p>
+      <div className="hero-center">
+        <div className="eyebrow"><span className="eydot"/>Intelligence personnelle par IA</div>
+        <h1 className="hero-h1">{t.hero.title}</h1>
+        <p className="hero-p">{t.hero.sub}</p>
+        <div className="hero-points-row">
+          <div className="hp"><span className="hp-dot"/>Analyse conversationnelle</div>
+          <div className="hp-sep"/>
+          <div className="hp"><span className="hp-dot"/>Basée sur vos données de naissance</div>
+          <div className="hp-sep"/>
+          <div className="hp"><span className="hp-dot"/>Claire, précise, personnalisée</div>
         </div>
-        {/* RIGHT — Chat visible */}
-        <div className="hero-right">
-          <HexastraChat t={t} threadId={threadId} onThreadId={onThreadId} />
+        <div className="hero-btns">
+          <button onClick={onCta} className="btn-gold btn-lg">
+            Commencer gratuitement
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+          <a href="#how" className="btn-ghost btn-lg">Voir comment ça fonctionne</a>
         </div>
+        <p className="hero-trust">2 400+ analyses réalisées · 4,9 / 5 · Gratuit pour commencer</p>
       </div>
     </section>
   )
@@ -667,9 +668,8 @@ export default function Page() {
   const t         = T[lang]
 
   const scrollToChat = useCallback(() => {
-    const el = document.querySelector('.hero-right')
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-  }, [])
+    router.push('/chat')
+  }, [router])
 
   const sendQuestion = useCallback((q: string) => {
     scrollToChat()
@@ -699,7 +699,7 @@ export default function Page() {
         <Nav t={t} lang={lang} setLang={setLang} onCta={scrollToChat} />
 
         {/* 1 — Hero + Chat */}
-        <Hero t={t} threadId={threadId} onThreadId={setThreadId} />
+        <Hero t={t} onCta={goChat} />
 
         <div className="divider"/>
 
@@ -805,20 +805,20 @@ html{scroll-behavior:smooth}
 .btn-xl{font-size:16px!important;padding:16px 42px!important}
 
 /* HERO */
-.hero{min-height:100vh;padding:110px 52px 80px;position:relative;overflow:hidden;display:flex;align-items:center}
+.hero{min-height:100vh;padding:130px 52px 100px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
 .hero-bg{position:absolute;inset:0;overflow:hidden}
-.hero-glow{position:absolute;top:40%;left:28%;transform:translate(-50%,-50%);width:700px;height:500px;border-radius:50%;background:radial-gradient(ellipse,rgba(198,163,95,.07),rgba(184,157,150,.03) 50%,transparent 70%);pointer-events:none;animation:breathe 11s ease-in-out infinite}
-.hero-inner{position:relative;z-index:1;max-width:1240px;margin:0 auto;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
-.hero-left{display:flex;flex-direction:column;gap:24px;animation:fadeUp .8s var(--expo) both}
-.hero-right{animation:fadeUp .8s .15s var(--expo) both}
-.eyebrow{display:flex;align-items:center;gap:8px;font-family:var(--f-m);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--rose);opacity:.9}
+.hero-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:900px;height:600px;border-radius:50%;background:radial-gradient(ellipse,rgba(198,163,95,.07),rgba(184,157,150,.03) 50%,transparent 70%);pointer-events:none;animation:breathe 11s ease-in-out infinite}
+.hero-center{position:relative;z-index:1;max-width:760px;width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;gap:28px;animation:fadeUp .8s var(--expo) both}
+.eyebrow{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--f-m);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--rose);opacity:.9}
 .eydot{width:5px;height:5px;border-radius:50%;background:var(--rose);animation:pulse 2.5s ease infinite;flex-shrink:0}
-.hero-h1{font-family:var(--f-t);font-size:clamp(34px,4.2vw,60px);font-weight:700;font-style:italic;line-height:1.1;color:var(--ivoire);letter-spacing:-.02em}
-.hero-p{font-family:var(--f-b);font-size:17px;font-weight:300;line-height:1.88;color:var(--iv72);max-width:440px}
-.hero-points{display:flex;flex-direction:column;gap:8px}
-.hp{display:flex;align-items:center;gap:9px;font-family:var(--f-b);font-size:14px;font-weight:300;color:var(--iv72)}
-.hp-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:.7;flex-shrink:0}
-.hero-trust{font-family:var(--f-m);font-size:10px;color:var(--iv52);letter-spacing:.12em}
+.hero-h1{font-family:var(--f-t);font-size:clamp(38px,5.5vw,72px);font-weight:700;font-style:italic;line-height:1.06;color:var(--ivoire);letter-spacing:-.025em}
+.hero-p{font-family:var(--f-b);font-size:18px;font-weight:300;line-height:1.88;color:var(--iv72);max-width:560px}
+.hero-points-row{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;row-gap:10px}
+.hero-btns{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.hp{display:flex;align-items:center;gap:8px;font-family:var(--f-m);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--iv72);padding:0 16px}
+.hp-sep{width:1px;height:14px;background:var(--iv28);flex-shrink:0}
+.hp-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.7;flex-shrink:0}
+.hero-trust{font-family:var(--f-m);font-size:10px;color:var(--iv52);letter-spacing:.1em}
 
 /* CHAT CARD */
 .chat-card{background:var(--card);border:1px solid var(--goldB);border-radius:20px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.55),0 0 0 1px rgba(198,163,95,.04) inset;display:flex;flex-direction:column;max-height:600px}
