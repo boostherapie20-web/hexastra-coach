@@ -16,9 +16,9 @@ function HexLogo({ size = 28 }: { size?: number }) {
   // PNG a fond noir — on utilise mix-blend-mode lighten pour retirer le noir
   return (
     <img
-      src="/logo/hexastra-logo-1024.png"
+      src="/logo/hexastra-logo-transparent.png"
       alt="HexAstra"
-      style={{ width: size, height: size, display: 'block', objectFit: 'cover', borderRadius: '6px', mixBlendMode: 'lighten' as any }}
+      style={{ width: size, height: size, display: 'block', objectFit: 'cover', borderRadius: '6px' }}
     />
   )
 }
