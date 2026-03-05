@@ -18,7 +18,7 @@ function HexLogo({ size = 28 }: { size?: number }) {
       src="/navbar/hexastra-navbar.png"
       alt="HexAstra"
       height={size}
-      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain' }}
+      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain', mixBlendMode: 'lighten' }}
     />
   )
 }
@@ -120,7 +120,7 @@ export default function ChatPage() {
       <aside className="sidebar">
         <div className="sb-top">
           <a href="/" className="sb-logo">
-            <HexLogo size={32} />
+            <HexLogo size={48} />
             <span className="sb-name">HexAstra <em>Coach</em></span>
           </a>
         </div>
