@@ -2,101 +2,64 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' })
+export const runtime = 'nodejs'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
-type PlanType = 'free' | 'essentiel' | 'premium' | 'praticien'
-
-function getPlanFromPriceId(priceId: string): PlanType | null {
-  if (priceId === process.env.STRIPE_ESSENTIEL_MONTHLY)      return 'essentiel'
-  if (priceId === process.env.STRIPE_PRICE_PREMIUM_MONTHLY)  return 'premium'
-  if (priceId === process.env.STRIPE_PRICE_PRATICIEN_MONTHLY) return 'praticien'
-  return null
-}
-
-async function setPlan(stripeCustomerId: string, plan: PlanType) {
-  const customer = await stripe.customers.retrieve(stripeCustomerId) as Stripe.Customer
-  const email = customer.email
-  if (!email) { console.error('No email for customer', stripeCustomerId); return }
-
-  const { data: users, error } = await supabase.auth.admin.listUsers()
-  if (error) { console.error('listUsers error', error); return }
-
-  const user = users.users.find(u => u.email === email)
-  if (!user) { console.error('No Supabase user for email', email); return }
-
-  const { error: upsertError } = await supabase
-    .from('profiles')
-    .upsert({ id: user.id, plan, updated_at: new Date().toISOString() })
-
-  if (upsertError) console.error('Error updating plan', upsertError)
-  else console.log('Plan set to', plan, 'for', email)
-}
+// ⚠ Ne pas initialiser Supabase ou Stripe au niveau du module —
+//   les variables d'env ne sont pas disponibles au build.
 
 export async function POST(req: NextRequest) {
+  const stripeKey     = process.env.STRIPE_SECRET_KEY
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const supabaseUrl   = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey   = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!stripeKey || !webhookSecret) {
+    return NextResponse.json({ error: 'Stripe non configuré' }, { status: 503 })
+  }
+
+  // Init à l'intérieur du handler — jamais au module level
+  const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' })
+
   const body = await req.text()
-  const sig = req.headers.get('stripe-signature')!
+  const sig  = req.headers.get('stripe-signature')
+
+  if (!sig) {
+    return NextResponse.json({ error: 'Signature manquante' }, { status: 400 })
+  }
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
+  } catch {
+    return NextResponse.json({ error: 'Signature invalide' }, { status: 400 })
   }
 
-  try {
-    switch (event.type) {
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.CheckoutSession
+    const { userId, readingId } = session.metadata ?? {}
 
-      case 'customer.subscription.created':
-      case 'customer.subscription.updated': {
-        const sub = event.data.object as Stripe.Subscription
-        const priceId = sub.items.data[0]?.price.id
-        const plan = getPlanFromPriceId(priceId)
-        if (sub.status === 'active' && plan) {
-          await setPlan(sub.customer as string, plan)
-        }
-        break
-      }
-
-      case 'customer.subscription.deleted': {
-        const sub = event.data.object as Stripe.Subscription
-        await setPlan(sub.customer as string, 'free')
-        break
-      }
-
-      case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as Stripe.Invoice
-        if (invoice.subscription) {
-          const sub = await stripe.subscriptions.retrieve(invoice.subscription as string)
-          const plan = getPlanFromPriceId(sub.items.data[0]?.price.id)
-          if (plan) await setPlan(sub.customer as string, plan)
-        }
-        break
-      }
-
-      case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
-        console.warn('Payment failed for', invoice.customer)
-        break
-      }
-
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        if (session.mode === 'subscription' && session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription as string)
-          const plan = getPlanFromPriceId(sub.items.data[0]?.price.id)
-          if (plan) await setPlan(sub.customer as string, plan)
-        }
-        break
-      }
+    // Supabase — init ici uniquement si configuré
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey)
+      await supabase
+        .from('orders')
+        .update({ status: 'paid', stripe_payment_id: session.payment_intent as string })
+        .eq('stripe_session_id', session.id)
     }
-  } catch (err: any) {
-    console.error('Webhook error:', err.message)
-    return NextResponse.json({ error: 'Processing error' }, { status: 500 })
+
+    // Déclencher n8n premium
+    const n8nUrl    = process.env.N8N_WEBHOOK_PREMIUM_URL
+    const n8nSecret = process.env.N8N_WEBHOOK_SECRET
+    if (n8nUrl && n8nUrl !== 'https://AREMPLACER') {
+      await fetch(n8nUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-webhook-secret': n8nSecret ?? '',
+        },
+        body: JSON.stringify({ userId, readingId, sessionId: session.id }),
+      })
+    }
   }
 
   return NextResponse.json({ received: true })
