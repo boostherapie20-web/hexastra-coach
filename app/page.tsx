@@ -226,9 +226,8 @@ function HexLogo({ size = 28 }: { size?: number; color?: string }) {
     <img
       src="/navbar/hexastra-navbar.png"
       alt="HexAstra"
-      width={size}
       height={size}
-      style={{ objectFit: 'contain', display: 'block' }}
+      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain' }}
     />
   )
 }
