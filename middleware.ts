@@ -1,18 +1,33 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request })
+  const { pathname } = request.nextUrl
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  // /chat accessible librement — pas dans protectedPaths
+  const protectedPaths = ['/dashboard', '/profile', '/analysis', '/library', '/reading']
+  const isProtected = protectedPaths.some(p => pathname.startsWith(p))
+
+  if (!isProtected) {
+    return NextResponse.next()
+  }
+
+  // Vérifie session Supabase uniquement si configuré
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    // Supabase non configuré → on laisse passer sans bloquer
+    return NextResponse.next()
+  }
+
+  try {
+    const { createServerClient } = await import('@supabase/ssr')
+    let response = NextResponse.next({ request })
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
@@ -21,33 +36,23 @@ export async function middleware(request: NextRequest) {
           })
         },
       },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
-  )
 
-  // Vérifie si l'utilisateur est connecté
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Pages protégées : redirige vers /login si pas connecté
-  // /chat retiré — accès libre sans connexion (mode gratuit)
-  const protectedPaths = ['/library', '/reading', '/dashboard', '/profile', '/analysis']
-  const isProtected = protectedPaths.some(p =>
-    request.nextUrl.pathname.startsWith(p)
-  )
-
-  if (isProtected && !user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return response
+  } catch {
+    // Si Supabase plante pour n'importe quelle raison → on laisse passer
+    return NextResponse.next()
   }
-
-  // Si déjà connecté et sur /login, redirige vers /chat
-  if (request.nextUrl.pathname === '/login' && user) {
-    return NextResponse.redirect(new URL('/chat', request.url))
-  }
-
-  return response
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/stripe/webhook).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|api/).*)',
   ],
 }
