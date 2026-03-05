@@ -221,19 +221,15 @@ const PRICE_KEYS: Record<string, string> = {
 }
 
 /* ── LOGO ─── */
-function HexLogo({ size = 28, color = "#C6A35F" }: { size?: number; color?: string }) {
+function HexLogo({ size = 28 }: { size?: number; color?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <polygon points="32,3 59,18 59,46 32,61 5,46 5,18" fill="none" stroke={color} strokeWidth="1.8"/>
-      <polygon points="32,13 51,23 51,43 32,53 13,43 13,23" fill="rgba(198,163,95,0.07)" stroke={color} strokeWidth="1" opacity="0.5"/>
-      <circle cx="32" cy="32" r="4.5" fill={color} opacity="0.9"/>
-      <line x1="32" y1="13" x2="32" y2="27" stroke={color} strokeWidth="1.2" opacity="0.55"/>
-      <line x1="32" y1="37" x2="32" y2="51" stroke={color} strokeWidth="1.2" opacity="0.55"/>
-      <line x1="13" y1="23" x2="27" y2="29" stroke={color} strokeWidth="1.2" opacity="0.55"/>
-      <line x1="37" y1="35" x2="51" y2="43" stroke={color} strokeWidth="1.2" opacity="0.55"/>
-      <line x1="51" y1="23" x2="37" y2="29" stroke={color} strokeWidth="1.2" opacity="0.55"/>
-      <line x1="27" y1="35" x2="13" y2="43" stroke={color} strokeWidth="1.2" opacity="0.55"/>
-    </svg>
+    <img
+      src="/navbar/hexastra-navbar.png"
+      alt="HexAstra"
+      width={size}
+      height={size}
+      style={{ objectFit: 'contain', display: 'block' }}
+    />
   )
 }
 
