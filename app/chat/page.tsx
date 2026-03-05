@@ -13,12 +13,12 @@ type Message = {
 type Mode = 'libre' | 'praticien'
 
 function HexLogo({ size = 28 }: { size?: number }) {
+  // PNG a fond noir — on utilise mix-blend-mode lighten pour retirer le noir
   return (
     <img
-      src="/navbar/hexastra-navbar.png"
+      src="/logo/hexastra-logo-1024.png"
       alt="HexAstra"
-      height={size}
-      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain', mixBlendMode: 'lighten' }}
+      style={{ width: size, height: size, display: 'block', objectFit: 'cover', borderRadius: '6px', mixBlendMode: 'lighten' as any }}
     />
   )
 }
@@ -120,7 +120,7 @@ export default function ChatPage() {
       <aside className="sidebar">
         <div className="sb-top">
           <a href="/" className="sb-logo">
-            <HexLogo size={48} />
+            <HexLogo size={44} />
             <span className="sb-name">HexAstra <em>Coach</em></span>
           </a>
         </div>
