@@ -18,7 +18,7 @@ const T: Record<string, any> = {
     },
     chat: {
       online: 'En ligne',
-      welcome: 'Bienvenue. Dis-moi ce que tu veux éclaircir aujourd\'hui.\nSi tu veux une analyse personnalisée, je te demanderai ensuite tes infos de naissance.',
+      welcome: "Bienvenue. Dis-moi ce que tu veux éclaircir aujourd\'hui.\nSi tu veux une analyse personnalisée, je te demanderai ensuite tes infos de naissance.",
       placeholder: 'Écris ta question… (décision, relation, direction, blocage)',
       micro: 'Réponses claires, sans jargon. Analyse conversationnelle.',
       send: 'Envoyer',
@@ -59,13 +59,13 @@ const T: Record<string, any> = {
     why: {
       tag: 'Pourquoi HexAstra est différent',
       title: 'Une approche différente',
-      body: 'HexAstra ne donne pas des réponses générales. Il analyse les dynamiques de votre vie en croisant plusieurs systèmes d\'observation des cycles humains.',
+      body: "HexAstra ne donne pas des réponses générales. Il analyse les dynamiques de votre vie en croisant plusieurs systèmes d\'observation des cycles humains.",
       detail: 'Le résultat est une lecture claire et personnalisée de votre situation actuelle.',
       points: [
         { icon: '◎', title: 'Analyse multi-dimensionnelle', desc: 'Cycles planétaires, Human Design, numérologie — croisés en une vision cohérente.' },
         { icon: '◈', title: 'Réponses personnalisées', desc: 'Chaque analyse est unique. Pas de réponses génériques ou de contenus pré-écrits.' },
         { icon: '⊕', title: 'Cinq domaines de vie', desc: 'Amour, travail, humeur, santé et direction — couverts dans chaque analyse.' },
-        { icon: '◉', title: 'Immédiatement actionnable', desc: 'Des insights clairs pour aujourd\'hui et les prochains jours.' },
+        { icon: '◉', title: 'Immédiatement actionnable', desc: "Des insights clairs pour aujourd\'hui et les prochains jours." },
       ],
       trust: {
         title: 'Une approche claire et respectueuse',
@@ -87,15 +87,15 @@ const T: Record<string, any> = {
       ],
     },
     useCases: {
-      tag: 'Cas d'usage',
+      tag: "Cas d'usage",
       title: 'Qui utilise HexAstra ?',
       sub: 'Des profils très différents, une même recherche de clarté.',
       cases: [
         { icon: '◎', title: 'En transition professionnelle', desc: 'Vous hésitez entre deux directions. HexAstra vous aide à voir laquelle correspond à votre énergie actuelle.' },
-        { icon: '♡', title: 'Dans une période relationnelle complexe', desc: 'Séparation, relation confuse, décision difficile. Comprendre les dynamiques en jeu avant d'agir.' },
-        { icon: '⊕', title: 'Manque d'énergie ou de direction', desc: 'Vous avancez mais sans élan. HexAstra identifie ce qui bloque et ce qui peut relancer le mouvement.' },
+        { icon: '♡', title: 'Dans une période relationnelle complexe', desc: "Séparation, relation confuse, décision difficile. Comprendre les dynamiques en jeu avant d'agir." },
+        { icon: '⊕', title: "Manque d'énergie ou de direction", desc: 'Vous avancez mais sans élan. HexAstra identifie ce qui bloque et ce qui peut relancer le mouvement.' },
         { icon: '◈', title: 'Prise de décision importante', desc: 'Déménagement, projet, changement. Voir si le timing et votre énergie sont alignés avec ce que vous envisagez.' },
-        { icon: '◉', title: 'Praticiens et coachs', desc: 'Un outil puissant pour enrichir les séances, identifier les cycles d'un client et structurer l'accompagnement.' },
+        { icon: '◉', title: 'Praticiens et coachs', desc: "Un outil puissant pour enrichir les séances, identifier les cycles d'un client et structurer l'accompagnement." },
         { icon: '✦', title: 'Curiosité et exploration personnelle', desc: 'Vous voulez simplement mieux vous comprendre. Vos cycles, vos forces, vos périodes de recharge.' },
       ],
     },
@@ -119,7 +119,7 @@ const T: Record<string, any> = {
     },
     chat: {
       online: 'Online',
-      welcome: 'Welcome. Tell me what you want to clarify today.\nIf you want a personalized analysis, I\'ll ask for your birth details next.',
+      welcome: "Welcome. Tell me what you want to clarify today.\nIf you want a personalized analysis, I\'ll ask for your birth details next.",
       placeholder: 'Write your question… (decision, relationship, direction, blockage)',
       micro: 'Clear answers, no jargon. Conversational analysis.',
       send: 'Send',
@@ -160,7 +160,7 @@ const T: Record<string, any> = {
     why: {
       tag: 'Why HexAstra is different',
       title: 'A different approach',
-      body: 'HexAstra doesn\'t give generic answers. It analyzes the dynamics of your life by crossing several systems of observation of human cycles.',
+      body: "HexAstra doesn\'t give generic answers. It analyzes the dynamics of your life by crossing several systems of observation of human cycles.",
       detail: 'The result is a clear and personalized reading of your current situation.',
       points: [
         { icon: '◎', title: 'Multi-dimensional analysis', desc: 'Planetary cycles, Human Design, numerology — crossed into one coherent vision.' },
@@ -177,7 +177,7 @@ const T: Record<string, any> = {
     pricing: {
       tag: 'Pricing',
       title: 'Start free.',
-      sub: 'Go deeper when you\'re ready.',
+      sub: "Go deeper when you\'re ready.",
       note: 'No credit card · Cancel anytime',
       popular: 'Most popular',
       plans: [
@@ -195,8 +195,8 @@ const T: Record<string, any> = {
         { icon: '◎', title: 'In professional transition', desc: 'Choosing between two paths. HexAstra helps you see which aligns with your current energy.' },
         { icon: '♡', title: 'In a complex relational period', desc: 'Separation, confusing relationship, difficult decision. Understanding the dynamics at play before acting.' },
         { icon: '⊕', title: 'Lacking energy or direction', desc: 'Moving forward but without momentum. HexAstra identifies what blocks and what can restart the flow.' },
-        { icon: '◈', title: 'Important decision to make', desc: 'Moving, project, change. Seeing if timing and energy align with what you're considering.' },
-        { icon: '◉', title: 'Practitioners and coaches', desc: 'A powerful tool to enrich sessions, identify a client's cycles and structure the guidance.' },
+        { icon: '◈', title: 'Important decision to make', desc: "Moving, project, change. Seeing if timing and energy align with what you're considering." },
+        { icon: '◉', title: 'Practitioners and coaches', desc: "A powerful tool to enrich sessions, identify a client's cycles and structure the guidance." },
         { icon: '✦', title: 'Personal curiosity', desc: 'You simply want to understand yourself better. Your cycles, your strengths, your recharge periods.' },
       ],
     },
@@ -718,7 +718,7 @@ export default function Page() {
 
         <div className="divider"/>
 
-        {/* 5 — Cas d'usage */}
+        {/* 5 — Cas d usage */}
         <UseCasesSection t={t} />
 
         <div className="divider"/>
