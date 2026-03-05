@@ -153,3 +153,4 @@ Vercel redéploie automatiquement en 1-2 minutes. Zéro configuration supplémen
 **Erreur Supabase "Invalid API key"**
 → Vérifie que tu n'as pas de guillemets ou d'espaces dans les valeurs Vercel
 → Re-copie la clé depuis supabase.com → Settings → API
+  
