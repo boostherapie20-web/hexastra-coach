@@ -17,9 +17,8 @@ function HexLogo({ size = 28 }: { size?: number }) {
     <img
       src="/navbar/hexastra-navbar.png"
       alt="HexAstra"
-      width={size}
       height={size}
-      style={{ objectFit: 'contain', display: 'block' }}
+      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain' }}
     />
   )
 }
@@ -121,7 +120,7 @@ export default function ChatPage() {
       <aside className="sidebar">
         <div className="sb-top">
           <a href="/" className="sb-logo">
-            <HexLogo size={26} />
+            <HexLogo size={32} />
             <span className="sb-name">HexAstra <em>Coach</em></span>
           </a>
         </div>
@@ -232,7 +231,7 @@ export default function ChatPage() {
               </svg>
             </button>
           </div>
-          <div className="composer-micro">Réponses claires, sans jargon · Analyse conversationnelle</div>
+          <div className="composer-micro">Analyse conversationnelle claire · Aucun conseil médical ou thérapeutique</div>
         </div>
       </main>
     </div>
@@ -247,7 +246,7 @@ button{border:none;cursor:pointer;background:none}
 
 /* SIDEBAR */
 .sidebar{width:220px;min-width:220px;height:100dvh;background:#14100C;border-right:1px solid rgba(198,163,95,0.18);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.sb-top{padding:18px 16px 14px;border-bottom:1px solid rgba(198,163,95,0.12)}
+.sb-top{padding:16px 14px;border-bottom:1px solid rgba(198,163,95,0.12)}
 .sb-logo{display:flex;align-items:center;gap:10px}
 .sb-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:400;color:#F3EFEA}
 .sb-name em{font-style:italic;color:#C6A35F}
