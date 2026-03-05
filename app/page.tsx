@@ -1,32 +1,172 @@
-// @ts-nocheck 
+// @ts-nocheck
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 type Lang = 'fr' | 'en'
 
 const translations: Record<string, any> = {
   fr: {
-    nav: { howItWorks: 'Comment ca marche', practitioners: 'Praticiens', pricing: 'Tarifs', signIn: 'Connexion', startReading: 'Commencer une lecture' },
-    hero: { eyebrow: 'Intelligence personnelle par IA', title1: 'HexAstra', title2: 'Coach', sub1: 'Comprenez votre etat interieur.', sub2: 'Prenez des decisions plus claires.', sub3: 'Avancez avec confiance.', cta1: 'Commencer une lecture', cta2: 'Comment ca marche', trust: '2 400+ lectures realisees', trustScore: '4,9 / 5' },
-    how: { tag: 'Comment ca marche', title1: 'Trois etapes vers la', title2: 'clarte', sub: 'Pas de graphiques complexes. Pas de jargon. Une lecture claire et personnelle.', step1title: 'Entrez vos informations de naissance', step1desc: "Date, heure et lieu de naissance. HexAstra cartographie votre configuration energetique actuelle.", step2title: 'HexAstra analyse vos dynamiques', step2desc: "Transits planetaires, portes Human Design, cycles numerologiques - synthetises en une vision coherente.", step3title: 'Recevez votre lecture', step3desc: "Une lecture claire sur votre vie amoureuse, travail, humeur, sante et direction." },
-    receive: { tag: 'Ce que vous recevez', title1: 'Votre lecture personnelle', title2: 'comprend', sub: 'Chaque lecture couvre les cinq domaines de votre quotidien.', card1title: 'Amour et Relations', card1desc: "Comprenez les dynamiques relationnelles et ce que ce moment vous enseigne.", card2title: 'Travail et Argent', card2desc: "Clarte sur votre energie professionnelle et vos opportunites actuelles.", card3title: 'Humeur et Etat interieur', card3desc: "Une lecture precise de votre meteo emotionnelle - pas seulement comment vous vous sentez, mais pourquoi.", card4title: 'Sante et Energie', card4desc: "Rythmes physiques et energetiques. Quand pousser, quand se reposer.", card5title: 'Direction de vie', card5desc: "La vision globale. Ou vous en etes dans votre cycle plus long." },
-    example: { tag: 'Exemple de lecture', title1: 'A quoi ressemble', title2: 'une lecture', sub: 'Claire. Personnelle. Utile.', name: 'Sophie M.', date: "Aujourd'hui - Lecture Premium", badge: 'Lecture complete', block1tag: "Energie du jour", block1title: "Une invitation a ralentir", block1txt: "Un mouvement interieur vous invite a ralentir et a clarifier ce qui merite votre attention.", block2tag: 'Comprehension', block2title: 'Une phase, pas un blocage', block2txt: "Ce que vous ressentez est une phase de reorganisation interne. Quelque chose s'acheve.", block3tag: 'Action', block3title: 'Une decision, clairement', block3txt: "Concentrez-vous sur une decision importante. L'energie disponible aujourd'hui est precise.", ctaNote: 'Lecture complete : 6 pages - PDF - Audio', ctaBtn: 'Obtenir ma lecture' },
-    practitioners: { tag: 'Pour les professionnels', title1: 'HexAstra pour les', title2: 'praticiens', sub: "Un outil puissant de lecture et d'analyse pour les professionnels.", profiles: ['Coachs', 'Therapeutes', 'Praticiens en developpement personnel', 'Praticiens holistiques', 'Guides et facilitateurs'], explain1: "HexAstra Coach a ete concu pour soutenir les praticiens qui souhaitent approfondir leur comprehension des personnes accompagnees.", explain2: "Le systeme analyse plusieurs dimensions et synthetise une lecture structuree utilisable en seance.", posTag: 'Positionnement', posTitle: 'Un outil de soutien professionnel', posTxt1: "HexAstra aide a mettre en evidence des schemas, cycles et dynamiques qui influencent les decisions et transitions de vie.", posTxt2: "Le praticien reste l'interpreteur final et integre la lecture dans sa propre approche.", b1title: 'Clarifier des situations complexes', b1desc: "Identifier les dynamiques profondes derriere l'etat actuel d'un client.", b2title: 'Structurer les seances', b2desc: 'Utiliser la lecture comme point de depart structure.', b3title: "Gagner du temps d'analyse", b3desc: 'Obtenir une perspective synthetisee sur les domaines les plus pertinents.', b4title: 'Enrichir la pratique', b4desc: "Complementer les approches de coaching et accompagnement.", useCaseTag: "Cas d'usage", useCases: ['Seances de coaching', 'Transitions de vie', 'Blocages personnels', 'Prise de decision', 'Soutien emotionnel', 'Direction de vie'], cta: 'Demarrer en tant que praticien' },
-    pricing: { tag: 'Tarifs', title1: 'Commencez gratuitement.', title2: 'Approfondissez', title3: 'quand vous etes pret.', sub: 'Sans engagement. Changez ou annulez a tout moment.', mostPopular: 'Le plus populaire', note: 'Sans carte bancaire pour commencer - Annulez a tout moment', plans: [ { key: 'free', tag: 'Decouverte', name: 'Gratuit', price: '0', per: '', desc: 'Decouvrez ce que HexAstra peut reveler.', features: [ { t: '1 lecture courte par jour', ok: true }, { t: 'Format texte uniquement', ok: true }, { t: 'Acces au chat', ok: true }, { t: 'Sauvegarde de 3 lectures', ok: true }, { t: 'Export PDF', ok: false }, { t: 'Version audio', ok: false }, { t: 'Themes avances', ok: false } ], cta: 'Commencer gratuitement', style: 'ghost' }, { key: 'essentiel', tag: 'Essentiel', name: 'Essentiel', price: '9', per: '/mois', desc: 'Les fondamentaux pour avancer avec clarte.', features: [ { t: '3 lectures completes par jour', ok: true }, { t: 'Analyses detaillees', ok: true }, { t: 'Export PDF', ok: true }, { t: 'Historique de 30 lectures', ok: true }, { t: 'Themes avances', ok: true }, { t: 'Version audio', ok: false }, { t: 'Usage client', ok: false } ], cta: 'Demarrer Essentiel', style: 'secondary' }, { key: 'premium', tag: 'Premium', name: 'Premium', price: '19', per: '/mois', desc: 'Votre lecture complete, aussi profonde que vous le souhaitez.', features: [ { t: 'Lectures illimitees', ok: true }, { t: 'Analyse complete et detaillee', ok: true }, { t: 'Arc de lecture 7 jours', ok: true }, { t: 'Export PDF (6 pages)', ok: true }, { t: 'Audio personnel (7 min)', ok: true }, { t: 'Themes avances', ok: true }, { t: 'Support prioritaire', ok: true } ], cta: 'Demarrer Premium', style: 'primary', featured: true }, { key: 'praticien', tag: 'Professionnel', name: 'Praticien', price: '49', per: '/mois', desc: 'Pour les coachs et therapeutes.', features: [ { t: 'Acces complet au systeme', ok: true }, { t: 'Usage en seance client', ok: true }, { t: 'Droits d usage professionnel', ok: true }, { t: 'PDF + audio pour chaque lecture', ok: true }, { t: 'Export et partage des lectures', ok: true }, { t: 'Support dedie', ok: true }, { t: 'Generation prioritaire', ok: true } ], cta: 'Demarrer Praticien', style: 'outline' } ] },
-    finalCta: { tag: 'Votre lecture est prete', title1: 'Comprenez', title2: 'ou vous en etes.', title3: 'Avancez avec clarte.', sub: 'Pret en 2 minutes. Gratuit pour commencer.', btn: 'Commencer ma lecture', note: 'Essentiel 9 EUR/mois - Premium 19 EUR/mois - Praticien 49 EUR/mois' },
-    footer: { copy: '2026 HexAstra - Intelligence personnelle par IA', links: [ { href: '#how', label: 'Comment ca marche' }, { href: '#practitioners', label: 'Praticiens' }, { href: '#pricing', label: 'Tarifs' }, { href: '/login', label: 'Connexion' } ] },
+    nav: { how: 'Comment ça marche', analysis: 'Ce qu\'on analyse', pricing: 'Tarifs', signIn: 'Connexion', cta: 'Commencer mon analyse' },
+    hero: {
+      eyebrow: 'Analyse personnelle intelligente',
+      title1: 'Comprenez ce que',
+      title2: 'vous traversez.',
+      title3: 'Découvrez ce qui s\'ouvre devant vous.',
+      sub: 'Une analyse intelligente de votre moment de vie, basée sur vos données de naissance.',
+      cta: 'Commencer mon analyse',
+      trust: '2 400+ analyses réalisées',
+      score: '4,9 / 5',
+    },
+    how: {
+      tag: 'Comment ça marche',
+      title: 'Trois étapes vers la clarté',
+      sub: 'Pas de graphiques complexes. Pas de jargon. Une analyse claire et personnelle.',
+      steps: [
+        { n: '01', title: 'Entrez vos données de naissance', desc: 'Date, heure et lieu de naissance. HexAstra cartographie votre configuration énergétique actuelle.' },
+        { n: '02', title: 'L\'IA analyse vos dynamiques', desc: 'Transits planétaires, portes Human Design, cycles numérологiques — synthétisés en une vision cohérente.' },
+        { n: '03', title: 'Recevez votre analyse', desc: 'Une lecture claire sur votre vie amoureuse, travail, humeur, santé et direction de vie.' },
+      ],
+    },
+    analysis: {
+      tag: 'Ce qu\'on analyse',
+      title: 'Votre lecture personnelle comprend',
+      sub: 'Cinq dimensions de votre quotidien, analysées avec précision.',
+      items: [
+        { icon: '♡', title: 'Amour & Relations', desc: 'Les dynamiques relationnelles et ce que ce moment vous enseigne.' },
+        { icon: '◈', title: 'Travail & Argent', desc: 'Votre énergie professionnelle et vos opportunités actuelles.' },
+        { icon: '◉', title: 'Humeur & État intérieur', desc: 'Votre météo émotionnelle — pas seulement comment vous vous sentez, mais pourquoi.' },
+        { icon: '⊕', title: 'Santé & Énergie', desc: 'Rythmes physiques et énergétiques. Quand pousser, quand se reposer.' },
+        { icon: '◎', title: 'Direction de vie', desc: 'La vision globale. Où vous en êtes dans votre cycle plus long.' },
+      ],
+    },
+    example: {
+      tag: 'Exemple d\'analyse',
+      title: 'À quoi ressemble une analyse',
+      sub: 'Claire. Personnelle. Utile.',
+      name: 'Sophie M.',
+      date: 'Aujourd\'hui · Analyse Premium',
+      badge: 'Analyse complète',
+      blocks: [
+        { tag: 'Situation actuelle', title: 'Une invitation à ralentir', txt: 'Un mouvement intérieur vous invite à ralentir et à clarifier ce qui mérite vraiment votre attention en ce moment.' },
+        { tag: 'Compréhension', title: 'Une phase, pas un blocage', txt: 'Ce que vous ressentez est une phase de réorganisation interne. Quelque chose s\'achève pour laisser place à quelque chose de nouveau.' },
+        { tag: 'Action', title: 'Une décision, clairement', txt: 'Concentrez-vous sur une seule décision importante. L\'énergie disponible aujourd\'hui est précise, pas diffuse.' },
+      ],
+      ctaNote: 'Analyse complète : 6 pages · PDF · Audio',
+      ctaBtn: 'Obtenir mon analyse',
+    },
+    pricing: {
+      tag: 'Tarifs',
+      title: 'Commencez gratuitement.',
+      title2: 'Approfondissez quand vous êtes prêt.',
+      sub: 'Sans engagement. Changez ou annulez à tout moment.',
+      popular: 'Le plus populaire',
+      note: 'Sans carte bancaire pour commencer · Annulez à tout moment',
+      plans: [
+        { key: 'free', tag: 'Découverte', name: 'Gratuit', price: '0', per: '', desc: 'Découvrez ce que HexAstra peut révéler.', features: ['1 analyse courte par jour', 'Format texte uniquement', 'Accès au chat', 'Sauvegarde de 3 analyses'], missing: ['Export PDF', 'Version audio', 'Thèmes avancés'], cta: 'Commencer gratuitement', style: 'ghost' },
+        { key: 'essentiel', tag: 'Essentiel', name: 'Essentiel', price: '9', per: '/mois', desc: 'Les fondamentaux pour avancer avec clarté.', features: ['3 analyses complètes par jour', 'Analyses détaillées', 'Export PDF', 'Historique de 30 analyses', 'Thèmes avancés'], missing: ['Version audio', 'Usage client'], cta: 'Démarrer Essentiel', style: 'secondary' },
+        { key: 'premium', tag: 'Premium', name: 'Premium', price: '19', per: '/mois', desc: 'Votre analyse complète, aussi profonde que vous le souhaitez.', features: ['Analyses illimitées', 'Analyse complète et détaillée', 'Arc de lecture 7 jours', 'Export PDF (6 pages)', 'Audio personnel (7 min)', 'Thèmes avancés', 'Support prioritaire'], missing: [], cta: 'Démarrer Premium', style: 'primary', featured: true },
+        { key: 'praticien', tag: 'Professionnel', name: 'Praticien', price: '49', per: '/mois', desc: 'Pour les coachs et thérapeutes.', features: ['Accès complet au système', 'Usage en séance client', 'Droits d\'usage professionnel', 'PDF + audio pour chaque analyse', 'Export et partage', 'Support dédié', 'Génération prioritaire'], missing: [], cta: 'Démarrer Praticien', style: 'outline' },
+      ],
+    },
+    finalCta: {
+      tag: 'Votre analyse est prête',
+      title: 'Comprenez où vous en êtes.',
+      title2: 'Avancez avec clarté.',
+      sub: 'Prêt en 2 minutes. Gratuit pour commencer.',
+      btn: 'Commencer mon analyse',
+      note: 'Essentiel 9€/mois · Premium 19€/mois · Praticien 49€/mois',
+    },
+    footer: {
+      copy: '2026 HexAstra · Intelligence personnelle par IA',
+      links: [
+        { href: '#how', label: 'Comment ça marche' },
+        { href: '#analysis', label: 'Ce qu\'on analyse' },
+        { href: '#pricing', label: 'Tarifs' },
+        { href: '/login', label: 'Connexion' },
+      ],
+    },
   },
   en: {
-    nav: { howItWorks: 'How it works', practitioners: 'Practitioners', pricing: 'Pricing', signIn: 'Sign in', startReading: 'Start a reading' },
-    hero: { eyebrow: 'Personal intelligence by AI', title1: 'HexAstra', title2: 'Coach', sub1: 'Understand your inner state.', sub2: 'Make clearer decisions.', sub3: 'Move forward with confidence.', cta1: 'Start a reading', cta2: 'How it works', trust: '2,400+ readings', trustScore: '4.9 / 5' },
-    how: { tag: 'How it works', title1: 'Three steps to', title2: 'clarity', sub: 'No complex charts. No jargon. A clear personal reading about where you are right now.', step1title: 'Enter your birth information', step1desc: 'Date, time and place of birth. HexAstra maps your current energy configuration.', step2title: 'HexAstra analyzes your dynamics', step2desc: 'Planetary transits, Human Design gates, numerological cycles - all synthesized into one coherent view.', step3title: 'Receive your reading', step3desc: 'A clear actionable reading about your love life, work, mood, health and direction.' },
-    receive: { tag: 'What you receive', title1: 'Your personal reading', title2: 'includes', sub: 'Each reading covers the five areas that shape how you experience your daily life.', card1title: 'Love & Connection', card1desc: 'Understand the relational dynamics at play and what this moment teaches you.', card2title: 'Work & Money', card2desc: 'Clarity on your professional energy and current opportunities.', card3title: 'Mood & Inner State', card3desc: 'A precise read of your emotional weather - not just how you feel, but why.', card4title: 'Health & Energy', card4desc: 'Physical and energetic rhythms. When to push, when to rest.', card5title: 'Life Direction', card5desc: 'The bigger picture. Where you are in your longer cycle.' },
-    example: { tag: 'Example reading', title1: 'What a reading', title2: 'feels like', sub: 'Clear. Personal. Useful.', name: 'Sarah M.', date: 'Today - Premium Reading', badge: 'Full reading', block1tag: 'Energy of the day', block1title: 'An invitation to slow down', block1txt: 'An inner movement invites you to slow down and clarify what truly deserves your attention.', block2tag: 'Understanding', block2title: 'A phase, not a blockage', block2txt: 'What you feel is not a blockage, but a phase of internal reorganization. Something new is forming.', block3tag: 'Action', block3title: 'One decision, clearly', block3txt: "Simplify your day and focus on one important decision. The energy today is precise, not broad.", ctaNote: 'Full reading: 6 pages - PDF - Audio', ctaBtn: 'Get my reading' },
-    practitioners: { tag: 'For professionals', title1: 'HexAstra for', title2: 'practitioners', sub: 'A powerful reading and analysis tool to enrich professional guidance.', profiles: ['Coaches', 'Therapists', 'Personal development practitioners', 'Holistic practitioners', 'Guides & facilitators'], explain1: 'HexAstra Coach was designed to support practitioners who want to deepen their understanding of the people they accompany.', explain2: 'The system analyzes several dimensions and synthesizes a structured reading usable in sessions.', posTag: 'Positioning', posTitle: 'A professional support tool', posTxt1: 'HexAstra helps highlight patterns, cycles and dynamics that may influence decisions, emotions or life transitions.', posTxt2: 'The practitioner remains the final interpreter and integrates the reading within their own approach.', b1title: 'Clarify complex situations', b1desc: "Identify deeper dynamics behind a client's current state.", b2title: 'Structure sessions', b2desc: 'Use the reading as a structured starting point for conversations.', b3title: 'Save analysis time', b3desc: 'Get a synthesized perspective highlighting the most relevant areas.', b4title: 'Enrich professional practice', b4desc: 'Complement coaching, therapy or guidance approaches.', useCaseTag: 'Use cases', useCases: ['Coaching sessions', 'Life transitions', 'Personal blockages', 'Decision making', 'Emotional support', 'Life direction'], cta: 'Start as a practitioner' },
-    pricing: { tag: 'Pricing', title1: 'Start free.', title2: 'Go deeper', title3: 'when ready.', sub: 'No commitment. Upgrade or cancel anytime.', mostPopular: 'Most popular', note: 'No credit card required - Cancel anytime', plans: [ { key: 'free', tag: 'Starter', name: 'Free', price: '0', per: '', desc: 'Discover what HexAstra can reveal. No commitment.', features: [ { t: '1 short reading per day', ok: true }, { t: 'Text format only', ok: true }, { t: 'Chat access', ok: true }, { t: 'Save up to 3 readings', ok: true }, { t: 'PDF export', ok: false }, { t: 'Audio version', ok: false }, { t: 'Advanced themes', ok: false } ], cta: 'Start for free', style: 'ghost' }, { key: 'essentiel', tag: 'Essential', name: 'Essential', price: '9', per: '/month', desc: 'The fundamentals to move forward with clarity.', features: [ { t: '3 full readings per day', ok: true }, { t: 'Detailed analyses', ok: true }, { t: 'PDF export', ok: true }, { t: 'History of 30 readings', ok: true }, { t: 'Advanced themes', ok: true }, { t: 'Audio version', ok: false }, { t: 'Client usage', ok: false } ], cta: 'Start Essential', style: 'secondary' }, { key: 'premium', tag: 'Premium', name: 'Premium', price: '19', per: '/month', desc: 'Your full personal reading, as deep as you want.', features: [ { t: 'Unlimited readings', ok: true }, { t: 'Complete personalized reading', ok: true }, { t: '7-day reading arc', ok: true }, { t: 'PDF export (6 pages)', ok: true }, { t: 'Personal audio (7 min)', ok: true }, { t: 'Advanced themes', ok: true }, { t: 'Priority support', ok: true } ], cta: 'Start Premium', style: 'primary', featured: true }, { key: 'praticien', tag: 'Professional', name: 'Practitioner', price: '49', per: '/month', desc: 'For coaches and therapists integrating HexAstra into their practice.', features: [ { t: 'Full system access', ok: true }, { t: 'Client session use', ok: true }, { t: 'Professional usage rights', ok: true }, { t: 'PDF + audio for every reading', ok: true }, { t: 'Export & share readings', ok: true }, { t: 'Dedicated support', ok: true }, { t: 'Priority generation', ok: true } ], cta: 'Start Practitioner', style: 'outline' } ] },
-    finalCta: { tag: 'Your reading is ready', title1: 'Understand', title2: 'where you are.', title3: 'Move forward with clarity.', sub: 'Takes 2 minutes. Free to start.', btn: 'Start my reading', note: 'Essential EUR 9/mo - Premium EUR 19/mo - Practitioner EUR 49/mo' },
-    footer: { copy: '2026 HexAstra - Personal intelligence by AI', links: [ { href: '#how', label: 'How it works' }, { href: '#practitioners', label: 'Practitioners' }, { href: '#pricing', label: 'Pricing' }, { href: '/login', label: 'Sign in' } ] },
+    nav: { how: 'How it works', analysis: 'What we analyze', pricing: 'Pricing', signIn: 'Sign in', cta: 'Start my analysis' },
+    hero: {
+      eyebrow: 'Intelligent personal analysis',
+      title1: 'Understand what you',
+      title2: 'are going through.',
+      title3: 'Discover what is opening ahead of you.',
+      sub: 'An intelligent analysis of your life moment, based on your birth data.',
+      cta: 'Start my analysis',
+      trust: '2,400+ analyses done',
+      score: '4.9 / 5',
+    },
+    how: {
+      tag: 'How it works',
+      title: 'Three steps to clarity',
+      sub: 'No complex charts. No jargon. A clear and personal analysis.',
+      steps: [
+        { n: '01', title: 'Enter your birth data', desc: 'Date, time and place of birth. HexAstra maps your current energetic configuration.' },
+        { n: '02', title: 'AI analyzes your dynamics', desc: 'Planetary transits, Human Design gates, numerological cycles — synthesized into one coherent view.' },
+        { n: '03', title: 'Receive your analysis', desc: 'A clear reading on your love life, work, mood, health and life direction.' },
+      ],
+    },
+    analysis: {
+      tag: 'What we analyze',
+      title: 'Your personal reading includes',
+      sub: 'Five dimensions of your daily life, analyzed with precision.',
+      items: [
+        { icon: '♡', title: 'Love & Connection', desc: 'The relational dynamics at play and what this moment teaches you.' },
+        { icon: '◈', title: 'Work & Money', desc: 'Your professional energy and current opportunities.' },
+        { icon: '◉', title: 'Mood & Inner State', desc: 'Your emotional weather — not just how you feel, but why.' },
+        { icon: '⊕', title: 'Health & Energy', desc: 'Physical and energetic rhythms. When to push, when to rest.' },
+        { icon: '◎', title: 'Life Direction', desc: 'The bigger picture. Where you are in your longer cycle.' },
+      ],
+    },
+    example: {
+      tag: 'Example analysis',
+      title: 'What an analysis feels like',
+      sub: 'Clear. Personal. Useful.',
+      name: 'Sarah M.',
+      date: 'Today · Premium Analysis',
+      badge: 'Full analysis',
+      blocks: [
+        { tag: 'Current situation', title: 'An invitation to slow down', txt: 'An inner movement invites you to slow down and clarify what truly deserves your attention right now.' },
+        { tag: 'Understanding', title: 'A phase, not a blockage', txt: 'What you feel is not a blockage, but a phase of internal reorganization. Something is completing itself.' },
+        { tag: 'Action', title: 'One decision, clearly', txt: 'Focus on one important decision. The energy available today is precise, not broad.' },
+      ],
+      ctaNote: 'Full analysis: 6 pages · PDF · Audio',
+      ctaBtn: 'Get my analysis',
+    },
+    pricing: {
+      tag: 'Pricing',
+      title: 'Start free.',
+      title2: 'Go deeper when you\'re ready.',
+      sub: 'No commitment. Upgrade or cancel anytime.',
+      popular: 'Most popular',
+      note: 'No credit card required · Cancel anytime',
+      plans: [
+        { key: 'free', tag: 'Starter', name: 'Free', price: '0', per: '', desc: 'Discover what HexAstra can reveal.', features: ['1 short analysis per day', 'Text format only', 'Chat access', 'Save up to 3 analyses'], missing: ['PDF export', 'Audio version', 'Advanced themes'], cta: 'Start for free', style: 'ghost' },
+        { key: 'essentiel', tag: 'Essential', name: 'Essential', price: '9', per: '/mo', desc: 'The fundamentals to move forward with clarity.', features: ['3 full analyses per day', 'Detailed analyses', 'PDF export', 'History of 30 analyses', 'Advanced themes'], missing: ['Audio version', 'Client usage'], cta: 'Start Essential', style: 'secondary' },
+        { key: 'premium', tag: 'Premium', name: 'Premium', price: '19', per: '/mo', desc: 'Your full personal reading, as deep as you want.', features: ['Unlimited analyses', 'Complete personalized reading', '7-day reading arc', 'PDF export (6 pages)', 'Personal audio (7 min)', 'Advanced themes', 'Priority support'], missing: [], cta: 'Start Premium', style: 'primary', featured: true },
+        { key: 'praticien', tag: 'Professional', name: 'Practitioner', price: '49', per: '/mo', desc: 'For coaches and therapists.', features: ['Full system access', 'Client session use', 'Professional usage rights', 'PDF + audio for every analysis', 'Export & share', 'Dedicated support', 'Priority generation'], missing: [], cta: 'Start Practitioner', style: 'outline' },
+      ],
+    },
+    finalCta: {
+      tag: 'Your analysis is ready',
+      title: 'Understand where you are.',
+      title2: 'Move forward with clarity.',
+      sub: 'Takes 2 minutes. Free to start.',
+      btn: 'Start my analysis',
+      note: 'Essential €9/mo · Premium €19/mo · Practitioner €49/mo',
+    },
+    footer: {
+      copy: '2026 HexAstra · Personal intelligence by AI',
+      links: [
+        { href: '#how', label: 'How it works' },
+        { href: '#analysis', label: 'What we analyze' },
+        { href: '#pricing', label: 'Pricing' },
+        { href: '/login', label: 'Sign in' },
+      ],
+    },
   },
 }
 
@@ -36,27 +176,309 @@ const PLAN_PRICE_KEYS: Record<string, string> = {
   praticien: 'praticien_monthly',
 }
 
+/* ── LOGO ─────────────────────────────── */
 function HexLogo({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <polygon points="32,4 58,18 58,46 32,60 6,46 6,18" fill="none" stroke="var(--gold)" strokeWidth="2"/>
-      <polygon points="32,14 50,24 50,44 32,54 14,44 14,24" fill="rgba(198,167,105,0.1)" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
-      <circle cx="32" cy="32" r="5" fill="var(--gold)" opacity="0.85"/>
-      <line x1="32" y1="14" x2="32" y2="27" stroke="var(--gold)" strokeWidth="1.2" opacity="0.7"/>
-      <line x1="32" y1="37" x2="32" y2="50" stroke="var(--gold)" strokeWidth="1.2" opacity="0.7"/>
-      <line x1="14" y1="24" x2="26" y2="29" stroke="var(--gold)" strokeWidth="1.2" opacity="0.7"/>
-      <line x1="38" y1="35" x2="50" y2="44" stroke="var(--gold)" strokeWidth="1.2" opacity="0.7"/>
-      <line x1="50" y1="24" x2="38" y2="29" stroke="var(--gold)" strokeWidth="1.2" opacity="0.7"/>
-      <line x1="26" y1="35" x2="14" y2="44" stroke="var(--gold)" strokeWidth="1.2" opacity="0.7"/>
+      <polygon points="32,3 59,18 59,46 32,61 5,46 5,18"
+        fill="none" stroke="var(--gold)" strokeWidth="1.8"/>
+      <polygon points="32,13 51,23 51,43 32,53 13,43 13,23"
+        fill="rgba(231,194,125,0.08)" stroke="var(--gold)" strokeWidth="1" opacity="0.55"/>
+      <circle cx="32" cy="32" r="5" fill="var(--gold)" opacity="0.9"/>
+      <line x1="32" y1="13" x2="32" y2="27" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
+      <line x1="32" y1="37" x2="32" y2="51" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
+      <line x1="13" y1="23" x2="27" y2="29" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
+      <line x1="37" y1="35" x2="51" y2="43" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
+      <line x1="51" y1="23" x2="37" y2="29" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
+      <line x1="27" y1="35" x2="13" y2="43" stroke="var(--gold)" strokeWidth="1.2" opacity="0.6"/>
     </svg>
   )
 }
 
+/* ── STARS ────────────────────────────── */
+function Stars() {
+  const stars = Array.from({ length: 80 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    r: Math.random() * 1.4 + 0.3,
+    d: Math.random() * 4 + 2,
+    delay: Math.random() * 5,
+  }))
+  return (
+    <svg className="stars-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+      {stars.map(s => (
+        <circle key={s.id} cx={s.x} cy={s.y} r={s.r}
+          fill="var(--text)" opacity={0.18 + Math.random() * 0.25}
+          style={{ animationDelay: `${s.delay}s`, animationDuration: `${s.d}s` }}
+          className="star"
+        />
+      ))}
+    </svg>
+  )
+}
+
+/* ── NAV ──────────────────────────────── */
+function Nav({ t, lang, setLang, onCta }: any) {
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', fn)
+    return () => window.removeEventListener('scroll', fn)
+  }, [])
+  return (
+    <nav className={`nav${scrolled ? ' nav-scrolled' : ''}`}>
+      <a href="/" className="nav-logo">
+        <HexLogo size={30} />
+        <span className="nav-brand">HexAstra <em>Coach</em></span>
+      </a>
+      <div className="nav-links">
+        <a href="#how" className="nav-link">{t.nav.how}</a>
+        <a href="#analysis" className="nav-link">{t.nav.analysis}</a>
+        <a href="#pricing" className="nav-link">{t.nav.pricing}</a>
+        <a href="/login" className="nav-link">{t.nav.signIn}</a>
+      </div>
+      <div className="nav-right">
+        <div className="lang-sw">
+          <button onClick={() => setLang('fr')} className={`lang-btn${lang==='fr'?' lang-on':''}`}>FR</button>
+          <button onClick={() => setLang('en')} className={`lang-btn${lang==='en'?' lang-on':''}`}>EN</button>
+        </div>
+        <button onClick={onCta} className="btn-gold nav-cta">{t.nav.cta}</button>
+      </div>
+    </nav>
+  )
+}
+
+/* ── HERO ─────────────────────────────── */
+function Hero({ t, onCta }: any) {
+  return (
+    <section className="hero">
+      <div className="hero-stars"><Stars /></div>
+      <div className="hero-glow" />
+      <div className="hero-content">
+        <div className="eyebrow">
+          <span className="eyebrow-dot" />
+          {t.hero.eyebrow}
+        </div>
+        <h1 className="hero-h1">
+          <span className="h1-line1">{t.hero.title1}</span>
+          <span className="h1-line2">{t.hero.title2}</span>
+          <span className="h1-line3">{t.hero.title3}</span>
+        </h1>
+        <p className="hero-sub">{t.hero.sub}</p>
+        <div className="hero-actions">
+          <button onClick={onCta} className="btn-gold btn-lg">
+            {t.hero.cta}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
+        <div className="hero-trust">
+          <div className="trust-avatars">
+            {['A','B','C','D','E'].map((l,i) => (
+              <div key={i} className="av" style={{ marginLeft: i > 0 ? '-9px' : 0 }}>{l}</div>
+            ))}
+          </div>
+          <span className="trust-text">{t.hero.trust} &middot; {t.hero.score}</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── HOW ──────────────────────────────── */
+function HowSection({ t }: any) {
+  return (
+    <section id="how" className="section">
+      <div className="section-inner">
+        <div className="stag"><span className="stag-line" />{t.how.tag}</div>
+        <h2 className="section-h2">{t.how.title}</h2>
+        <p className="section-sub">{t.how.sub}</p>
+        <div className="steps">
+          {t.how.steps.map((s: any, i: number) => (
+            <div key={i} className="step">
+              <div className="step-num">{s.n}</div>
+              <div className="step-body">
+                <div className="step-connector" />
+                <h3 className="step-title">{s.title}</h3>
+                <p className="step-desc">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── ANALYSIS DOMAINS ─────────────────── */
+function AnalysisSection({ t }: any) {
+  const [active, setActive] = useState<number | null>(null)
+  return (
+    <section id="analysis" className="section section-alt">
+      <div className="section-inner">
+        <div className="stag"><span className="stag-line" />{t.analysis.tag}</div>
+        <h2 className="section-h2">{t.analysis.title}</h2>
+        <p className="section-sub">{t.analysis.sub}</p>
+        <div className="domains">
+          {t.analysis.items.map((item: any, i: number) => (
+            <div
+              key={i}
+              className={`domain-card${active===i?' domain-active':''}`}
+              onClick={() => setActive(active===i ? null : i)}
+            >
+              <div className="domain-icon">{item.icon}</div>
+              <div className="domain-title">{item.title}</div>
+              <p className="domain-desc">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── EXAMPLE ──────────────────────────── */
+function ExampleSection({ t, onCta }: any) {
+  return (
+    <section className="section">
+      <div className="section-inner">
+        <div className="stag"><span className="stag-line" />{t.example.tag}</div>
+        <h2 className="section-h2">{t.example.title}</h2>
+        <p className="section-sub">{t.example.sub}</p>
+        <div className="ex-card">
+          <div className="ex-header">
+            <div className="ex-hl">
+              <div className="ex-av"><HexLogo size={32} /></div>
+              <div>
+                <div className="ex-name">{t.example.name}</div>
+                <div className="ex-date">{t.example.date}</div>
+              </div>
+            </div>
+            <div className="ex-badge">{t.example.badge}</div>
+          </div>
+          <div className="ex-body">
+            {t.example.blocks.map((b: any, i: number) => (
+              <div key={i}>
+                <div className="ex-block">
+                  <div className="ex-btag">{b.tag}</div>
+                  <div className="ex-btitle">{b.title}</div>
+                  <p className="ex-btxt">{b.txt}</p>
+                </div>
+                {i < t.example.blocks.length - 1 && <div className="ex-sep" />}
+              </div>
+            ))}
+            <div className="ex-sep" />
+            <div className="ex-footer">
+              <span className="ex-note">{t.example.ctaNote}</span>
+              <button onClick={onCta} className="btn-gold btn-sm">{t.example.ctaBtn}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ── PRICING ──────────────────────────── */
+function PricingSection({ t, onCta }: any) {
+  return (
+    <section id="pricing" className="section section-alt">
+      <div className="section-inner">
+        <div className="stag"><span className="stag-line" />{t.pricing.tag}</div>
+        <h2 className="section-h2">{t.pricing.title} <em className="em-gold">{t.pricing.title2}</em></h2>
+        <p className="section-sub">{t.pricing.sub}</p>
+        <div className="plans">
+          {t.pricing.plans.map((plan: any, i: number) => (
+            <div key={i} className={`plan${plan.featured?' plan-featured':''}`}>
+              {plan.featured && <div className="plan-badge">{t.pricing.popular}</div>}
+              <div className="plan-tag">{plan.tag}</div>
+              <div className="plan-name">{plan.name}</div>
+              <div className="plan-price">
+                <span className="plan-amt">{plan.price}</span>
+                <span className="plan-cur">€</span>
+                {plan.per && <span className="plan-per">{plan.per}</span>}
+              </div>
+              <p className="plan-desc">{plan.desc}</p>
+              <div className="plan-line" />
+              <ul className="plan-feats">
+                {plan.features.map((f: string, j: number) => (
+                  <li key={j} className="feat feat-on">
+                    <span className="feat-ico">✓</span>{f}
+                  </li>
+                ))}
+                {plan.missing.map((f: string, j: number) => (
+                  <li key={j} className="feat feat-off">
+                    <span className="feat-ico">–</span>{f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => onCta(plan.key)}
+                className={
+                  plan.style === 'primary' ? 'btn-gold plan-btn'
+                  : plan.style === 'secondary' ? 'btn-rose plan-btn'
+                  : plan.style === 'outline' ? 'btn-outline plan-btn'
+                  : 'btn-ghost plan-btn'
+                }
+              >{plan.cta}</button>
+            </div>
+          ))}
+        </div>
+        <p className="pricing-note">{t.pricing.note}</p>
+      </div>
+    </section>
+  )
+}
+
+/* ── FINAL CTA ────────────────────────── */
+function FinalCta({ t, onCta }: any) {
+  return (
+    <section className="section final">
+      <div className="final-stars"><Stars /></div>
+      <div className="final-glow" />
+      <div className="final-inner">
+        <div className="stag stag-center"><span className="stag-line" />{t.finalCta.tag}</div>
+        <h2 className="final-h2">
+          {t.finalCta.title}<br />
+          <em className="em-gold">{t.finalCta.title2}</em>
+        </h2>
+        <p className="final-sub">{t.finalCta.sub}</p>
+        <button onClick={onCta} className="btn-gold btn-xl">
+          {t.finalCta.btn}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+        <p className="final-note">{t.finalCta.note}</p>
+      </div>
+    </section>
+  )
+}
+
+/* ── FOOTER ───────────────────────────── */
+function Footer({ t }: any) {
+  return (
+    <footer className="footer">
+      <div className="footer-inner">
+        <a href="/" className="footer-logo">
+          <HexLogo size={22} />
+          <span className="footer-brand">HexAstra Coach</span>
+        </a>
+        <p className="footer-copy">© {t.footer.copy}</p>
+        <div className="footer-links">
+          {t.footer.links.map((l: any, i: number) => (
+            <a key={i} href={l.href} className="footer-link">{l.label}</a>
+          ))}
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+/* ── PAGE ─────────────────────────────── */
 export default function Page() {
   const router = useRouter()
   const [lang, setLang] = useState<Lang>('fr')
   const t = translations[lang]
-  const goChat = useCallback(() => router.push('/chat'), [router])
+  const goChat  = useCallback(() => router.push('/chat'), [router])
   const goLogin = useCallback(() => router.push('/login'), [router])
 
   const handleUpgrade = useCallback(async (planKey: string) => {
@@ -80,18 +502,15 @@ export default function Page() {
       <style>{CSS}</style>
       <div className="root">
         <Nav t={t} lang={lang} setLang={setLang} onCta={goChat} />
-        <Hero t={t} lang={lang} onCta={goChat} />
+        <Hero t={t} onCta={goChat} />
         <div className="divider" />
         <HowSection t={t} />
         <div className="divider" />
-        <ReceiveSection t={t} />
+        <AnalysisSection t={t} />
         <div className="divider" />
         <ExampleSection t={t} onCta={goLogin} />
         <div className="divider" />
-        <div id="practitioners"><PractitionerSection t={t} onCta={goLogin} /></div>
-        <div className="divider" />
         <PricingSection t={t} onCta={handleUpgrade} />
-        <div className="divider" />
         <FinalCta t={t} onCta={goChat} />
         <Footer t={t} />
       </div>
@@ -99,696 +518,354 @@ export default function Page() {
   )
 }
 
-function Nav({ t, lang, setLang, onCta }: { t: any; lang: Lang; setLang: (l: Lang) => void; onCta: () => void }) {
-  return (
-    <nav className="nav">
-      <a href="/" className="nav-logo">
-        <HexLogo size={34} />
-        <span className="nav-logo-txt">HexAstra <span className="nav-accent">Coach</span></span>
-      </a>
-      <div className="nav-links">
-        <a href="#how" className="nav-link">{t.nav.howItWorks}</a>
-        <a href="#practitioners" className="nav-link">{t.nav.practitioners}</a>
-        <a href="#pricing" className="nav-link">{t.nav.pricing}</a>
-        <button onClick={onCta} className="nav-link nav-link-btn">{t.nav.signIn}</button>
-      </div>
-      <div className="nav-right">
-        <div className="lang-toggle">
-          <button onClick={() => setLang('fr')} className={'lang-btn' + (lang === 'fr' ? ' lang-active' : '')}>FR</button>
-          <button onClick={() => setLang('en')} className={'lang-btn' + (lang === 'en' ? ' lang-active' : '')}>EN</button>
-        </div>
-        <button onClick={onCta} className="btn-primary nav-cta">{t.nav.startReading}</button>
-      </div>
-    </nav>
-  )
-}
-
-function Hero({ t, lang, onCta }: { t: any; lang: Lang; onCta: () => void }) {
-  return (
-    <section className="hero">
-      <div className="hero-bg" />
-      <div className="hero-grid" />
-      <div className="hero-orb" />
-      <div className="hero-left">
-        <div className="eyebrow">
-          <span className="eyebrow-dot" />
-          {t.hero.eyebrow}
-        </div>
-        <h1 className="hero-title">
-          {t.hero.title1}<br />
-          <span className="hero-accent">{t.hero.title2}</span>
-        </h1>
-        <p className="hero-sub">
-          {t.hero.sub1}<br />{t.hero.sub2}<br />{t.hero.sub3}
-        </p>
-        <div className="hero-ctas">
-          <button onClick={onCta} className="btn-primary">
-            {t.hero.cta1} <ArrowIcon />
-          </button>
-          <a href="#how" className="btn-ghost">{t.hero.cta2}</a>
-        </div>
-        <div className="trust-row">
-          <div className="trust-avs">
-            {['S','M','L','A','R'].map((l, i) => (
-              <div key={i} className="trust-av" style={{ marginLeft: i > 0 ? '-7px' : '0' }}>{l}</div>
-            ))}
-          </div>
-          <span className="trust-txt">{t.hero.trust} &middot; {t.hero.trustScore}</span>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function HowSection({ t }: { t: any }) {
-  return (
-    <section id="how" className="section">
-      <div className="section-inner">
-        <STag label={t.how.tag} />
-        <h2 className="section-title">{t.how.title1} <em>{t.how.title2}</em></h2>
-        <p className="section-sub">{t.how.sub}</p>
-        <div className="steps">
-          {[
-            { n: '01', title: t.how.step1title, desc: t.how.step1desc, icon: <CalIcon /> },
-            { n: '02', title: t.how.step2title, desc: t.how.step2desc, icon: <ClockIcon /> },
-            { n: '03', title: t.how.step3title, desc: t.how.step3desc, icon: <DocIcon /> },
-          ].map((s, i) => (
-            <div key={i} className="step-card">
-              <div className="step-top">
-                <div className="step-icon">{s.icon}</div>
-                <div className="step-num">{s.n}</div>
-              </div>
-              <h3 className="step-title">{s.title}</h3>
-              <p className="step-desc">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function ReceiveSection({ t }: { t: any }) {
-  const [active, setActive] = useState<number | null>(null)
-  const cards = [
-    { title: t.receive.card1title, desc: t.receive.card1desc },
-    { title: t.receive.card2title, desc: t.receive.card2desc },
-    { title: t.receive.card3title, desc: t.receive.card3desc },
-    { title: t.receive.card4title, desc: t.receive.card4desc },
-    { title: t.receive.card5title, desc: t.receive.card5desc },
-  ]
-  return (
-    <section className="section bg-deep">
-      <div className="section-inner">
-        <STag label={t.receive.tag} />
-        <h2 className="section-title">{t.receive.title1} <em>{t.receive.title2}</em></h2>
-        <p className="section-sub">{t.receive.sub}</p>
-        <div className="cards-grid">
-          {cards.map((c, i) => (
-            <div
-              key={i}
-              className={'reading-card' + (active === i ? ' reading-card-active' : '')}
-              onClick={() => setActive(active === i ? null : i)}
-            >
-              <div className="card-num">0{i + 1}</div>
-              <div className="card-title">{c.title}</div>
-              <p className="card-desc">{c.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function ExampleSection({ t, onCta }: { t: any; onCta: () => void }) {
-  return (
-    <section className="section">
-      <div className="section-inner">
-        <STag label={t.example.tag} />
-        <h2 className="section-title">{t.example.title1} <em>{t.example.title2}</em></h2>
-        <p className="section-sub">{t.example.sub}</p>
-        <div className="ex-card">
-          <div className="ex-header">
-            <div className="ex-header-left">
-              <div className="ex-av"><HexLogo size={36} /></div>
-              <div>
-                <div className="ex-name">{t.example.name}</div>
-                <div className="ex-date">{t.example.date}</div>
-              </div>
-            </div>
-            <div className="ex-badge">{t.example.badge}</div>
-          </div>
-          <div className="ex-body">
-            {[
-              { tag: t.example.block1tag, title: t.example.block1title, txt: t.example.block1txt },
-              { tag: t.example.block2tag, title: t.example.block2title, txt: t.example.block2txt },
-              { tag: t.example.block3tag, title: t.example.block3title, txt: t.example.block3txt },
-            ].map((b, i) => (
-              <div key={i}>
-                <div className="ex-block">
-                  <div className="ex-block-tag">{b.tag}</div>
-                  <div className="ex-block-title">{b.title}</div>
-                  <p className="ex-block-txt">{b.txt}</p>
-                </div>
-                {i < 2 && <div className="ex-divider" />}
-              </div>
-            ))}
-            <div className="ex-divider" />
-            <div className="ex-cta-row">
-              <p className="ex-cta-note">{t.example.ctaNote}</p>
-              <button onClick={onCta} className="btn-primary btn-sm">{t.example.ctaBtn}</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function PractitionerSection({ t, onCta }: { t: any; onCta: () => void }) {
-  return (
-    <section className="section bg-deep">
-      <div className="section-inner">
-        <STag label={t.practitioners.tag} />
-        <h2 className="section-title">{t.practitioners.title1} <em>{t.practitioners.title2}</em></h2>
-        <p className="section-sub">{t.practitioners.sub}</p>
-        <div className="prac-tags">
-          {t.practitioners.profiles.map((p, i) => <span key={i} className="prac-tag">{p}</span>)}
-        </div>
-        <div className="prac-grid">
-          <div className="prac-left">
-            <p className="prac-txt">{t.practitioners.explain1}</p>
-            <p className="prac-txt">{t.practitioners.explain2}</p>
-            <div className="prac-pos">
-              <div className="prac-pos-tag">{t.practitioners.posTag}</div>
-              <div className="prac-pos-title">{t.practitioners.posTitle}</div>
-              <p className="prac-pos-txt">{t.practitioners.posTxt1}</p>
-              <p className="prac-pos-txt" style={{ marginTop: '8px', fontStyle: 'italic', opacity: 0.75 }}>{t.practitioners.posTxt2}</p>
-            </div>
-          </div>
-          <div className="prac-benefits">
-            {[
-              { title: t.practitioners.b1title, desc: t.practitioners.b1desc },
-              { title: t.practitioners.b2title, desc: t.practitioners.b2desc },
-              { title: t.practitioners.b3title, desc: t.practitioners.b3desc },
-              { title: t.practitioners.b4title, desc: t.practitioners.b4desc },
-            ].map((b, i) => (
-              <div key={i} className="benefit-card">
-                <div className="benefit-title">{b.title}</div>
-                <p className="benefit-desc">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="use-cases">
-          <div className="use-case-tag">{t.practitioners.useCaseTag}</div>
-          <div className="use-case-row">
-            {t.practitioners.useCases.map((u, i) => (
-              <div key={i} className="use-case-item">
-                <span className="use-case-dot" />{u}
-              </div>
-            ))}
-          </div>
-        </div>
-        <button onClick={onCta} className="btn-secondary prac-cta">{t.practitioners.cta}</button>
-      </div>
-    </section>
-  )
-}
-
-function PricingSection({ t, onCta }: { t: any; onCta: (key: string) => void }) {
-  const plans = t.pricing.plans as Array<{
-    key: string; tag: string; name: string; price: string; per: string;
-    desc: string; features: { t: string; ok: boolean }[];
-    cta: string; style: string; featured?: boolean;
-  }>
-  return (
-    <section id="pricing" className="section">
-      <div className="section-inner">
-        <STag label={t.pricing.tag} />
-        <h2 className="section-title">{t.pricing.title1} <em>{t.pricing.title2}</em> {t.pricing.title3}</h2>
-        <p className="section-sub">{t.pricing.sub}</p>
-        <div className="pricing-grid">
-          {plans.map((plan, i) => (
-            <div key={i} className={'plan-card' + (plan.featured ? ' plan-featured' : '')}>
-              {plan.featured && <div className="plan-badge">{t.pricing.mostPopular}</div>}
-              <div className="plan-tag">{plan.tag}</div>
-              <div className="plan-name">{plan.name}</div>
-              <div className="plan-price-row">
-                <span className="plan-amt">{plan.price}</span>
-                <span className="plan-cur">EUR</span>
-                {plan.per && <span className="plan-per">{plan.per}</span>}
-              </div>
-              <p className="plan-desc">{plan.desc}</p>
-              <div className="plan-divider" />
-              <ul className="plan-features">
-                {plan.features.map((f, j) => (
-                  <li key={j} className={'plan-feature' + (!f.ok ? ' plan-feature-off' : '')}>
-                    <span className={f.ok ? 'feat-check' : 'feat-cross'}>{f.ok ? 'v' : 'x'}</span>
-                    {f.t}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => onCta(plan.key)}
-                className={
-                  plan.style === 'primary' ? 'btn-primary plan-btn'
-                  : plan.style === 'secondary' ? 'btn-secondary plan-btn'
-                  : plan.style === 'outline' ? 'btn-outline plan-btn'
-                  : 'btn-ghost plan-btn'
-                }
-              >{plan.cta}</button>
-            </div>
-          ))}
-        </div>
-        <p className="pricing-note">{t.pricing.note}</p>
-      </div>
-    </section>
-  )
-}
-
-function FinalCta({ t, onCta }: { t: any; onCta: () => void }) {
-  return (
-    <section className="section final-cta">
-      <div className="final-glow" />
-      <div className="final-inner">
-        <STag label={t.finalCta.tag} centered />
-        <h2 className="final-title">
-          {t.finalCta.title1} <em>{t.finalCta.title2}</em><br />{t.finalCta.title3}
-        </h2>
-        <p className="final-sub">{t.finalCta.sub}</p>
-        <button onClick={onCta} className="btn-primary btn-lg">
-          {t.finalCta.btn} <ArrowIcon />
-        </button>
-        <p className="final-note">{t.finalCta.note}</p>
-      </div>
-    </section>
-  )
-}
-
-function Footer({ t }: { t: any }) {
-  return (
-    <footer className="footer">
-      <div className="footer-inner">
-        <a href="/" className="footer-logo">
-          <HexLogo size={26} />
-          <span className="footer-logo-txt">HexAstra Coach</span>
-        </a>
-        <p className="footer-copy">&copy; {t.footer.copy}</p>
-        <div className="footer-links">
-          {t.footer.links.map((l, i) => (
-            <a key={i} href={l.href} className="footer-link">{l.label}</a>
-          ))}
-        </div>
-      </div>
-    </footer>
-  )
-}
-
-function STag({ label, centered }: { label: string; centered?: boolean }) {
-  return (
-    <div className="section-tag" style={centered ? { justifyContent: 'center' } : {}}>
-      <span className="section-tag-line" />{label}
-    </div>
-  )
-}
-function ArrowIcon() { return <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg> }
-function CalIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> }
-function ClockIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg> }
-function DocIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg> }
-
+/* ════════════════════════════════════════
+   CSS — HEXASTRA · SPECS DOC PALETTE
+   Fond #1C1412 · Or #E7C27D · Rose #CFA7A0
+   Text #F5EFEA · Playfair Display + Inter
+   ════════════════════════════════════════ */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
 :root {
-  --bg:       #2C1A14;
-  --bg2:      #241610;
-  --bg3:      #1E1109;
-  --panel:    #3A2218;
-  --panel2:   #452A1E;
-  --gold:     #C6A769;
-  --gold2:    #D4B87A;
-  --gold3:    #E8D4A8;
-  --goldDim:  rgba(198,167,105,0.10);
-  --goldLine: rgba(198,167,105,0.18);
-  --goldGlow: rgba(198,167,105,0.08);
-  --cream:    #F5F3EF;
-  --cream2:   #D6CFC4;
-  --cream3:   #9A9189;
-  --void:     #150D09;
-  --f-display: 'Cormorant Garamond', Georgia, serif;
-  --f-body:    'DM Sans', system-ui, sans-serif;
-  --f-mono:    'DM Mono', monospace;
-  --expo: cubic-bezier(0.16,1,0.3,1);
+  --bg:       #1C1412;
+  --bg2:      #161010;
+  --bg3:      #120e0c;
+  --panel:    #231816;
+  --panel2:   #2c1e1b;
+  --rose:     #CFA7A0;
+  --gold:     #E7C27D;
+  --gold2:    #f0d090;
+  --goldDim:  rgba(231,194,125,0.10);
+  --goldLine: rgba(231,194,125,0.16);
+  --roseDim:  rgba(207,167,160,0.12);
+  --roseLine: rgba(207,167,160,0.22);
+  --text:     #F5EFEA;
+  --text2:    #C8BDB8;
+  --text3:    #8A7D78;
+  --f-title:  'Playfair Display', Georgia, serif;
+  --f-body:   'Inter', system-ui, sans-serif;
+  --f-mono:   'DM Mono', monospace;
+  --expo:     cubic-bezier(0.16,1,0.3,1);
 }
 
-@keyframes fadeUp  { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
-@keyframes glow    { 0%,100%{opacity:.35;transform:translateY(-50%) scale(1)} 50%{opacity:.65;transform:translateY(-50%) scale(1.1)} }
-@keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.35} }
-@keyframes shimmer { from{background-position:-200% center} to{background-position:200% center} }
+@keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes twinkle  { 0%,100%{opacity:.15} 50%{opacity:.55} }
+@keyframes breathe  { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.12);opacity:.8} }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.3} }
+@keyframes shimmer  { from{background-position:200% center} to{background-position:-200% center} }
 
-/* ── BASE ─────────────────────────────────── */
-.root{background:var(--bg);color:var(--cream);font-family:var(--f-body);overflow-x:hidden;min-height:100vh}
-.bg-deep{background:var(--bg2)}
-.divider{height:1px;background:linear-gradient(90deg,transparent,var(--goldLine),transparent);margin:0 48px}
+/* ── BASE ─────────────────────────────── */
+.root { background:var(--bg); color:var(--text); font-family:var(--f-body); overflow-x:hidden; min-height:100vh; }
+.divider { height:1px; background:linear-gradient(90deg,transparent,var(--goldLine),transparent); margin:0 56px; }
 
-/* ── NAV ──────────────────────────────────── */
-.nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 52px;
-  background:rgba(44,26,20,0.92);
-  backdrop-filter:blur(28px);
-  -webkit-backdrop-filter:blur(28px);
-  border-bottom:1px solid var(--goldLine);
-  transition:background 0.3s;
-}
-.nav-logo{display:flex;align-items:center;gap:11px;text-decoration:none}
-.nav-logo-txt{font-family:var(--f-display);font-size:21px;font-weight:400;letter-spacing:0.05em;color:var(--cream)}
-.nav-accent{font-style:italic;color:var(--gold)}
-.nav-links{display:flex;align-items:center;gap:32px}
-.nav-link{font-family:var(--f-body);font-size:13px;font-weight:400;color:var(--cream3);text-decoration:none;letter-spacing:0.03em;transition:color 0.2s;background:none;border:none;cursor:pointer;padding:0}
-.nav-link:hover{color:var(--gold)}
-.nav-link-btn{font-family:var(--f-body);font-size:13px}
-.nav-right{display:flex;align-items:center;gap:12px}
-.lang-toggle{display:flex;background:var(--panel);border:1px solid var(--goldLine);border-radius:6px;overflow:hidden}
-.lang-btn{padding:5px 12px;font-family:var(--f-mono);font-size:10px;letter-spacing:0.12em;color:var(--cream3);background:transparent;border:none;cursor:pointer;transition:background 0.2s,color 0.2s}
-.lang-active{background:var(--gold)!important;color:var(--void)!important;font-weight:600}
-.nav-cta{font-size:13px!important;padding:9px 20px!important}
+/* ── STARS ────────────────────────────── */
+.stars-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.star { animation:twinkle var(--d,3s) ease-in-out infinite; }
 
-/* ── BUTTONS ──────────────────────────────── */
-.btn-primary{
-  padding:13px 28px;
-  background:var(--gold);color:var(--void);
-  font-family:var(--f-body);font-size:14px;font-weight:600;letter-spacing:0.03em;
-  border:none;border-radius:4px;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;
-  box-shadow:0 6px 28px rgba(198,167,105,0.32);
-  transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
-  white-space:nowrap;text-decoration:none;
+/* ── NAV ──────────────────────────────── */
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 56px;
+  transition:background 0.4s, box-shadow 0.4s, backdrop-filter 0.4s;
 }
-.btn-primary:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 10px 36px rgba(198,167,105,0.42)}
+.nav-scrolled {
+  background:rgba(28,20,18,0.88);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  box-shadow:0 1px 0 var(--goldLine);
+}
+.nav-logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+.nav-brand { font-family:var(--f-title); font-size:19px; font-weight:400; color:var(--text); letter-spacing:0.02em; }
+.nav-brand em { font-style:italic; color:var(--gold); }
+.nav-links { display:flex; align-items:center; gap:30px; }
+.nav-link { font-family:var(--f-body); font-size:13.5px; font-weight:400; color:var(--text3); text-decoration:none; letter-spacing:0.02em; background:none; border:none; cursor:pointer; transition:color 0.2s; }
+.nav-link:hover { color:var(--rose); }
+.nav-right { display:flex; align-items:center; gap:14px; }
+.lang-sw { display:flex; background:rgba(255,255,255,0.05); border:1px solid var(--goldLine); border-radius:6px; overflow:hidden; }
+.lang-btn { padding:5px 11px; font-family:var(--f-mono); font-size:10px; letter-spacing:0.12em; color:var(--text3); background:transparent; border:none; cursor:pointer; transition:all 0.2s; }
+.lang-on { background:var(--gold) !important; color:var(--bg) !important; font-weight:600; }
+.nav-cta { font-size:13px !important; padding:9px 20px !important; }
 
-.btn-secondary{
-  padding:13px 28px;
-  background:var(--goldDim);color:var(--gold);
-  font-family:var(--f-body);font-size:14px;font-weight:500;
-  border:1px solid var(--goldLine);border-radius:4px;cursor:pointer;
-  transition:background 0.2s,border-color 0.2s;white-space:nowrap;
+/* ── BUTTONS ──────────────────────────── */
+.btn-gold {
+  padding:13px 28px; background:var(--gold); color:var(--bg);
+  font-family:var(--f-body); font-size:14px; font-weight:600; letter-spacing:0.02em;
+  border:none; border-radius:50px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:8px;
+  box-shadow:0 6px 32px rgba(231,194,125,0.30);
+  transition:background 0.22s, transform 0.18s, box-shadow 0.22s;
+  white-space:nowrap; text-decoration:none;
 }
-.btn-secondary:hover{background:rgba(198,167,105,0.16);border-color:rgba(198,167,105,0.35)}
+.btn-gold:hover { background:var(--gold2); transform:translateY(-2px); box-shadow:0 12px 40px rgba(231,194,125,0.42); }
+.btn-rose {
+  padding:13px 28px; background:var(--roseDim); color:var(--rose);
+  font-family:var(--f-body); font-size:14px; font-weight:500;
+  border:1px solid var(--roseLine); border-radius:50px; cursor:pointer;
+  transition:background 0.22s; white-space:nowrap;
+}
+.btn-rose:hover { background:rgba(207,167,160,0.2); }
+.btn-ghost {
+  padding:13px 26px; background:transparent; color:var(--text2);
+  font-family:var(--f-body); font-size:14px; font-weight:400;
+  border:1px solid rgba(245,239,234,0.16); border-radius:50px; cursor:pointer;
+  transition:all 0.22s; white-space:nowrap; display:inline-flex; align-items:center;
+}
+.btn-ghost:hover { border-color:rgba(245,239,234,0.36); color:var(--text); }
+.btn-outline {
+  padding:13px 26px; background:transparent; color:var(--text2);
+  font-family:var(--f-body); font-size:14px;
+  border:1px solid var(--goldLine); border-radius:50px; cursor:pointer;
+  transition:all 0.22s; white-space:nowrap;
+}
+.btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+.btn-sm  { font-size:13px !important; padding:9px 20px !important; }
+.btn-lg  { font-size:15px !important; padding:15px 34px !important; }
+.btn-xl  { font-size:16px !important; padding:17px 42px !important; }
 
-.btn-ghost{
-  padding:13px 26px;
-  background:transparent;color:var(--cream2);
-  font-family:var(--f-body);font-size:14px;font-weight:400;
-  border:1px solid rgba(245,243,239,0.18);border-radius:4px;cursor:pointer;
-  transition:border-color 0.2s,color 0.2s;white-space:nowrap;
-  text-decoration:none;display:inline-flex;align-items:center;
+/* ── HERO ─────────────────────────────── */
+.hero {
+  min-height:100vh; display:flex; align-items:center;
+  padding:130px 56px 100px; position:relative; overflow:hidden;
 }
-.btn-ghost:hover{border-color:rgba(245,243,239,0.38);color:var(--cream)}
+.hero-stars { position:absolute; inset:0; overflow:hidden; }
+.hero-glow {
+  position:absolute; top:30%; left:50%; transform:translate(-50%,-50%);
+  width:700px; height:500px; border-radius:50%;
+  background:radial-gradient(ellipse, rgba(231,194,125,0.08) 0%, rgba(207,167,160,0.04) 40%, transparent 70%);
+  pointer-events:none; animation:breathe 9s ease-in-out infinite;
+}
+.hero-content {
+  position:relative; z-index:1; max-width:700px;
+  display:flex; flex-direction:column; gap:28px;
+  animation:fadeUp 0.8s var(--expo) both;
+}
+.eyebrow {
+  display:flex; align-items:center; gap:9px;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:0.22em;
+  text-transform:uppercase; color:var(--rose); opacity:0.9;
+}
+.eyebrow-dot { width:5px; height:5px; border-radius:50%; background:var(--rose); animation:pulse 2.4s ease infinite; flex-shrink:0; }
+.hero-h1 {
+  display:flex; flex-direction:column; gap:4px;
+}
+.h1-line1 {
+  font-family:var(--f-title); font-size:clamp(42px,5.5vw,78px);
+  font-weight:400; line-height:1.08; color:var(--text); letter-spacing:-0.01em;
+}
+.h1-line2 {
+  font-family:var(--f-title); font-size:clamp(48px,6.5vw,92px);
+  font-weight:700; font-style:italic; line-height:1.0; color:var(--gold); letter-spacing:-0.02em;
+}
+.h1-line3 {
+  font-family:var(--f-title); font-size:clamp(22px,2.6vw,38px);
+  font-weight:400; font-style:italic; line-height:1.3; color:var(--rose); letter-spacing:0em;
+  margin-top:6px;
+}
+.hero-sub { font-family:var(--f-body); font-size:18px; font-weight:300; line-height:1.85; color:var(--text2); max-width:520px; }
+.hero-actions { display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+.hero-trust { display:flex; align-items:center; gap:12px; }
+.trust-avatars { display:flex; align-items:center; }
+.av {
+  width:28px; height:28px; border-radius:50%;
+  background:linear-gradient(135deg, var(--panel2), var(--rose));
+  border:2px solid var(--bg); display:flex; align-items:center; justify-content:center;
+  font-family:var(--f-mono); font-size:9px; font-weight:600; color:var(--text); flex-shrink:0;
+}
+.trust-text { font-family:var(--f-body); font-size:12.5px; color:var(--text3); }
 
-.btn-outline{
-  padding:13px 26px;background:transparent;color:var(--cream2);
-  font-family:var(--f-body);font-size:14px;
-  border:1px solid var(--goldLine);border-radius:4px;cursor:pointer;
-  transition:border-color 0.2s,color 0.2s;white-space:nowrap;
+/* ── SECTIONS ─────────────────────────── */
+.section { padding:100px 56px; position:relative; }
+.section-alt { background:rgba(0,0,0,0.18); }
+.section-inner { max-width:1100px; margin:0 auto; }
+.stag {
+  display:flex; align-items:center; gap:10px;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:0.24em;
+  text-transform:uppercase; color:var(--rose); margin-bottom:20px;
 }
-.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.stag-center { justify-content:center; }
+.stag-line { width:26px; height:1px; background:var(--rose); opacity:0.5; flex-shrink:0; }
+.section-h2 {
+  font-family:var(--f-title); font-size:clamp(32px,4vw,54px);
+  font-weight:500; color:var(--text); line-height:1.1; letter-spacing:-0.01em;
+  margin-bottom:16px;
+}
+.section-sub { font-family:var(--f-body); font-size:17px; font-weight:300; color:var(--text2); line-height:1.85; max-width:520px; }
+.em-gold { font-style:italic; color:var(--gold); }
 
-.btn-sm{font-size:13px!important;padding:10px 20px!important}
-.btn-lg{font-size:16px!important;padding:17px 40px!important}
+/* ── HOW STEPS ────────────────────────── */
+.steps { display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin-top:56px; position:relative; }
+.steps::before {
+  content:''; position:absolute; top:28px; left:calc(16.6% + 24px); right:calc(16.6% + 24px);
+  height:1px; background:linear-gradient(90deg, var(--goldLine), var(--goldLine));
+  pointer-events:none;
+}
+.step { padding:0 28px 0 0; display:flex; flex-direction:column; gap:0; }
+.step-num {
+  font-family:var(--f-title); font-size:42px; font-weight:700; font-style:italic;
+  color:var(--goldLine); line-height:1; margin-bottom:20px; position:relative; z-index:1;
+  text-shadow:0 0 30px rgba(231,194,125,0.25);
+}
+.step-body { display:flex; flex-direction:column; gap:12px; }
+.step-connector { display:none; }
+.step-title { font-family:var(--f-title); font-size:20px; font-weight:500; color:var(--text); line-height:1.3; }
+.step-desc { font-family:var(--f-body); font-size:14px; font-weight:300; color:var(--text2); line-height:1.8; }
 
-/* ── HERO ─────────────────────────────────── */
-.hero{
-  min-height:100vh;
-  display:flex;align-items:center;
-  padding:130px 52px 90px;
-  position:relative;overflow:hidden;
-}
-.hero-bg{
-  position:absolute;inset:0;z-index:0;
-  background:
-    radial-gradient(ellipse 70% 55% at 55% 40%, rgba(198,167,105,0.06) 0%, transparent 65%),
-    linear-gradient(160deg, var(--bg3) 0%, var(--bg) 45%, var(--bg2) 100%);
-}
-.hero-grid{
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(198,167,105,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(198,167,105,0.04) 1px, transparent 1px);
-  background-size:80px 80px;
-  mask-image:radial-gradient(ellipse 75% 75% at 50% 50%, black, transparent);
-  -webkit-mask-image:radial-gradient(ellipse 75% 75% at 50% 50%, black, transparent);
-}
-.hero-orb{
-  position:absolute;right:-60px;top:50%;
-  width:650px;height:650px;border-radius:50%;
-  background:radial-gradient(circle, rgba(198,167,105,0.07) 0%, transparent 68%);
-  animation:glow 9s ease-in-out infinite;pointer-events:none;
-}
-.hero-left{
-  position:relative;z-index:1;
-  max-width:620px;
-  display:flex;flex-direction:column;gap:30px;
-  animation:fadeUp 0.75s var(--expo) both;
-}
-.eyebrow{
-  display:flex;align-items:center;gap:9px;
-  font-family:var(--f-mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
-  color:var(--gold);opacity:0.85;
-}
-.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 2s ease infinite;flex-shrink:0}
-
-.hero-title{
-  font-family:var(--f-display);
-  font-size:clamp(58px,6.5vw,96px);
-  font-weight:300;
-  line-height:1.0;
-  letter-spacing:-0.01em;
-  color:var(--cream);
-}
-.hero-accent{
-  display:block;
-  font-style:italic;
-  color:var(--gold);
-}
-.hero-sub{font-family:var(--f-body);font-size:19px;font-weight:300;line-height:1.82;color:var(--cream2)}
-.hero-ctas{display:flex;gap:13px;flex-wrap:wrap;align-items:center}
-.trust-row{display:flex;align-items:center;gap:13px}
-.trust-avs{display:flex;align-items:center}
-.trust-av{
-  width:27px;height:27px;border-radius:50%;
-  background:var(--panel2);border:2px solid var(--bg);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--f-mono);font-size:9px;color:var(--gold);flex-shrink:0;
-}
-.trust-txt{font-family:var(--f-body);font-size:12px;color:var(--cream3)}
-
-/* ── SECTIONS ─────────────────────────────── */
-.section{padding:100px 52px;position:relative}
-.section-inner{max-width:1100px;margin:0 auto}
-.section-tag{
-  display:flex;align-items:center;gap:10px;
-  font-family:var(--f-mono);font-size:10px;letter-spacing:0.22em;
-  color:var(--gold);text-transform:uppercase;margin-bottom:20px;
-}
-.section-tag-line{width:28px;height:1px;background:var(--gold);opacity:0.45;flex-shrink:0}
-.section-title{
-  font-family:var(--f-display);
-  font-size:clamp(34px,4vw,56px);
-  font-weight:300;
-  letter-spacing:-0.01em;
-  color:var(--cream);
-  margin-bottom:16px;line-height:1.08;
-}
-.section-title em{font-style:italic;color:var(--gold)}
-.section-sub{font-family:var(--f-body);font-size:17px;font-weight:300;color:var(--cream2);line-height:1.82;max-width:540px}
-
-/* ── HOW IT WORKS ─────────────────────────── */
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:54px}
-.step-card{
-  padding:38px 34px;background:var(--panel);border:1px solid var(--goldLine);
-  display:flex;flex-direction:column;gap:18px;
-  position:relative;overflow:hidden;
-  transition:background 0.28s,transform 0.28s;
-}
-.step-card::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse 60% 50% at 50% 0%, rgba(198,167,105,0.07), transparent);
-  opacity:0;transition:opacity 0.28s;
-}
-.step-card:hover{background:var(--panel2);transform:translateY(-4px)}
-.step-card:hover::before{opacity:1}
-.step-card:first-child{border-radius:14px 0 0 14px}
-.step-card:last-child{border-radius:0 14px 14px 0}
-.step-top{display:flex;justify-content:space-between;align-items:flex-start}
-.step-icon{
-  width:44px;height:44px;
-  background:var(--goldDim);border:1px solid var(--goldLine);border-radius:10px;
-  display:flex;align-items:center;justify-content:center;color:var(--gold);
-}
-.step-num{font-family:var(--f-display);font-size:64px;font-weight:300;color:rgba(198,167,105,0.13);line-height:1}
-.step-title{font-family:var(--f-display);font-size:22px;font-weight:400;color:var(--cream);letter-spacing:-0.01em}
-.step-desc{font-family:var(--f-body);font-size:14px;font-weight:300;color:var(--cream2);line-height:1.78}
-
-/* ── READING CARDS ────────────────────────── */
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:12px;margin-top:54px}
-.reading-card{
-  padding:26px 22px;background:var(--panel);border:1px solid var(--goldLine);border-radius:13px;
-  display:flex;flex-direction:column;gap:11px;
-  cursor:pointer;position:relative;overflow:hidden;
-  transition:background 0.26s,border-color 0.26s,transform 0.26s;
-}
-.reading-card::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  opacity:0;transition:opacity 0.3s;
-}
-.reading-card:hover,.reading-card-active{background:var(--panel2);border-color:rgba(198,167,105,0.38);transform:translateY(-4px)}
-.reading-card:hover::after,.reading-card-active::after{opacity:1}
-.card-num{font-family:var(--f-display);font-size:30px;font-weight:300;color:rgba(198,167,105,0.35);line-height:1}
-.card-title{font-family:var(--f-display);font-size:18px;font-weight:400;color:var(--cream);letter-spacing:-0.01em}
-.card-desc{font-family:var(--f-body);font-size:13px;font-weight:300;color:var(--cream2);line-height:1.72}
-
-/* ── EXAMPLE READING ──────────────────────── */
-.ex-card{
-  background:var(--panel);border:1px solid var(--goldLine);border-radius:20px;overflow:hidden;
-  max-width:760px;margin:54px auto 0;
-  box-shadow:0 40px 90px rgba(0,0,0,0.45),0 0 0 1px rgba(198,167,105,0.06) inset;
-}
-.ex-header{
-  padding:22px 32px;background:var(--panel2);border-bottom:1px solid var(--goldLine);
-  display:flex;align-items:center;justify-content:space-between;
-}
-.ex-header-left{display:flex;align-items:center;gap:13px}
-.ex-av{
-  width:40px;height:40px;border-radius:50%;
-  border:1px solid var(--goldLine);overflow:hidden;
-  display:flex;align-items:center;justify-content:center;
+/* ── DOMAINS ──────────────────────────── */
+.domains { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:54px; }
+.domain-card {
+  padding:28px 24px;
   background:var(--panel);
+  border:1px solid var(--goldLine);
+  border-radius:20px;
+  display:flex; flex-direction:column; gap:12px;
+  cursor:pointer; position:relative; overflow:hidden;
+  transition:background 0.28s, border-color 0.28s, transform 0.28s, box-shadow 0.28s;
 }
-.ex-name{font-family:var(--f-display);font-size:19px;font-weight:400;color:var(--cream)}
-.ex-date{font-family:var(--f-mono);font-size:10px;color:var(--cream3);letter-spacing:0.1em;margin-top:2px}
-.ex-badge{
-  font-family:var(--f-mono);font-size:9px;letter-spacing:0.14em;
-  color:var(--gold);background:var(--goldDim);border:1px solid var(--goldLine);
-  border-radius:100px;padding:4px 14px;text-transform:uppercase;
+.domain-card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(231,194,125,0.07), transparent);
+  opacity:0; transition:opacity 0.3s;
 }
-.ex-body{padding:34px 32px;display:flex;flex-direction:column;gap:26px}
-.ex-block{display:flex;flex-direction:column;gap:8px}
-.ex-block-tag{font-family:var(--f-mono);font-size:9.5px;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase}
-.ex-block-title{font-family:var(--f-display);font-size:23px;font-weight:400;color:var(--cream);letter-spacing:-0.01em}
-.ex-block-txt{font-family:var(--f-body);font-size:15px;font-weight:300;color:var(--cream2);line-height:1.88;font-style:italic}
-.ex-divider{height:1px;background:var(--goldLine)}
-.ex-cta-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
-.ex-cta-note{font-family:var(--f-body);font-size:13px;color:var(--cream3);font-style:italic}
+.domain-card:hover, .domain-active {
+  background:var(--panel2);
+  border-color:rgba(231,194,125,0.35);
+  transform:translateY(-5px);
+  box-shadow:0 20px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(231,194,125,0.08);
+}
+.domain-card:hover::before, .domain-active::before { opacity:1; }
+.domain-icon { font-size:26px; color:var(--gold); opacity:0.75; line-height:1; }
+.domain-title { font-family:var(--f-title); font-size:18px; font-weight:500; color:var(--text); letter-spacing:-0.01em; }
+.domain-desc { font-family:var(--f-body); font-size:13.5px; font-weight:300; color:var(--text2); line-height:1.75; }
 
-/* ── PRACTITIONERS ────────────────────────── */
-.prac-tags{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 46px}
-.prac-tag{
-  font-family:var(--f-mono);font-size:10px;letter-spacing:0.1em;
-  color:var(--gold);background:var(--goldDim);border:1px solid var(--goldLine);
-  border-radius:100px;padding:5px 16px;text-transform:uppercase;
+/* ── EXAMPLE ──────────────────────────── */
+.ex-card {
+  background:var(--panel);
+  border:1px solid var(--goldLine);
+  border-radius:24px; overflow:hidden;
+  max-width:740px; margin:56px auto 0;
+  box-shadow:0 50px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(231,194,125,0.05) inset;
 }
-.prac-grid{display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:start}
-.prac-left{display:flex;flex-direction:column;gap:18px}
-.prac-txt{font-family:var(--f-body);font-size:16px;font-weight:300;color:var(--cream2);line-height:1.88}
-.prac-pos{background:var(--panel);border:1px solid var(--goldLine);border-radius:13px;padding:24px}
-.prac-pos-tag{font-family:var(--f-mono);font-size:9px;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
-.prac-pos-title{font-family:var(--f-display);font-size:20px;font-weight:400;color:var(--cream);margin-bottom:11px;letter-spacing:-0.01em}
-.prac-pos-txt{font-family:var(--f-body);font-size:14px;font-weight:300;color:var(--cream2);line-height:1.82}
-.prac-benefits{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.benefit-card{
-  background:var(--panel);border:1px solid var(--goldLine);border-radius:11px;padding:20px;
-  transition:background 0.22s,border-color 0.22s;
+.ex-header {
+  padding:22px 32px;
+  background:linear-gradient(135deg, var(--panel2), var(--panel));
+  border-bottom:1px solid var(--goldLine);
+  display:flex; align-items:center; justify-content:space-between;
 }
-.benefit-card:hover{background:var(--panel2);border-color:rgba(198,167,105,0.32)}
-.benefit-title{font-family:var(--f-display);font-size:17px;font-weight:400;color:var(--cream);margin-bottom:7px;letter-spacing:-0.01em}
-.benefit-desc{font-family:var(--f-body);font-size:13px;font-weight:300;color:var(--cream2);line-height:1.68}
-.use-cases{margin-top:36px;background:var(--panel);border:1px solid var(--goldLine);border-radius:13px;padding:22px 28px}
-.use-case-tag{font-family:var(--f-mono);font-size:9px;letter-spacing:0.18em;color:var(--gold);text-transform:uppercase;margin-bottom:15px}
-.use-case-row{display:flex;flex-wrap:wrap;gap:10px}
-.use-case-item{display:flex;align-items:center;gap:8px;font-family:var(--f-body);font-size:14px;color:var(--cream2)}
-.use-case-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
-.prac-cta{margin-top:30px}
+.ex-hl { display:flex; align-items:center; gap:14px; }
+.ex-av {
+  width:42px; height:42px; border-radius:50%;
+  border:1px solid var(--goldLine);
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(231,194,125,0.06);
+}
+.ex-name { font-family:var(--f-title); font-size:19px; font-weight:500; color:var(--text); }
+.ex-date { font-family:var(--f-mono); font-size:10px; color:var(--text3); letter-spacing:0.1em; margin-top:3px; }
+.ex-badge {
+  font-family:var(--f-mono); font-size:9px; letter-spacing:0.14em;
+  color:var(--gold); background:var(--goldDim); border:1px solid var(--goldLine);
+  border-radius:100px; padding:5px 14px; text-transform:uppercase;
+}
+.ex-body { padding:34px 32px; display:flex; flex-direction:column; gap:24px; }
+.ex-block { display:flex; flex-direction:column; gap:8px; }
+.ex-btag { font-family:var(--f-mono); font-size:9.5px; letter-spacing:0.2em; color:var(--rose); text-transform:uppercase; }
+.ex-btitle { font-family:var(--f-title); font-size:22px; font-weight:500; color:var(--text); letter-spacing:-0.01em; }
+.ex-btxt { font-family:var(--f-body); font-size:15px; font-weight:300; color:var(--text2); line-height:1.9; font-style:italic; }
+.ex-sep { height:1px; background:var(--goldLine); }
+.ex-footer { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.ex-note { font-family:var(--f-body); font-size:13px; color:var(--text3); font-style:italic; }
 
-/* ── PRICING ──────────────────────────────── */
-.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:54px;align-items:start}
-.plan-card{
-  background:var(--panel);border:1px solid var(--goldLine);border-radius:15px;padding:28px;
-  position:relative;display:flex;flex-direction:column;
-  transition:transform 0.26s,box-shadow 0.26s;
+/* ── PRICING ──────────────────────────── */
+.plans { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:54px; align-items:start; }
+.plan {
+  background:var(--panel); border:1px solid var(--goldLine); border-radius:22px;
+  padding:28px; position:relative; display:flex; flex-direction:column;
+  transition:transform 0.26s, box-shadow 0.26s;
 }
-.plan-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.35)}
-.plan-featured{
-  border-color:rgba(198,167,105,0.42);background:var(--panel2);
-  box-shadow:0 0 0 1px rgba(198,167,105,0.12),0 28px 70px rgba(0,0,0,0.5);
+.plan:hover { transform:translateY(-4px); box-shadow:0 24px 60px rgba(0,0,0,0.4); }
+.plan-featured {
+  border-color:rgba(231,194,125,0.45);
+  background:linear-gradient(160deg, var(--panel2) 0%, var(--panel) 100%);
+  box-shadow:0 0 0 1px rgba(231,194,125,0.12), 0 30px 70px rgba(0,0,0,0.5);
 }
-.plan-badge{
-  position:absolute;top:-12px;left:50%;transform:translateX(-50%);
-  background:var(--gold);color:var(--void);
-  font-family:var(--f-mono);font-size:9px;letter-spacing:0.12em;
-  padding:4px 16px;border-radius:100px;white-space:nowrap;font-weight:600;
+.plan-badge {
+  position:absolute; top:-13px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:var(--bg);
+  font-family:var(--f-mono); font-size:9px; letter-spacing:0.14em;
+  padding:4px 16px; border-radius:100px; white-space:nowrap; font-weight:600;
 }
-.plan-tag{font-family:var(--f-mono);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--cream3);margin-bottom:9px}
-.plan-name{font-family:var(--f-display);font-size:26px;font-weight:300;color:var(--cream);line-height:1;letter-spacing:-0.01em}
-.plan-price-row{display:flex;align-items:baseline;gap:4px;margin:12px 0 7px}
-.plan-amt{font-family:var(--f-display);font-size:50px;font-weight:300;color:var(--cream);line-height:1}
-.plan-cur{font-family:var(--f-mono);font-size:14px;color:var(--cream2)}
-.plan-per{font-family:var(--f-mono);font-size:10px;color:var(--cream3);letter-spacing:0.06em}
-.plan-desc{font-family:var(--f-body);font-size:13px;font-style:italic;color:var(--cream2);line-height:1.62;margin-bottom:18px}
-.plan-divider{height:1px;background:var(--goldLine);margin:0 0 17px}
-.plan-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:22px;flex:1;padding:0}
-.plan-feature{display:flex;align-items:flex-start;gap:9px;font-family:var(--f-body);font-size:13px;color:var(--cream2);line-height:1.5}
-.plan-feature-off{opacity:0.32}
-.feat-check{color:var(--gold);font-weight:700;flex-shrink:0}
-.feat-cross{color:var(--cream3);flex-shrink:0}
-.plan-btn{width:100%}
-.pricing-note{font-family:var(--f-mono);font-size:10px;color:var(--cream3);text-align:center;letter-spacing:0.1em;margin-top:26px}
+.plan-tag { font-family:var(--f-mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--text3); margin-bottom:10px; }
+.plan-name { font-family:var(--f-title); font-size:26px; font-weight:500; color:var(--text); letter-spacing:-0.01em; }
+.plan-price { display:flex; align-items:baseline; gap:3px; margin:12px 0 7px; }
+.plan-amt { font-family:var(--f-title); font-size:52px; font-weight:700; color:var(--text); line-height:1; }
+.plan-cur { font-family:var(--f-mono); font-size:16px; color:var(--text2); align-self:flex-start; margin-top:10px; }
+.plan-per { font-family:var(--f-mono); font-size:11px; color:var(--text3); letter-spacing:0.06em; }
+.plan-desc { font-family:var(--f-body); font-size:13px; font-style:italic; color:var(--text2); line-height:1.65; margin-bottom:20px; }
+.plan-line { height:1px; background:var(--goldLine); margin-bottom:18px; }
+.plan-feats { list-style:none; display:flex; flex-direction:column; gap:9px; margin-bottom:24px; flex:1; padding:0; }
+.feat { display:flex; align-items:flex-start; gap:9px; font-family:var(--f-body); font-size:13px; line-height:1.5; }
+.feat-on { color:var(--text2); }
+.feat-off { color:var(--text3); opacity:0.4; }
+.feat-ico { font-size:12px; flex-shrink:0; margin-top:1px; }
+.feat-on .feat-ico { color:var(--gold); }
+.plan-btn { width:100%; }
+.pricing-note { font-family:var(--f-mono); font-size:10px; color:var(--text3); text-align:center; letter-spacing:0.1em; margin-top:28px; }
 
-/* ── FINAL CTA ────────────────────────────── */
-.final-cta{text-align:center;overflow:hidden}
-.final-glow{position:absolute;inset:0;background:radial-gradient(ellipse 60% 55% at 50% 50%,rgba(198,167,105,0.07),transparent);pointer-events:none}
-.final-inner{position:relative;z-index:1;max-width:620px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:24px}
-.final-title{
-  font-family:var(--f-display);font-size:clamp(36px,4.5vw,62px);font-weight:300;
-  color:var(--cream);line-height:1.06;letter-spacing:-0.01em;
+/* ── FINAL CTA ────────────────────────── */
+.final { text-align:center; overflow:hidden; padding:120px 56px; }
+.final-stars { position:absolute; inset:0; overflow:hidden; }
+.final-glow {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:800px; height:400px; border-radius:50%;
+  background:radial-gradient(ellipse, rgba(231,194,125,0.09) 0%, rgba(207,167,160,0.05) 50%, transparent 70%);
+  pointer-events:none;
 }
-.final-title em{font-style:italic;color:var(--gold)}
-.final-sub{font-family:var(--f-body);font-size:17px;font-weight:300;color:var(--cream2);line-height:1.78}
-.final-note{font-family:var(--f-mono);font-size:10px;color:var(--cream3);letter-spacing:0.1em}
+.final-inner {
+  position:relative; z-index:1;
+  max-width:640px; margin:0 auto;
+  display:flex; flex-direction:column; align-items:center; gap:24px;
+}
+.final-h2 {
+  font-family:var(--f-title); font-size:clamp(36px,5vw,64px);
+  font-weight:500; color:var(--text); line-height:1.08; letter-spacing:-0.01em;
+}
+.final-sub { font-family:var(--f-body); font-size:18px; font-weight:300; color:var(--text2); line-height:1.8; }
+.final-note { font-family:var(--f-mono); font-size:10px; color:var(--text3); letter-spacing:0.1em; }
 
-/* ── FOOTER ───────────────────────────────── */
-.footer{border-top:1px solid var(--goldLine);background:var(--void);padding:30px 52px}
-.footer-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-.footer-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.footer-logo-txt{font-family:var(--f-display);font-size:17px;font-weight:400;letter-spacing:0.05em;color:var(--cream)}
-.footer-copy{font-family:var(--f-mono);font-size:10px;letter-spacing:0.1em;color:var(--cream3)}
-.footer-links{display:flex;gap:22px}
-.footer-link{font-family:var(--f-body);font-size:12px;color:var(--cream3);text-decoration:none;transition:color 0.2s}
-.footer-link:hover{color:var(--gold)}
+/* ── FOOTER ───────────────────────────── */
+.footer { border-top:1px solid var(--goldLine); background:var(--bg3); padding:30px 56px; }
+.footer-inner { max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+.footer-logo { display:flex; align-items:center; gap:9px; text-decoration:none; }
+.footer-brand { font-family:var(--f-title); font-size:16px; font-weight:400; color:var(--text2); }
+.footer-copy { font-family:var(--f-mono); font-size:10px; color:var(--text3); letter-spacing:0.1em; }
+.footer-links { display:flex; gap:22px; }
+.footer-link { font-family:var(--f-body); font-size:12.5px; color:var(--text3); text-decoration:none; transition:color 0.2s; }
+.footer-link:hover { color:var(--rose); }
 
-/* ── RESPONSIVE ───────────────────────────── */
-@media(max-width:1100px){.pricing-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:900px){
-  .nav{padding:14px 20px}
-  .nav-links{display:none}
-  .hero{padding:100px 20px 64px;min-height:auto}
-  .hero-left{gap:22px}
-  .hero-title{font-size:clamp(46px,10vw,72px)}
-  .steps{grid-template-columns:1fr}
-  .step-card:first-child{border-radius:14px 14px 0 0}
-  .step-card:last-child{border-radius:0 0 14px 14px}
-  .prac-grid{grid-template-columns:1fr}
-  .prac-benefits{grid-template-columns:1fr 1fr}
-  .pricing-grid{grid-template-columns:1fr}
-  .section{padding:68px 20px}
-  .divider{margin:0 20px}
-  .footer{padding:24px 20px}
+/* ── RESPONSIVE ───────────────────────── */
+@media(max-width:1100px) {
+  .plans { grid-template-columns:repeat(2,1fr); }
+}
+@media(max-width:900px) {
+  .nav { padding:14px 20px; }
+  .nav-links { display:none; }
+  .hero { padding:100px 22px 70px; }
+  .hero-content { gap:22px; }
+  .section { padding:70px 22px; }
+  .steps { grid-template-columns:1fr; gap:32px; }
+  .steps::before { display:none; }
+  .step { padding:0; }
+  .domains { grid-template-columns:1fr 1fr; }
+  .plans { grid-template-columns:1fr; }
+  .divider { margin:0 22px; }
+  .footer { padding:24px 22px; }
+  .final { padding:80px 22px; }
+}
+@media(max-width:500px) {
+  .domains { grid-template-columns:1fr; }
+  .h1-line2 { font-size:clamp(42px,13vw,72px); }
 }
 `
