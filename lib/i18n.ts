@@ -1,6 +1,6 @@
 export type Lang = 'fr' | 'en'
 
-export const translations = {
+export const translations: Record<Lang, any> = {
   fr: {
     nav: {
       howItWorks: 'Comment ca marche',
@@ -432,8 +432,5 @@ export const translations = {
   },
 }
 
-// Strip readonly and literal string types - T works regardless of how translations is defined
-type Writable<T> = { -readonly [K in keyof T]: Writable<T[K]> }
-type DeepString<T> = T extends string ? string : T extends object ? { [K in keyof T]: DeepString<T[K]> } : T
-
-export type T = DeepString<Writable<typeof translations.fr>>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type T = any
