@@ -120,7 +120,7 @@ export default function ChatPage() {
       <aside className="sidebar">
         <div className="sb-top">
           <a href="/" className="sb-logo">
-            <HexLogo size={44} />
+            <HexLogo size={80} />
             <span className="sb-name">HexAstra <em>Coach</em></span>
           </a>
         </div>
@@ -178,7 +178,7 @@ export default function ChatPage() {
             <div key={m.id} className={`msg-row ${m.role === 'user' ? 'msg-user' : 'msg-ai'}`}
               style={{ animationDelay: `${i * 0.03}s` }}>
               {m.role === 'assistant' && (
-                <div className="msg-av"><HexLogo size={18} /></div>
+                <div className="msg-av"><HexLogo size={28} /></div>
               )}
               <div className="msg-bubble">
                 {m.content.split('\n').map((line, j) => (
@@ -193,7 +193,7 @@ export default function ChatPage() {
 
           {loading && (
             <div className="msg-row msg-ai">
-              <div className="msg-av"><HexLogo size={18} /></div>
+              <div className="msg-av"><HexLogo size={28} /></div>
               <div className="msg-bubble msg-typing">
                 <span /><span /><span />
               </div>
@@ -246,7 +246,7 @@ button{border:none;cursor:pointer;background:none}
 
 /* SIDEBAR */
 .sidebar{width:220px;min-width:220px;height:100dvh;background:#14100C;border-right:1px solid rgba(198,163,95,0.18);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.sb-top{padding:16px 14px;border-bottom:1px solid rgba(198,163,95,0.12)}
+.sb-top{padding:14px 16px 16px;border-bottom:1px solid rgba(198,163,95,0.12)}
 .sb-logo{display:flex;align-items:center;gap:10px}
 .sb-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:400;color:#F3EFEA}
 .sb-name em{font-style:italic;color:#C6A35F}
@@ -286,7 +286,7 @@ button{border:none;cursor:pointer;background:none}
 .msg-row{display:flex;align-items:flex-end;gap:10px;animation:fadeUp .32s cubic-bezier(0.16,1,0.3,1) both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .msg-user{flex-direction:row-reverse}
-.msg-av{width:28px;height:28px;border-radius:50%;border:1px solid rgba(198,163,95,0.25);background:rgba(198,163,95,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.msg-av{width:36px;height:36px;border-radius:50%;border:1px solid rgba(198,163,95,0.25);background:rgba(198,163,95,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .msg-bubble{font-family:'Inter',sans-serif;font-size:14px;font-weight:300;line-height:1.75;padding:12px 16px;border-radius:16px;max-width:min(68ch,75%);position:relative}
 .msg-ai .msg-bubble{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(243,239,234,0.82);border-radius:16px 16px 16px 4px}
 .msg-user .msg-bubble{background:rgba(198,163,95,0.12);border:1px solid rgba(198,163,95,0.22);color:#F3EFEA;border-radius:16px 16px 4px 16px}
