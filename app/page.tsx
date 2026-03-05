@@ -227,7 +227,7 @@ function HexLogo({ size = 28 }: { size?: number; color?: string }) {
       src="/navbar/hexastra-navbar.png"
       alt="HexAstra"
       height={size}
-      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain' }}
+      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain', mixBlendMode: 'lighten' }}
     />
   )
 }
