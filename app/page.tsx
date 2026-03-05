@@ -224,10 +224,9 @@ const PRICE_KEYS: Record<string, string> = {
 function HexLogo({ size = 28 }: { size?: number; color?: string }) {
   return (
     <img
-      src="/navbar/hexastra-navbar.png"
+      src="/logo/hexastra-logo-1024.png"
       alt="HexAstra"
-      height={size}
-      style={{ width: 'auto', height: size, display: 'block', objectFit: 'contain', mixBlendMode: 'lighten' }}
+      style={{ width: size, height: size, display: 'block', objectFit: 'cover', borderRadius: '6px', mixBlendMode: 'lighten' as any }}
     />
   )
 }
