@@ -10,8 +10,10 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() { return request.cookies.getAll() },
-        setAll(cookiesToSet: { name: string; value: string; options?: object }[]) {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value)
             response = NextResponse.next({ request })
@@ -22,24 +24,22 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // Vérifie si l'utilisateur est connecté
   const { data: { user } } = await supabase.auth.getUser()
 
-  const protectedPaths = ['/chat', '/library', '/reading']
-  const isProtected = protectedPaths.some(p => request.nextUrl.pathname.startsWith(p))
+  // Pages protégées : redirige vers /login si pas connecté
+  // /chat retiré — accès libre sans connexion (mode gratuit)
+  const protectedPaths = ['/library', '/reading', '/dashboard', '/profile', '/analysis']
+  const isProtected = protectedPaths.some(p =>
+    request.nextUrl.pathname.startsWith(p)
+  )
 
-  // Redirect to login if accessing protected page without auth
   if (isProtected && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect logged-in users away from login to app
+  // Si déjà connecté et sur /login, redirige vers /chat
   if (request.nextUrl.pathname === '/login' && user) {
-    return NextResponse.redirect(new URL('/chat', request.url))
-  }
-
-  // Homepage: show landing page (not redirect)
-  // Logged-in users visiting "/" go straight to /chat
-  if (request.nextUrl.pathname === '/' && user) {
     return NextResponse.redirect(new URL('/chat', request.url))
   }
 
@@ -47,5 +47,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/stripe/webhook|logo).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|api/stripe/webhook).*)',
+  ],
 }
