@@ -86,6 +86,19 @@ const T: Record<string, any> = {
         { key: 'praticien', tag: 'Pro', name: 'Praticien', price: '49', per: '/mois', desc: 'Pour les coachs et thérapeutes.', features: ['Accès complet', 'Usage en séance', 'Droits pro', 'PDF + Audio', 'Support dédié'], missing: [], cta: 'Démarrer Praticien', style: 'outline' },
       ],
     },
+    useCases: {
+      tag: 'Cas d'usage',
+      title: 'Qui utilise HexAstra ?',
+      sub: 'Des profils très différents, une même recherche de clarté.',
+      cases: [
+        { icon: '◎', title: 'En transition professionnelle', desc: 'Vous hésitez entre deux directions. HexAstra vous aide à voir laquelle correspond à votre énergie actuelle.' },
+        { icon: '♡', title: 'Dans une période relationnelle complexe', desc: 'Séparation, relation confuse, décision difficile. Comprendre les dynamiques en jeu avant d'agir.' },
+        { icon: '⊕', title: 'Manque d'énergie ou de direction', desc: 'Vous avancez mais sans élan. HexAstra identifie ce qui bloque et ce qui peut relancer le mouvement.' },
+        { icon: '◈', title: 'Prise de décision importante', desc: 'Déménagement, projet, changement. Voir si le timing et votre énergie sont alignés avec ce que vous envisagez.' },
+        { icon: '◉', title: 'Praticiens et coachs', desc: 'Un outil puissant pour enrichir les séances, identifier les cycles d'un client et structurer l'accompagnement.' },
+        { icon: '✦', title: 'Curiosité et exploration personnelle', desc: 'Vous voulez simplement mieux vous comprendre. Vos cycles, vos forces, vos périodes de recharge.' },
+      ],
+    },
     cta: {
       tag: 'Prêt à commencer ?',
       title: 'Commencer votre analyse',
@@ -172,6 +185,19 @@ const T: Record<string, any> = {
         { key: 'essentiel', tag: 'Essential', name: 'Essential', price: '9', per: '/mo', desc: 'The fundamentals to move forward.', features: ['3 full analyses / day', 'Detailed analyses', 'PDF export', '30 analysis history'], missing: ['Audio', 'Client usage'], cta: 'Start Essential', style: 'secondary' },
         { key: 'premium', tag: 'Premium', name: 'Premium', price: '19', per: '/mo', desc: 'Your full personal reading, as deep as you want.', features: ['Unlimited analyses', '6-page analysis', '7-day arc', 'PDF + Audio 7 min', 'Priority support'], missing: [], cta: 'Start Premium', style: 'primary', featured: true },
         { key: 'praticien', tag: 'Pro', name: 'Practitioner', price: '49', per: '/mo', desc: 'For coaches and therapists.', features: ['Full access', 'Client session use', 'Pro rights', 'PDF + Audio', 'Dedicated support'], missing: [], cta: 'Start Practitioner', style: 'outline' },
+      ],
+    },
+    useCases: {
+      tag: 'Use cases',
+      title: 'Who uses HexAstra?',
+      sub: 'Very different profiles, one shared need for clarity.',
+      cases: [
+        { icon: '◎', title: 'In professional transition', desc: 'Choosing between two paths. HexAstra helps you see which aligns with your current energy.' },
+        { icon: '♡', title: 'In a complex relational period', desc: 'Separation, confusing relationship, difficult decision. Understanding the dynamics at play before acting.' },
+        { icon: '⊕', title: 'Lacking energy or direction', desc: 'Moving forward but without momentum. HexAstra identifies what blocks and what can restart the flow.' },
+        { icon: '◈', title: 'Important decision to make', desc: 'Moving, project, change. Seeing if timing and energy align with what you're considering.' },
+        { icon: '◉', title: 'Practitioners and coaches', desc: 'A powerful tool to enrich sessions, identify a client's cycles and structure the guidance.' },
+        { icon: '✦', title: 'Personal curiosity', desc: 'You simply want to understand yourself better. Your cycles, your strengths, your recharge periods.' },
       ],
     },
     cta: {
@@ -275,12 +301,18 @@ function HexastraChat({ t, threadId, onThreadId }: { t: any; threadId: string | 
           threadId,
           mode,
           persona: mode === 'praticien' ? persona : null,
+          profile: {
+            language: typeof window !== 'undefined' ? (document.documentElement.lang || 'fr') : 'fr',
+          },
         }),
       })
       const data = await res.json()
       if (data.threadId) onThreadId(data.threadId)
       if (data.chips?.length) setChips(data.chips)
-      setMsgs([...newMsgs, { role: 'assistant', content: data.reply ?? '…' }])
+      const reply = data.reply ?? '…'
+      setMsgs([...newMsgs, { role: 'assistant', content: reply }])
+      // If n8n signals birth data needed, bump stage to Clarification
+      if (data.needsBirthData) setStage(1)
     } catch {
       setMsgs([...newMsgs, { role: 'assistant', content: '⚠ Erreur de connexion. Réessayez.' }])
     } finally {
@@ -567,6 +599,27 @@ function PricingSection({ t, onCta }: any) {
 /* ══════════════════════════════════════════
    FINAL CTA
 ══════════════════════════════════════════ */
+function UseCasesSection({ t }: any) {
+  return (
+    <section className="section">
+      <div className="si">
+        <div className="stag"><span className="sl"/>{t.useCases.tag}</div>
+        <h2 className="sh2">{t.useCases.title}</h2>
+        <p className="ssub">{t.useCases.sub}</p>
+        <div className="uc-grid">
+          {t.useCases.cases.map((c: any, i: number) => (
+            <div key={i} className="uc-card">
+              <div className="uc-ico">{c.icon}</div>
+              <div className="uc-title">{c.title}</div>
+              <p className="uc-desc">{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function CTASection({ t, onCta }: any) {
   return (
     <section className="cta-sec">
@@ -665,7 +718,12 @@ export default function Page() {
 
         <div className="divider"/>
 
-        {/* 5 — Pricing */}
+        {/* 5 — Cas d'usage */}
+        <UseCasesSection t={t} />
+
+        <div className="divider"/>
+
+        {/* 6 — Pricing */}
         <PricingSection t={t} onCta={handleUpgrade} />
 
         {/* 6 — CTA final */}
@@ -902,6 +960,16 @@ html{scroll-behavior:smooth}
 .flink{font-family:var(--f-b);font-size:12px;color:var(--iv52);text-decoration:none;transition:color .2s}
 .flink:hover{color:var(--gold)}
 
+/* USE CASES */
+.uc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:48px}
+.uc-card{background:var(--card);border:1px solid var(--goldB);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;transition:all .25s;position:relative;overflow:hidden}
+.uc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity .3s}
+.uc-card:hover{background:var(--lift);transform:translateY(-4px);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.uc-card:hover::after{opacity:1}
+.uc-ico{font-size:24px;color:var(--gold);opacity:.7;line-height:1}
+.uc-title{font-family:var(--f-t);font-size:16.5px;font-weight:500;color:var(--ivoire);letter-spacing:-.01em}
+.uc-desc{font-family:var(--f-b);font-size:13px;font-weight:300;color:var(--iv72);line-height:1.78}
+
 /* RESPONSIVE */
 @media(max-width:1100px){
   .plans{grid-template-columns:repeat(2,1fr)}
@@ -915,6 +983,7 @@ html{scroll-behavior:smooth}
   .section{padding:68px 20px}
   .divider{margin:0 20px}
   .how-grid{grid-template-columns:1fr;gap:2px}
+  .uc-grid{grid-template-columns:1fr 1fr}
   .how-card:first-child{border-radius:16px 16px 0 0}
   .how-card:last-child{border-radius:0 0 16px 16px}
   .q-grid{grid-template-columns:1fr}
