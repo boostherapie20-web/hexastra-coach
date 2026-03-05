@@ -56,10 +56,11 @@ export default function Page() {
   const router = useRouter()
   const [lang, setLang] = useState<Lang>('fr')
   const t = translations[lang]
+  const goChat = useCallback(() => router.push('/chat'), [router])
   const goLogin = useCallback(() => router.push('/login'), [router])
 
   const handleUpgrade = useCallback(async (planKey: string) => {
-    if (planKey === 'free') { goLogin(); return }
+    if (planKey === 'free') { goChat(); return }
     const priceKey = PLAN_PRICE_KEYS[planKey]
     if (!priceKey) { goLogin(); return }
     try {
@@ -78,8 +79,8 @@ export default function Page() {
     <>
       <style>{CSS}</style>
       <div className="root">
-        <Nav t={t} lang={lang} setLang={setLang} onCta={goLogin} />
-        <Hero t={t} lang={lang} onCta={goLogin} />
+        <Nav t={t} lang={lang} setLang={setLang} onCta={goChat} />
+        <Hero t={t} lang={lang} onCta={goChat} />
         <div className="divider" />
         <HowSection t={t} />
         <div className="divider" />
@@ -91,7 +92,7 @@ export default function Page() {
         <div className="divider" />
         <PricingSection t={t} onCta={handleUpgrade} />
         <div className="divider" />
-        <FinalCta t={t} onCta={goLogin} />
+        <FinalCta t={t} onCta={goChat} />
         <Footer t={t} />
       </div>
     </>
@@ -418,6 +419,33 @@ function ClockIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fi
 function DocIcon() { return <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8"/></svg> }
 
 const CSS = `
+
+:root {
+  --void: #1a0f0b;
+  --pitch: #2C1F1A;
+  --deep: #241510;
+  --panel: #2e1a12;
+  --lift: #3a2218;
+  --chrome: #f5f0eb;
+  --emerald: #1FAF8C;
+  --emerald-lt: #2dd4aa;
+  --emerald-dk: #15806a;
+  --tx1: #f5f0eb;
+  --tx2: #9a8878;
+  --tx3: #5a4a42;
+  --b1: rgba(255,255,255,0.04);
+  --b2: rgba(255,255,255,0.08);
+  --b3: rgba(255,255,255,0.14);
+  --b4: rgba(255,255,255,0.22);
+  --f-display: 'Bebas Neue', sans-serif;
+  --f-serif: 'DM Serif Display', serif;
+  --f-mono: 'Geist Mono', monospace;
+  --f-ui: 'Outfit', sans-serif;
+  --expo: cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes fadeUp { from { opacity:0; transform:translateY(24px) } to { opacity:1; transform:translateY(0) } }
+@keyframes glow { 0%,100% { opacity:0.6; transform:translateY(-50%) scale(1) } 50% { opacity:1; transform:translateY(-50%) scale(1.08) } }
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
 .root{background:var(--pitch);color:var(--tx1);font-family:var(--f-ui);overflow-x:hidden;min-height:100vh}
 .bg-deep{background:var(--deep)}
