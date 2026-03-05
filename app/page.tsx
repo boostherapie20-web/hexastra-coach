@@ -661,11 +661,9 @@ function Footer({ t }: any) {
    PAGE ROOT
 ══════════════════════════════════════════ */
 export default function Page() {
-  const router    = useRouter()
-  const [lang, setLang]         = useState<Lang>('fr')
-  const [threadId, setThreadId] = useState<string | null>(null)
-  const chatRef   = useRef<{ send: (t: string) => void } | null>(null)
-  const t         = T[lang]
+  const router = useRouter()
+  const [lang, setLang] = useState<Lang>('fr')
+  const t = T[lang]
 
   const scrollToChat = useCallback(() => {
     router.push('/chat')
@@ -699,7 +697,7 @@ export default function Page() {
         <Nav t={t} lang={lang} setLang={setLang} onCta={scrollToChat} />
 
         {/* 1 — Hero + Chat */}
-        <Hero t={t} onCta={goChat} />
+        <Hero t={t} onCta={scrollToChat} />
 
         <div className="divider"/>
 
