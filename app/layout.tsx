@@ -69,7 +69,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Geist+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        {/* ── Typography: Sora (titres) + Inter (interface) ── */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
         {/* Couleur de la barre du navigateur sur mobile */}
         <meta name="theme-color" content="#2C1F1A" />
         <meta name="msapplication-TileColor" content="#2C1F1A" />
