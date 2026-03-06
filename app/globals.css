@@ -553,3 +553,26 @@ optgroup       { color: var(--amber); font-style: normal; }
     animation-duration: 0.01ms !important;
   }
 }
+/* HexAstra Visual Brain states */
+.hx-halo-analyzing {
+  animation: hxHaloPulse 3.2s ease-in-out infinite;
+}
+.hx-halo-responding {
+  animation: hxHaloPulseSoft 2.8s ease-in-out infinite;
+}
+@keyframes hxHaloPulse {
+  0%,100% { opacity: 0.22; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.34; transform: translate(-50%, -50%) scale(1.02); }
+}
+@keyframes hxHaloPulseSoft {
+  0%,100% { opacity: 0.2; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.29; transform: translate(-50%, -50%) scale(1.015); }
+}
+@keyframes hxRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes hxBreath {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
