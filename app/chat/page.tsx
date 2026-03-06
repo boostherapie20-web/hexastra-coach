@@ -393,7 +393,7 @@ function ShareModal({ messages, onClose }: { messages:Msg[]; onClose:()=>void })
           <div style={{fontFamily:'var(--f-display)',fontSize:16,color:'var(--chrome)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Sélectionner</div></div>
           <button onClick={onClose} style={{color:'var(--tx3)',fontSize:13,cursor:'pointer',background:'none',border:'none'}}>✕</button>
         </div>
-        <div style={{padding:'8px 18px',borderBottom:'1px solid var(--b1)',display:'flex',gap:10'}}>
+        <div style={{padding:'8px 18px',borderBottom:'1px solid var(--b1)',display:'flex',gap:10}}>
           <button onClick={()=>setSelected(new Set(aiMsgs.map(m=>m.id)))} style={{fontFamily:'var(--f-mono)',fontSize:9,color:'var(--amber)',cursor:'pointer',background:'none',border:'none',letterSpacing:'0.08em',textTransform:'uppercase'}}>Tout sélect.</button>
           <button onClick={()=>setSelected(new Set())} style={{fontFamily:'var(--f-mono)',fontSize:9,color:'var(--tx3)',cursor:'pointer',background:'none',border:'none',letterSpacing:'0.08em',textTransform:'uppercase'}}>Effacer</button>
         </div>
