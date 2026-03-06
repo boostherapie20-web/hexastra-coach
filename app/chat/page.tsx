@@ -103,8 +103,8 @@ const MENU_PRATICIEN = [
 // STARS
 // ═══════════════════════════════════════════════════════════════
 function Stars() {
-  const s = useRef(Array.from({length:50},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*100,sz:Math.random()*1.4+0.3,d:Math.random()*4}))).current
-  return <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0}}>{s.map(st=><div key={st.id} style={{position:'absolute',left:`${st.x}%`,top:`${st.y}%`,width:st.sz,height:st.sz,borderRadius:'50%',background:'rgba(255,255,255,0.5)',animation:`pulse ${2+st.d}s ease-in-out ${st.d}s infinite`}}/>)}</div>
+  const s = useRef(Array.from({length:28},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*100,sz:Math.random()*0.9+0.2,d:Math.random()*6+2}))).current
+  return <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0}}>{s.map(st=><div key={st.id} style={{position:'absolute',left:`${st.x}%`,top:`${st.y}%`,width:st.sz,height:st.sz,borderRadius:'50%',background:'rgba(255,255,255,0.35)',animation:`pulse ${st.d}s ease-in-out ${st.d*0.5}s infinite`}}/>)}</div>
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -829,55 +829,155 @@ export default function ChatPage() {
           </button>
         </div>
 
-        {/* Messages */}
-        <div style={{flex:1,overflowY:'auto',padding:'14px 18px',display:'flex',flexDirection:'column',gap:10}}>
-          {messages.map((msg,i)=>(
-            <div key={msg.id} style={{display:'flex',alignItems:'flex-end',gap:9,justifyContent:msg.role==='user'?'flex-end':'flex-start',animation:'fadeUp 0.3s var(--expo) both',animationDelay:`${Math.min(i,5)*0.03}s`}}>
-              {msg.role==='assistant'&&(
-                <div style={{width:26,height:26,minWidth:26,position:'relative',flexShrink:0,marginBottom:2}}>
-                  <div style={{position:'absolute',inset:0,background:'var(--amber)',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)'}}/>
-                  <span style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--f-mono)',fontSize:5.5,fontWeight:600,color:'var(--void)'}}>HA</span>
+        {/* ── MESSAGES AREA ── */}
+        <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',position:'relative'}}>
+
+          {/* WELCOME SCREEN — shown only when conversation is just the initial message */}
+          {messages.length===1 && messages[0].id==='0' ? (
+            <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',padding:'24px 20px',animation:'welcomeFade 0.7s ease both'}}>
+              <div style={{width:'100%',maxWidth:580,display:'flex',flexDirection:'column',alignItems:'center',gap:0}}>
+
+                {/* Glass card */}
+                <div style={{width:'100%',background:'rgba(20,12,8,0.65)',backdropFilter:'blur(24px)',WebkitBackdropFilter:'blur(24px)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:24,padding:'36px 40px 32px',boxShadow:'0 0 80px rgba(212,165,116,0.08), 0 24px 60px rgba(0,0,0,0.5)',display:'flex',flexDirection:'column',alignItems:'center',gap:20}}>
+
+                  {/* Micro label */}
+                  <div style={{fontFamily:'var(--f-mono)',fontSize:9,letterSpacing:'0.22em',color:'rgba(212,165,116,0.5)',textTransform:'uppercase'}}>
+                    Conversation privée · Analyse personnelle générée instantanément
+                  </div>
+
+                  {/* Hexagon logo */}
+                  <div style={{width:44,height:44,background:'linear-gradient(135deg, #D4A574, #8C6239)',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',boxShadow:'0 0 30px rgba(212,165,116,0.25)',animation:'floatGlow 4s ease-in-out infinite'}}/>
+
+                  {/* Title */}
+                  <div style={{textAlign:'center',display:'flex',flexDirection:'column',gap:6}}>
+                    <h1 style={{fontFamily:'var(--f-display)',fontSize:'clamp(22px,3.5vw,30px)',letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(255,245,235,0.95)',fontWeight:400,lineHeight:1}}>HexAstra Coach</h1>
+                    <p style={{fontFamily:'var(--f-ui)',fontSize:15,color:'rgba(212,165,116,0.75)',fontWeight:300,letterSpacing:'0.02em'}}>Explore ta situation avec plus de clarté.</p>
+                  </div>
+
+                  {/* Body */}
+                  <div style={{textAlign:'center',maxWidth:400}}>
+                    <p style={{fontFamily:'var(--f-ui)',fontSize:14,color:'rgba(255,255,255,0.55)',lineHeight:1.75}}>
+                      Je suis HexAstra.<br/>Choisis ta langue pour commencer.
+                    </p>
+                  </div>
+
+                  {/* Language buttons */}
+                  <div style={{display:'flex',gap:12}}>
+                    {[{label:'Français',msg:'Français'},{label:'English',msg:'English'}].map(l=>(
+                      <button key={l.label} onClick={()=>send(l.msg)}
+                        style={{padding:'12px 28px',borderRadius:12,background:'linear-gradient(135deg,#D4A574,#8C6239)',color:'rgba(255,255,255,0.95)',fontFamily:'var(--f-ui)',fontSize:14,fontWeight:500,letterSpacing:'0.04em',border:'none',cursor:'pointer',boxShadow:'0 0 20px rgba(212,165,116,0.2)',transition:'all 0.2s',transform:'translateY(0)'}}>
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Quick actions */}
+                  <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginTop:4}}>
+                    {[
+                      'Comprendre une période de vie',
+                      'Clarifier une décision',
+                      'Explorer une dynamique relationnelle',
+                      'Mieux lire mon moment actuel',
+                    ].map(q=>(
+                      <button key={q} onClick={()=>send(q)}
+                        style={{padding:'7px 14px',borderRadius:20,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.6)',fontFamily:'var(--f-ui)',fontSize:12,cursor:'pointer',transition:'all 0.2s',letterSpacing:'0.01em'}}>
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Legal */}
+                  <p style={{fontFamily:'var(--f-ui)',fontSize:11,color:'rgba(255,255,255,0.28)',textAlign:'center',lineHeight:1.7,fontStyle:'italic',maxWidth:400,marginTop:4}}>
+                    HexAstra Coach est un outil d'exploration et de réflexion personnelle.<br/>
+                    Il ne remplace pas un avis médical, juridique ou financier.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          ) : (
+            /* CONVERSATION VIEW */
+            <div style={{flex:1,overflowY:'auto',padding:'20px 22px',display:'flex',flexDirection:'column',gap:12}}>
+
+              {/* Micro-label above first message */}
+              <div style={{textAlign:'center',fontFamily:'var(--f-mono)',fontSize:9,letterSpacing:'0.16em',color:'rgba(212,165,116,0.35)',textTransform:'uppercase',paddingBottom:4}}>
+                Conversation privée · Analyse personnelle générée instantanément
+              </div>
+
+              {messages.map((msg,i)=>(
+                <div key={msg.id} style={{display:'flex',alignItems:'flex-end',gap:10,justifyContent:msg.role==='user'?'flex-end':'flex-start',animation:'fadeUp 0.35s var(--expo) both',animationDelay:`${Math.min(i,4)*0.04}s`}}>
+                  {/* HA avatar — subtle, no bubble */}
+                  {msg.role==='assistant'&&(
+                    <div style={{width:22,height:22,minWidth:22,flexShrink:0,marginBottom:3,opacity:0.7}}>
+                      <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#D4A574,#8C6239)',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)'}}/>
+                    </div>
+                  )}
+                  {/* Message block — clean, no bubble style for assistant */}
+                  <div style={{maxWidth:'76%',...(msg.role==='user'
+                    ? {background:'rgba(212,165,116,0.07)',border:'1px solid rgba(212,165,116,0.18)',borderRadius:14,borderBottomRightRadius:3,padding:'11px 15px'}
+                    : {padding:'2px 0',paddingLeft:4}
+                  )}}>
+                    <p style={{fontFamily:'var(--f-ui)',fontSize:14,lineHeight:1.78,color:msg.role==='user'?'rgba(255,255,255,0.8)':'rgba(255,255,255,0.82)',whiteSpace:'pre-wrap',margin:0,letterSpacing:'0.01em'}}>{msg.content}</p>
+                    {msg.cached&&<span style={{fontFamily:'var(--f-mono)',fontSize:7,color:'rgba(255,255,255,0.2)',marginTop:3,display:'block'}}>⚡ cache</span>}
+                    <span style={{display:'block',fontFamily:'var(--f-mono)',fontSize:7,color:'rgba(255,255,255,0.2)',marginTop:5,textAlign:msg.role==='user'?'right' as const:'left' as const}}>{new Date(msg.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
+                  </div>
+                </div>
+              ))}
+
+              {/* Typing indicator */}
+              {isTyping&&(
+                <div style={{display:'flex',alignItems:'center',gap:10,paddingLeft:4,animation:'fadeUp 0.3s ease both'}}>
+                  <div style={{width:22,height:22,minWidth:22,flexShrink:0,opacity:0.6}}>
+                    <div style={{width:'100%',height:'100%',background:'linear-gradient(135deg,#D4A574,#8C6239)',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)'}}/>
+                  </div>
+                  <div style={{display:'flex',gap:4,alignItems:'center',padding:'8px 0'}}>
+                    {[0,1,2].map(i=><span key={i} style={{width:4,height:4,borderRadius:'50%',background:'rgba(212,165,116,0.5)',display:'inline-block',animation:'blink 1.4s ease-in-out infinite',animationDelay:`${i*0.2}s`}}/>)}
+                  </div>
                 </div>
               )}
-              <div style={{maxWidth:'72%',borderRadius:11,padding:'10px 13px',position:'relative',...(msg.role==='user'?{background:'rgba(255,140,0,0.06)',border:'1px solid var(--ab1)',borderBottomRightRadius:2}:{background:'rgba(255,255,255,0.025)',border:'1px solid var(--b1)',borderBottomLeftRadius:2})}}>
-                <p style={{fontFamily:'var(--f-ui)',fontSize:13.5,lineHeight:1.72,color:'var(--tx2)',whiteSpace:'pre-wrap',margin:0}}>{msg.content}</p>
-                {msg.cached&&<span style={{fontFamily:'var(--f-mono)',fontSize:7.5,color:'var(--tx3)',marginTop:3,opacity:0.5,display:'block'}}>⚡ cache</span>}
-                <span style={{display:'block',fontFamily:'var(--f-mono)',fontSize:7.5,color:'var(--tx3)',marginTop:4,textAlign:'right' as const}}>{new Date(msg.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
-              </div>
-            </div>
-          ))}
-          {isTyping&&(
-            <div style={{display:'flex',alignItems:'flex-end',gap:9}}>
-              <div style={{width:26,height:26,minWidth:26,position:'relative',flexShrink:0}}>
-                <div style={{position:'absolute',inset:0,background:'var(--amber)',clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)'}}/>
-                <span style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--f-mono)',fontSize:5.5,fontWeight:600,color:'var(--void)'}}>HA</span>
-              </div>
-              <div style={{background:'rgba(255,255,255,0.025)',border:'1px solid var(--b1)',borderRadius:11,borderBottomLeftRadius:2,padding:'13px 16px',display:'flex',gap:5,alignItems:'center'}}>
-                {[0,1,2].map(i=><span key={i} style={{width:4,height:4,borderRadius:'50%',background:'var(--tx3)',display:'inline-block',animation:'blink 1.4s ease-in-out infinite',animationDelay:`${i*0.18}s`}}/>)}
-              </div>
+              <div ref={endRef}/>
             </div>
           )}
-          <div ref={endRef}/>
         </div>
 
-        {/* Composer */}
-        <div style={{padding:'6px 14px 10px',borderTop:'1px solid var(--b1)',background:'rgba(5,5,8,0.65)',backdropFilter:'blur(14px)',flexShrink:0}}>
-          {/* Title */}
-          <div style={{textAlign:'center',fontFamily:'var(--f-display)',fontSize:11,letterSpacing:'0.18em',color:'var(--amber)',textTransform:'uppercase',marginBottom:5,opacity:0.9}}>HexAstra t'aide à y voir plus clair</div>
+        {/* ── COMPOSER ── */}
+        <div style={{padding:'8px 16px 12px',borderTop:'1px solid rgba(255,255,255,0.05)',background:'rgba(8,5,3,0.7)',backdropFilter:'blur(20px)',flexShrink:0}}>
+
+          {/* Supra-label */}
+          <div style={{textAlign:'center',fontFamily:'var(--f-display)',fontSize:10.5,letterSpacing:'0.2em',color:'rgba(212,165,116,0.6)',textTransform:'uppercase',marginBottom:8}}>
+            HexAstra t'aide à y voir plus clair
+          </div>
+
+          {/* Quick action chips — shown when conversation started */}
+          {messages.length>1&&(
+            <div style={{display:'flex',gap:7,flexWrap:'wrap',justifyContent:'center',marginBottom:9}}>
+              {[
+                'Comprendre une situation que je traverse',
+                'Clarifier une décision importante',
+                'Explorer une période de ma vie',
+                'Lire mon énergie du moment',
+              ].map(q=>(
+                <button key={q} onClick={()=>send(q)}
+                  style={{padding:'5px 12px',borderRadius:16,background:'rgba(212,165,116,0.06)',border:'1px solid rgba(212,165,116,0.15)',color:'rgba(255,255,255,0.5)',fontFamily:'var(--f-ui)',fontSize:11.5,cursor:'pointer',transition:'all 0.18s',letterSpacing:'0.01em',whiteSpace:'nowrap'}}>
+                  {q}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Input box */}
-          <div style={{display:'flex',alignItems:'flex-end',gap:6,background:'rgba(255,255,255,0.025)',border:'1px solid var(--b2)',borderRadius:9,padding:'7px 9px'}}>
-            {/* Données naissance */}
+          <div style={{display:'flex',alignItems:'flex-end',gap:6,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:14,padding:'9px 11px',boxShadow:'0 0 0 0 rgba(212,165,116,0)',transition:'box-shadow 0.3s'}}>
+            {/* Profile / client data */}
             <Tooltip label="Données de naissance">
-              <button style={{width:28,height:28,flexShrink:0,borderRadius:5,background:'rgba(255,140,0,0.06)',border:'1px solid var(--ab1)',color:'var(--amber)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}} onClick={()=>mode==='praticien'?setShowClient(true):setShowBirth(true)}>
+              <button style={{width:30,height:30,flexShrink:0,borderRadius:8,background:'rgba(212,165,116,0.07)',border:'1px solid rgba(212,165,116,0.2)',color:'rgba(212,165,116,0.8)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.2s'}} onClick={()=>mode==='praticien'?setShowClient(true):setShowBirth(true)}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               </button>
             </Tooltip>
 
-            {/* File attach — épingle */}
+            {/* File attach */}
             <Tooltip label="Ajouter des fichiers">
-              <button style={{width:28,height:28,flexShrink:0,borderRadius:5,background:'rgba(255,140,0,0.06)',border:'1px solid var(--ab1)',color:'var(--amber)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}} onClick={()=>fileRef.current?.click()}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+              <button style={{width:30,height:30,flexShrink:0,borderRadius:8,background:'rgba(212,165,116,0.07)',border:'1px solid rgba(212,165,116,0.2)',color:'rgba(212,165,116,0.8)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'all 0.2s'}} onClick={()=>fileRef.current?.click()}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
               </button>
             </Tooltip>
             <input ref={fileRef} type="file" accept="image/*,.pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>handleFile(e.target.files)}/>
@@ -886,21 +986,23 @@ export default function ChatPage() {
             <textarea ref={taRef} value={input} onChange={e=>setInput(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
               placeholder="Parle-moi de ta situation ou pose ta question…" rows={1}
-              style={{flex:1,background:'transparent',border:'none',color:'var(--tx1)',fontSize:13,lineHeight:'1.55',minHeight:20,maxHeight:96,overflowY:'auto',padding:'4px 0',resize:'none',fontFamily:'var(--f-ui)',outline:'none'}}/>
+              style={{flex:1,background:'transparent',border:'none',color:'rgba(255,255,255,0.88)',fontSize:14,lineHeight:'1.6',minHeight:22,maxHeight:100,overflowY:'auto',padding:'4px 0',resize:'none',fontFamily:'var(--f-ui)',outline:'none'}}/>
 
             {/* Waveform mic */}
             <Tooltip label="Message vocal">
-              <button style={{width:28,height:28,flexShrink:0,borderRadius:5,background:isRec?'rgba(255,140,0,0.18)':'rgba(255,140,0,0.06)',border:'1px solid var(--ab1)',color:'var(--amber)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',animation:isRec?'recPulse 1s ease-in-out infinite':'none'}} onClick={toggleRec}>
+              <button style={{width:30,height:30,flexShrink:0,borderRadius:8,background:isRec?'rgba(212,165,116,0.2)':'rgba(212,165,116,0.07)',border:'1px solid rgba(212,165,116,0.2)',color:'rgba(212,165,116,0.8)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',animation:isRec?'recPulse 1s ease-in-out infinite':'none',transition:'all 0.2s'}} onClick={toggleRec}>
                 <WaveformIcon active={isRec}/>
               </button>
             </Tooltip>
           </div>
 
-          {/* Footer */}
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:5,padding:'0 2px',gap:8}}>
-            <div style={{fontFamily:'var(--f-mono)',fontSize:7,color:'rgba(255,140,0,0.5)',letterSpacing:'0.1em',textTransform:'uppercase',flexShrink:0,border:'1px solid rgba(255,140,0,0.15)',padding:'2px 7px',borderRadius:3}}>{modeLabel}</div>
-            <span style={{fontFamily:'var(--f-ui)',fontSize:7.5,color:'var(--tx3)',textAlign:'center',flex:1,lineHeight:1.5}}>HexAstra Coach est un outil d'exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.</span>
-            <button style={{fontFamily:'var(--f-mono)',fontSize:8,color:'var(--amber)',letterSpacing:'0.1em',flexShrink:0,cursor:'pointer',background:'transparent',border:'none'}} onClick={()=>setView('abonnements')}>✦ Premium</button>
+          {/* Footer row */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:7,padding:'0 2px',gap:8}}>
+            <div style={{fontFamily:'var(--f-mono)',fontSize:7,color:'rgba(212,165,116,0.4)',letterSpacing:'0.12em',textTransform:'uppercase',flexShrink:0,border:'1px solid rgba(212,165,116,0.12)',padding:'2px 8px',borderRadius:3}}>{modeLabel}</div>
+            <p style={{fontFamily:'var(--f-ui)',fontSize:11,color:'rgba(255,255,255,0.22)',textAlign:'center',flex:1,lineHeight:1.6,margin:0,fontStyle:'italic'}}>
+              HexAstra Coach est un outil d'exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
+            </p>
+            <div style={{width:60,flexShrink:0}}/>
           </div>
         </div>
       </main>
@@ -914,16 +1016,25 @@ export default function ChatPage() {
       {showShare&&<ShareModal messages={messages} onClose={()=>setShowShare(false)}/>}
 
       <style>{`
-        @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,140,0,0.4)}50%{box-shadow:0 0 0 6px rgba(255,140,0,0)}}
-        @keyframes waveBar{0%{transform:scaleY(0.4)}100%{transform:scaleY(1)}}
+        @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(212,165,116,0.35)}50%{box-shadow:0 0 0 6px rgba(212,165,116,0)}}
+        @keyframes waveBar{0%{transform:scaleY(0.35)}100%{transform:scaleY(1)}}
+        @keyframes welcomeFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes floatGlow{0%,100%{transform:translateY(0);box-shadow:0 0 20px rgba(212,165,116,0.15)}50%{transform:translateY(-5px);box-shadow:0 0 35px rgba(212,165,116,0.3)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes blink{0%,100%{opacity:0.25}50%{opacity:1}}
+        @keyframes pulse{0%,100%{opacity:0.15}50%{opacity:0.5}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes amberPop{0%,100%{box-shadow:0 0 6px rgba(212,165,116,0.3)}50%{box-shadow:0 0 16px rgba(212,165,116,0.7)}}
         *{box-sizing:border-box;margin:0;padding:0}
         button{cursor:pointer;background:none;color:inherit}
         input,textarea,select{font-family:inherit;outline:none}
         textarea{resize:none}
         ::-webkit-scrollbar{width:2px}
-        ::-webkit-scrollbar-thumb{background:var(--ab1)}
+        ::-webkit-scrollbar-thumb{background:rgba(212,165,116,0.2)}
         select option{background:var(--panel);color:var(--tx1)}
         optgroup{color:var(--amber);font-style:normal}
+        .chip-hover:hover{background:rgba(212,165,116,0.1)!important;border-color:rgba(212,165,116,0.3)!important;color:rgba(255,255,255,0.75)!important}
+        .lang-btn:hover{transform:translateY(-2px)!important;box-shadow:0 4px 24px rgba(212,165,116,0.35)!important}
       `}</style>
     </div>
   )
