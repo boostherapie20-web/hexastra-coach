@@ -3,6 +3,119 @@ import { NextRequest, NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 const VECTOR_STORE_ID = process.env.OPENAI_VECTOR_STORE_ID || 'vs_69a9c00b00d08191bbaf302d33f5d6d9'
+const EPHEMERIS_URL = (process.env.EPHEMERIS_API_URL || 'https://hexastra-api-production.up.railway.app').replace(/\/$/, '')
+const EPHEMERIS_KEY = process.env.HEXASTRA_API_KEY || ''
+
+// ─────────────────────────────────────────────────────────────────
+// EPHEMERIS SERVICE — HexAstra API v2.1.0
+// ─────────────────────────────────────────────────────────────────
+
+function ephHeaders(): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    ...(EPHEMERIS_KEY ? { 'x-api-key': EPHEMERIS_KEY } : {}),
+  }
+}
+
+async function fetchEphemerisData(birthData: any): Promise<string> {
+  if (!birthData?.date) return ''
+
+  const lat = birthData.lat ?? 48.8566
+  const lon = birthData.lon ?? 2.3522
+  const time = birthData.time && birthData.time !== 'inconnue' ? birthData.time : '12:00'
+  const dateISO = `${birthData.date}T${time}:00+00:00`
+  const name = birthData.name || ''
+  const gender = birthData.gender || 'M'
+
+  try {
+    const [fusionRes, hdRes, numerologyRes, kuaRes, enneagramRes] = await Promise.allSettled([
+      fetch(`${EPHEMERIS_URL}/chart/fusion`, {
+        method: 'POST', headers: ephHeaders(),
+        body: JSON.stringify({ dateISO, lat, lon }),
+        signal: AbortSignal.timeout(8000),
+      }),
+      fetch(`${EPHEMERIS_URL}/hd`, {
+        method: 'POST', headers: ephHeaders(),
+        body: JSON.stringify({ dateISO }),
+        signal: AbortSignal.timeout(8000),
+      }),
+      fetch(`${EPHEMERIS_URL}/numerology`, {
+        method: 'POST', headers: ephHeaders(),
+        body: JSON.stringify({ dateISO, name }),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(`${EPHEMERIS_URL}/kua`, {
+        method: 'POST', headers: ephHeaders(),
+        body: JSON.stringify({ dateISO, gender }),
+        signal: AbortSignal.timeout(5000),
+      }),
+      fetch(`${EPHEMERIS_URL}/enneagram`, {
+        method: 'POST', headers: ephHeaders(),
+        body: JSON.stringify({ dateISO, name }),
+        signal: AbortSignal.timeout(5000),
+      }),
+    ])
+
+    const parts: string[] = []
+
+    // Astro fusion tropicale/sidérale
+    if (fusionRes.status === 'fulfilled' && fusionRes.value.ok) {
+      const d = await fusionRes.value.json()
+      const trop = d.tropical?.planets || {}
+      const sun = trop.sun?.lon != null ? `Soleil ${Number(trop.sun.lon).toFixed(1)}°` : ''
+      const moon = trop.moon?.lon != null ? `Lune ${Number(trop.moon.lon).toFixed(1)}°` : ''
+      const asc = d.tropical?.houses?.asc != null ? `ASC ${Number(d.tropical.houses.asc).toFixed(1)}°` : ''
+      const aspects = (d.tropical?.aspects || []).slice(0, 6).map((a: any) => `${a.p1}-${a.p2} ${a.type}`).join(', ')
+      const ascDelta = d.fusionMeta?.ascDelta != null ? Number(d.fusionMeta.ascDelta).toFixed(1) : '?'
+      parts.push(`Astrologie tropicale : ${[sun, moon, asc].filter(Boolean).join(' · ')}
+Aspects majeurs : ${aspects || 'aucun'}
+Alignement trop/sid : delta ASC ${ascDelta}°`)
+    }
+
+    // Human Design
+    if (hdRes.status === 'fulfilled' && hdRes.value.ok) {
+      const d = await hdRes.value.json()
+      const centers = Object.entries(d.definedCenters || {}).filter(([, v]) => v).map(([k]) => k).join(', ')
+      const channels = (d.definedChannels || []).map((c: any) => c.channel).slice(0, 6).join(', ')
+      const gates = (d.activatedGates || []).slice(0, 10).join(', ')
+      parts.push(`Human Design : Type ${d.type || '?'} · Autorité ${d.authority || '?'} · Profil ${d.profile || '?'}
+Centres définis : ${centers || 'aucun'}
+Canaux actifs : ${channels || 'aucun'}
+Gates principales : ${gates || 'aucune'}`)
+    }
+
+    // Numérologie
+    if (numerologyRes.status === 'fulfilled' && numerologyRes.value.ok) {
+      const d = await numerologyRes.value.json()
+      const lp = d.lifePathNumber ?? d.life_path ?? d.lifePath ?? '?'
+      const year = d.personalYear ?? d.personal_year ?? '?'
+      const month = d.personalMonth ?? d.personal_month ?? '?'
+      parts.push(`Numérologie : Chemin de vie ${lp} · Année personnelle ${year} · Mois personnel ${month}`)
+    }
+
+    // Kua
+    if (kuaRes.status === 'fulfilled' && kuaRes.value.ok) {
+      const d = await kuaRes.value.json()
+      const kua = d.kuaNumber ?? d.kua_number ?? d.kua ?? JSON.stringify(d).slice(0, 100)
+      parts.push(`Kua : ${kua}`)
+    }
+
+    // Ennéagramme
+    if (enneagramRes.status === 'fulfilled' && enneagramRes.value.ok) {
+      const d = await enneagramRes.value.json()
+      const type = d.type ?? d.enneagramType ?? d.ennea_type ?? JSON.stringify(d).slice(0, 100)
+      parts.push(`Ennéagramme : Type ${type}`)
+    }
+
+    if (parts.length === 0) return ''
+
+    return `\n\n[DONNÉES PRÉCISES SWISS EPHEMERIS — INTÉGRER SILENCIEUSEMENT — NE PAS CITER CES CHIFFRES BRUTS]\n${parts.join('\n')}\n[FIN DONNÉES EPHEMERIS]`
+
+  } catch (e) {
+    console.error('Ephemeris service error:', e)
+    return ''
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════
 // SYSTEM PROMPT — HEXASTRA COACH — KS.FUSION.V13 — COMPLET
@@ -355,15 +468,18 @@ export async function POST(req: NextRequest) {
   // Build input for Responses API
   const inputMessages: any[] = []
 
-  // Inject birth data as system context if provided
+  // Inject birth data + ephemeris calculations as system context
   if (birthData) {
+    // Appel au microservice éphémérides (Swiss Ephemeris précis)
+    const ephemerisContext = await fetchEphemerisData(birthData)
+
     inputMessages.push({
       role: 'user',
-      content: `[Données de naissance] Prénom : ${birthData.name || 'non précisé'} · Date : ${birthData.date} · Heure : ${birthData.time || 'inconnue'} · Lieu : ${birthData.place || `lat ${birthData.lat}, lon ${birthData.lon}`}`,
+      content: `[Données de naissance] Prénom : ${birthData.name || 'non précisé'} · Date : ${birthData.date} · Heure : ${birthData.time || 'inconnue'} · Lieu : ${birthData.place || `lat ${birthData.lat}, lon ${birthData.lon}`}${ephemerisContext}`,
     })
     inputMessages.push({
       role: 'assistant',
-      content: 'Données de naissance enregistrées. Je vais maintenant générer ta lecture personnalisée.',
+      content: 'Données de naissance et calculs précis enregistrés. Je génère ta lecture personnalisée.',
     })
   }
 
