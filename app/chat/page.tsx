@@ -100,11 +100,31 @@ const MENU_PRATICIEN = [
 ]
 
 // ═══════════════════════════════════════════════════════════════
-// STARS
+// BACKGROUND SYSTEM — 3 layers: stars · halo · sacred geometry
 // ═══════════════════════════════════════════════════════════════
-function Stars() {
-  const s = useRef(Array.from({length:28},(_,i)=>({id:i,x:Math.random()*100,y:Math.random()*100,sz:Math.random()*0.9+0.2,d:Math.random()*6+2}))).current
-  return <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0}}>{s.map(st=><div key={st.id} style={{position:'absolute',left:`${st.x}%`,top:`${st.y}%`,width:st.sz,height:st.sz,borderRadius:'50%',background:'rgba(255,255,255,0.35)',animation:`pulse ${st.d}s ease-in-out ${st.d*0.5}s infinite`}}/>)}</div>
+function CosmicBackground() {
+  return (
+    <>
+      {/* Layer 1 — Stars (CSS, no DOM nodes, GPU-optimized) */}
+      <div className="hx-stars" aria-hidden="true"/>
+
+      {/* Layer 2 — Sacred halo: warm diffuse radial glow */}
+      <div className="hx-sacred-halo" aria-hidden="true"/>
+
+      {/* Layer 3 — Flower of Life geometry: ultra-subtle, breathing */}
+      <div className="hx-sacred-geometry" aria-hidden="true">
+        <img
+          src="/hexastra-sacred-geometry.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
+      </div>
+
+      {/* Warm ambient gradient overlay */}
+      <div style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none',background:'radial-gradient(ellipse at 32% 22%, rgba(212,165,116,0.06) 0%, transparent 52%), radial-gradient(ellipse at 70% 75%, rgba(140,98,57,0.04) 0%, transparent 45%)'}} aria-hidden="true"/>
+    </>
+  )
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -805,14 +825,14 @@ export default function ChatPage() {
   const modeLabel = mode==='essentiel'?'Essentiel':mode==='premium'?'Premium':'Praticien'
 
   return (
-    <div style={{display:'flex',height:'100vh',overflow:'hidden',background:'var(--deep)',position:'relative'}}>
-      <Stars/>
+    <div style={{display:'flex',height:'100vh',overflow:'hidden',background:'var(--bg-void)',position:'relative'}}>
+      <CosmicBackground/>
       <LeftSidebar view={view} setView={setView} userEmail={userEmail} mode={mode} currentStep={step} stepLabels={stepLabels}
         projects={projects} readings={readings} onNewProject={newProject} onRenameProject={renameProject} onDeleteProject={deleteProject}
         onOpenReading={openReading} onAddToProject={addToProject} onSearch={()=>setShowSearch(true)}
         onLogout={async()=>{await supabase.auth.signOut();router.push('/login')}} dragId={dragId}/>
 
-      <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',zIndex:10,minWidth:0}}>
+      <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',zIndex:10,minWidth:0,position:'relative'}}>
         {/* Top bar */}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'7px 14px',borderBottom:'1px solid var(--b1)',background:'rgba(10,10,16,0.75)',backdropFilter:'blur(20px)',flexShrink:0}}>
           {/* Mode pill — Premium / Praticien */}
@@ -1016,25 +1036,9 @@ export default function ChatPage() {
       {showShare&&<ShareModal messages={messages} onClose={()=>setShowShare(false)}/>}
 
       <style>{`
-        @keyframes recPulse{0%,100%{box-shadow:0 0 0 0 rgba(212,165,116,0.35)}50%{box-shadow:0 0 0 6px rgba(212,165,116,0)}}
-        @keyframes waveBar{0%{transform:scaleY(0.35)}100%{transform:scaleY(1)}}
-        @keyframes welcomeFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes floatGlow{0%,100%{transform:translateY(0);box-shadow:0 0 20px rgba(212,165,116,0.15)}50%{transform:translateY(-5px);box-shadow:0 0 35px rgba(212,165,116,0.3)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes blink{0%,100%{opacity:0.25}50%{opacity:1}}
-        @keyframes pulse{0%,100%{opacity:0.15}50%{opacity:0.5}}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @keyframes amberPop{0%,100%{box-shadow:0 0 6px rgba(212,165,116,0.3)}50%{box-shadow:0 0 16px rgba(212,165,116,0.7)}}
-        *{box-sizing:border-box;margin:0;padding:0}
-        button{cursor:pointer;background:none;color:inherit}
-        input,textarea,select{font-family:inherit;outline:none}
-        textarea{resize:none}
-        ::-webkit-scrollbar{width:2px}
-        ::-webkit-scrollbar-thumb{background:rgba(212,165,116,0.2)}
-        select option{background:var(--panel);color:var(--tx1)}
-        optgroup{color:var(--amber);font-style:normal}
         .chip-hover:hover{background:rgba(212,165,116,0.1)!important;border-color:rgba(212,165,116,0.3)!important;color:rgba(255,255,255,0.75)!important}
         .lang-btn:hover{transform:translateY(-2px)!important;box-shadow:0 4px 24px rgba(212,165,116,0.35)!important}
+        .icon-btn:hover{background:rgba(212,165,116,0.12)!important;border-color:rgba(212,165,116,0.35)!important}
       `}</style>
     </div>
   )
@@ -1045,7 +1049,7 @@ export default function ChatPage() {
 // ═══════════════════════════════════════════════════════════════
 function ProfileViewPage({ profile, onEdit, onBack }: any) {
   return (
-    <div style={{minHeight:'100vh',background:'var(--deep)',display:'flex',flexDirection:'column',alignItems:'center',position:'relative',zIndex:10}}><Stars/>
+    <div style={{minHeight:'100vh',background:'var(--deep)',display:'flex',flexDirection:'column',alignItems:'center',position:'relative',zIndex:10}}><CosmicBackground/>
       <div style={{width:'100%',maxWidth:700,padding:'0 24px 48px',flex:1,display:'flex',flexDirection:'column',position:'relative',zIndex:1}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 0',borderBottom:'1px solid var(--b1)',marginBottom:24}}>
           <button style={{fontFamily:'var(--f-mono)',fontSize:10,color:'var(--tx3)',cursor:'pointer',background:'none',border:'none'}} onClick={onBack}>← Retour</button>
@@ -1069,7 +1073,7 @@ function ProjetsPage({ projects, readings, onBack, onNewProject, onRenameProject
   const [editName,setEditName] = useState('')
   const [newName,setNewName] = useState('')
   return (
-    <div style={{minHeight:'100vh',background:'var(--deep)',display:'flex',flexDirection:'column',alignItems:'center',position:'relative',zIndex:10}}><Stars/>
+    <div style={{minHeight:'100vh',background:'var(--deep)',display:'flex',flexDirection:'column',alignItems:'center',position:'relative',zIndex:10}}><CosmicBackground/>
       <div style={{width:'100%',maxWidth:640,padding:'0 24px 48px',flex:1,position:'relative',zIndex:1}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 0',borderBottom:'1px solid var(--b1)',marginBottom:20}}>
           <button style={{fontFamily:'var(--f-mono)',fontSize:10,color:'var(--tx3)',cursor:'pointer',background:'none',border:'none'}} onClick={onBack}>← Retour</button>
@@ -1111,7 +1115,7 @@ function AbonnementsPage({ onBack, userEmail, onSuccess }: any) {
     {key:'praticien',mode:'praticien' as Mode,badge:'PRATICIEN',name:'Praticien',price:'89',period:'/mois',features:['Mode cabinet complet','Profils clients illimités','Rapports exportables','12 sciences avancées','Support prioritaire'],accent:false},
   ]
   return (
-    <div style={{minHeight:'100vh',background:'var(--deep)',display:'flex',flexDirection:'column',alignItems:'center',position:'relative',zIndex:10}}><Stars/>
+    <div style={{minHeight:'100vh',background:'var(--deep)',display:'flex',flexDirection:'column',alignItems:'center',position:'relative',zIndex:10}}><CosmicBackground/>
       <div style={{width:'100%',maxWidth:960,padding:'0 24px 48px',flex:1,display:'flex',flexDirection:'column',position:'relative',zIndex:1}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 0',borderBottom:'1px solid var(--b1)',marginBottom:16}}>
           <button style={{fontFamily:'var(--f-mono)',fontSize:10,color:'var(--tx3)',cursor:'pointer',background:'none',border:'none'}} onClick={onBack}>← Retour au chat</button>
