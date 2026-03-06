@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 type Message = {
@@ -8,458 +9,826 @@ type Message = {
   role: 'user' | 'assistant'
   content: string
   created_at: string
+  showPremium?: boolean
+  cached?: boolean
 }
 
-type Mode = 'libre' | 'praticien'
+type Step = 1 | 2 | 3 | 4
 
-type BirthData = {
-  date: string
-  time: string
-  place: string
-}
-
-function HexLogo({ size = 28 }: { size?: number; color?: string }) {
-  return (
-    <img
-      src="/logo/hexastra-logo-transparent.png"
-      alt="HexAstra"
-      style={{ width: size, height: size, display: 'block', objectFit: 'contain' }}
-    />
-  )
-}
-
-const CHIPS_DEFAULT = [
-  'Je me sens bloqué en ce moment',
-  'Décision importante à prendre',
-  'Relation confuse',
-  'Direction de vie',
+const STEPS: { step: Step; label: string; desc: string }[] = [
+  { step: 1, label: 'Langue & Mode', desc: 'Choix de la langue et activation du mode (Libre ou Praticien)' },
+  { step: 2, label: 'Données de naissance', desc: 'Date, heure et lieu pour personnaliser ta lecture' },
+  { step: 3, label: 'Microlectures', desc: 'Profil · Année · Mois générés automatiquement' },
+  { step: 4, label: 'Exploration', desc: 'Menu, thèmes, sciences et lectures approfondies' },
 ]
 
-function makeWelcome(mode: Mode): Message {
-  return {
-    id: '0',
-    role: 'assistant',
-    content: mode === 'praticien'
-      ? 'Bienvenue dans le mode Praticien.\n\nPour analyser le profil d\'un client, partagez sa date de naissance, heure et lieu — ou décrivez sa situation.'
-      : 'Bienvenue. Dis-moi ce que tu veux éclaircir aujourd\'hui.\n\nSi tu veux une analyse personnalisée, clique sur "Nouvelle analyse" et entre tes données de naissance.',
-    created_at: new Date().toISOString(),
-  }
-}
-
-// ── Birth Modal ──────────────────────────────────────────────────────────────
-function BirthModal({ onSubmit, onClose }: {
-  onSubmit: (d: BirthData) => void
-  onClose: () => void
-}) {
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('12:00')
-  const [place, setPlace] = useState('')
-  const [error, setError] = useState('')
-
-  const submit = () => {
-    if (!date) { setError('La date de naissance est requise.'); return }
-    if (!place.trim()) { setError('Le lieu de naissance est requis.'); return }
-    onSubmit({ date, time, place })
-  }
-
-  return (
-    <div style={m.overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div style={m.modal}>
-        <div style={m.hdr}>
-          <div>
-            <div style={m.tag}>// Nouvelle analyse</div>
-            <h2 style={m.title}>DONNÉES DE NAISSANCE</h2>
-          </div>
-          <button onClick={onClose} style={m.closeBtn}>✕</button>
-        </div>
-        <p style={m.sub}>Ces informations permettent de calculer ton thème natal et ton profil Human Design avec précision.</p>
-        <div style={m.divider} />
-        <div style={m.fields}>
-          <div style={m.field}>
-            <label style={m.label}>Date de naissance *</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={m.input} />
-          </div>
-          <div style={m.field}>
-            <label style={m.label}>Heure de naissance</label>
-            <input type="time" value={time} onChange={e => setTime(e.target.value)} style={m.input} />
-            <span style={m.hint}>Si inconnue, laisse 12:00</span>
-          </div>
-          <div style={m.field}>
-            <label style={m.label}>Lieu de naissance *</label>
-            <input
-              type="text"
-              placeholder="Paris, France"
-              value={place}
-              onChange={e => setPlace(e.target.value)}
-              style={m.input}
-            />
-          </div>
-        </div>
-        {error && <p style={m.err}>{error}</p>}
-        <button onClick={submit} style={m.btn}>
-          Lancer l'analyse
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-          </svg>
-        </button>
-        <p style={m.note}>Tes données ne sont jamais partagées · Analyse locale uniquement</p>
-      </div>
-    </div>
-  )
-}
-
-// ── Main Component ───────────────────────────────────────────────────────────
 export default function ChatPage() {
-  const router = useRouter()
-  const [mode, setMode] = useState<Mode>('libre')
-  const [messages, setMessages] = useState<Message[]>([makeWelcome('libre')])
+  const [messages, setMessages] = useState<Message[]>([{
+    id: '0', role: 'assistant',
+    content: 'Bienvenue.\nJe suis HexAstra Coach.\n\nChoisis ta langue / Choose your language :\nFrançais / English',
+    created_at: new Date().toISOString(),
+  }])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [threadId, setThreadId] = useState<string | null>(null)
-  const [chips, setChips] = useState<string[]>(CHIPS_DEFAULT)
-  const [stage, setStage] = useState(0)
-  const [showBirth, setShowBirth] = useState(false)
-  const [birthData, setBirthData] = useState<BirthData | null>(null)
+  const [isTyping, setIsTyping] = useState(false)
+  const [conversationId, setConversationId] = useState<string | null>(null)
+  const [showBirthModal, setShowBirthModal] = useState(false)
+  const [showPremiumPage, setShowPremiumPage] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+  const [currentStep, setCurrentStep] = useState<Step>(1)
+  const [msgCount, setMsgCount] = useState(0)
+  const [replyCache, setReplyCache] = useState<Map<string, string>>(new Map())
   const endRef = useRef<HTMLDivElement>(null)
   const taRef = useRef<HTMLTextAreaElement>(null)
+  const router = useRouter()
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserEmail(data.user.email || '')
+    })
+  }, [])
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+  }, [messages, isTyping])
 
+  // Auto-resize textarea
   useEffect(() => {
     if (taRef.current) {
       taRef.current.style.height = 'auto'
-      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 120) + 'px'
+      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 100) + 'px'
     }
   }, [input])
 
-  // Mode change resets conversation
-  const handleModeChange = (newMode: Mode) => {
-    setMode(newMode)
-    setMessages([makeWelcome(newMode)])
-    setStage(0)
-    setChips(CHIPS_DEFAULT)
-    setThreadId(null)
-  }
+  // Advance step logic
+  const advanceStep = useCallback((msgIndex: number) => {
+    if (msgIndex >= 2 && currentStep < 2) setCurrentStep(2)
+    if (msgIndex >= 4 && currentStep < 3) setCurrentStep(3)
+    if (msgIndex >= 6 && currentStep < 4) setCurrentStep(4)
+  }, [currentStep])
 
-  const handleNewAnalysis = () => {
-    setShowBirth(true)
-  }
-
-  const handleBirthSubmit = (data: BirthData) => {
-    setBirthData(data)
-    setShowBirth(false)
-    const msg = `Je veux une analyse personnalisée. Né(e) le ${data.date} à ${data.time}, à ${data.place}.`
-    send(msg, data)
-  }
-
-  const send = useCallback(async (text: string, birth?: BirthData) => {
-    if (!text.trim() || loading) return
+  const handleSend = useCallback(async (text?: string, birthData?: any) => {
+    const content = text || input.trim()
+    if (!content && !birthData) return
 
     const userMsg: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: text,
+      id: Date.now().toString(), role: 'user',
+      content: birthData
+        ? `Données de naissance : ${birthData.name || ''} · ${birthData.date} · ${birthData.time || 'heure inconnue'} · ${birthData.place || `${birthData.lat}, ${birthData.lon}`}`
+        : content,
       created_at: new Date().toISOString(),
     }
 
-    const newMsgs = [...messages, userMsg]
-    setMessages(newMsgs)
+    const newMessages = [...messages, userMsg]
+    setMessages(newMessages)
     setInput('')
-    setLoading(true)
-    setStage(s => Math.min(s + 1, 3))
+    setIsTyping(true)
+    const newCount = msgCount + 1
+    setMsgCount(newCount)
+    advanceStep(newMessages.length)
+
+    // Check cache
+    const cacheKey = birthData ? JSON.stringify(birthData) : content
+    if (replyCache.has(cacheKey) && !birthData) {
+      setTimeout(() => {
+        setIsTyping(false)
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(), role: 'assistant',
+          content: replyCache.get(cacheKey)!,
+          created_at: new Date().toISOString(),
+          cached: true,
+        }])
+      }, 400)
+      return
+    }
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: newMsgs.map(m => ({ role: m.role, content: m.content })),
-          threadId,
-          mode,
-          birthData: birth || birthData || null,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+          mode: 'libre',
+          birthData: birthData || null,
+          conversationId,
         }),
       })
       const data = await res.json()
+      if (data.conversationId) setConversationId(data.conversationId)
 
-      if (data.threadId) setThreadId(data.threadId)
-      if (data.chips?.length) setChips(data.chips)
-      if (data.needsBirthData) setShowBirth(true)
+      const reply = data.reply || 'Une erreur est survenue.'
+      setIsTyping(false)
+
+      // Cache simple
+      if (!birthData && content.length < 200) {
+        setReplyCache(prev => new Map(prev).set(cacheKey, reply))
+      }
+
+      // Show premium after 3 free messages
+      const showPrem = newCount >= 3 && newCount % 4 === 3
 
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: data.reply ?? '…',
+        id: Date.now().toString(), role: 'assistant',
+        content: reply,
         created_at: new Date().toISOString(),
+        showPremium: showPrem,
       }])
+
+      advanceStep(newMessages.length + 1)
+
+      // Trigger birth modal if AI asks for birth data
+      if (data.needsBirthData) {
+        setTimeout(() => setShowBirthModal(true), 800)
+      }
     } catch {
+      setIsTyping(false)
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: 'Erreur de connexion. Réessayez dans un instant.',
+        id: Date.now().toString(), role: 'assistant',
+        content: 'Erreur de connexion. Réessaie dans un instant.',
         created_at: new Date().toISOString(),
       }])
-    } finally {
-      setLoading(false)
     }
-  }, [messages, loading, threadId, mode, birthData])
+  }, [input, messages, conversationId, msgCount, replyCache, advanceStep])
 
-  const onKey = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(input) }
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
   }
 
-  const STAGES = ['Exploration', 'Clarification', 'Synthèse', "Plan d'action"]
+  if (showPremiumPage) {
+    return <PremiumPage onBack={() => setShowPremiumPage(false)} userEmail={userEmail} />
+  }
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', background: '#0E0B08', overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
-      <style>{CHAT_CSS}</style>
+    <div style={s.root}>
+      <div style={s.bgGlow} />
 
-      {/* ── Sidebar ── */}
-      <aside className="sidebar">
-        <div className="sb-top">
-          <a href="/" className="sb-logo">
-            <HexLogo size={80} />
-            <div className="sb-logo-text">
-              <span className="sb-name">HexAstra</span>
-              <em className="sb-sub">Coach</em>
-            </div>
-          </a>
+      {/* Sidebar */}
+      <aside style={s.sidebar}>
+        <div style={s.sbTop}>
+          <div style={s.sbHex} />
+          <div style={s.sbName}>Hex<span style={s.sbAccent}>Astra</span></div>
         </div>
 
-        <nav className="sb-nav">
-          <div className="sb-nav-label">Navigation</div>
-          <a href="/" className="sb-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Accueil
-          </a>
-          <button className="sb-item sb-item-on">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-            Chat
+        <div style={s.sbSectionLabel}>Navigation</div>
+        <nav style={s.nav}>
+          <button style={{ ...s.navItem, ...s.navActive }}>
+            <svg style={s.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            Chat IA
           </button>
-          <button className="sb-item" onClick={() => router.push('/login')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Se connecter
+          <button style={s.navItem} onClick={() => router.push('/library')}>
+            <svg style={s.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+            </svg>
+            Mes Lectures
+          </button>
+          <button style={s.navItem} onClick={() => setShowPremiumPage(true)}>
+            <svg style={s.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Premium
           </button>
         </nav>
 
-        <div className="sb-stages">
-          <div className="sb-stage-label">Progression</div>
-          {STAGES.map((s, i) => (
-            <div key={i} className={`sb-stage${i <= stage ? ' sb-stage-on' : ''}`}>
-              <span className="sb-stage-dot" />
-              {s}
-            </div>
-          ))}
+        {/* Progression HexAstra — 4 étapes */}
+        <div style={s.progressSection}>
+          <div style={s.progressLabel}>// Progression</div>
+          {STEPS.map(({ step, label, desc }) => {
+            const done = currentStep > step
+            const active = currentStep === step
+            return (
+              <div key={step} style={s.stepRow}>
+                <div style={{
+                  ...s.stepDot,
+                  background: done ? 'var(--amber)' : active ? 'transparent' : 'transparent',
+                  border: done ? '2px solid var(--amber)' : active ? '2px solid var(--amber)' : '2px solid var(--b2)',
+                  boxShadow: active ? '0 0 8px rgba(255,140,0,0.5)' : 'none',
+                }}>
+                  {done && (
+                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 13l4 4L19 7" stroke="var(--void)" strokeWidth="3.5" strokeLinecap="round"/>
+                    </svg>
+                  )}
+                  {active && <div style={s.stepDotInner} />}
+                </div>
+                <div style={s.stepInfo}>
+                  <div style={{
+                    ...s.stepName,
+                    color: done || active ? 'var(--tx1)' : 'var(--tx3)',
+                    fontWeight: active ? 500 : 400,
+                  }}>{label}</div>
+                  {active && <div style={s.stepDesc}>{desc}</div>}
+                </div>
+                {step < 4 && (
+                  <div style={{
+                    ...s.stepLine,
+                    background: done ? 'var(--amber)' : 'var(--b1)',
+                  }} />
+                )}
+              </div>
+            )
+          })}
         </div>
 
-        {birthData && (
-          <div className="sb-birth">
-            <div className="sb-birth-label">Profil actif</div>
-            <div className="sb-birth-val">{birthData.date}</div>
-            <div className="sb-birth-val">{birthData.time} · {birthData.place}</div>
+        <div style={s.sbBottom}>
+          <div style={s.userRow}>
+            <div style={s.userAv}>{userEmail[0]?.toUpperCase() || 'U'}</div>
+            <div style={s.userEmail}>{userEmail}</div>
           </div>
-        )}
-
-        <div className="sb-bottom">
-          <a href="/#pricing" className="sb-upgrade">✦ Passer à Premium</a>
+          <button onClick={handleLogout} style={s.logoutBtn}>Déconnexion</button>
         </div>
       </aside>
 
-      {/* ── Main ── */}
-      <main className="chat-main">
-
-        {/* Header */}
-        <header className="chat-header">
-          <div className="chat-header-left">
-            <div className="chat-title">HexAstra Coach</div>
-            <div className="chat-online"><span className="online-dot" />En ligne</div>
-          </div>
-          <div className="chat-header-right">
-            <button className="new-analysis-btn" onClick={handleNewAnalysis}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              Nouvelle analyse
-            </button>
-            <div className="mode-toggle">
-              <button onClick={() => handleModeChange('libre')} className={`mode-btn${mode === 'libre' ? ' mode-on' : ''}`}>Libre</button>
-              <button onClick={() => handleModeChange('praticien')} className={`mode-btn${mode === 'praticien' ? ' mode-on' : ''}`}>Praticien</button>
-            </div>
-          </div>
-        </header>
-
+      {/* Main */}
+      <main style={s.main}>
         {/* Messages */}
-        <div className="chat-msgs">
+        <div style={s.msgs}>
           {messages.map((msg, i) => (
-            <div key={msg.id} className={`msg-row ${msg.role === 'user' ? 'msg-user' : 'msg-ai'}`}
-              style={{ animationDelay: `${i * 0.03}s` }}>
-              {msg.role === 'assistant' && (
-                <div className="msg-av"><HexLogo size={28} /></div>
-              )}
-              <div className="msg-bubble">
-                {msg.content.split('\n').map((line, j, arr) => (
-                  <span key={j}>{line}{j < arr.length - 1 && <br />}</span>
-                ))}
-                <span className="msg-time">
+            <div key={msg.id} style={{
+              ...s.msgRow,
+              justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+              animation: 'fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both',
+              animationDelay: `${i * 0.03}s`,
+            }}>
+              {msg.role === 'assistant' && <div style={s.av}>HA</div>}
+              <div style={{ ...s.bub, ...(msg.role === 'user' ? s.bubU : s.bubAI) }}>
+                <p style={s.bubTxt}>{msg.content}</p>
+                {msg.cached && (
+                  <span style={s.cachedBadge}>⚡ Cache</span>
+                )}
+                {msg.showPremium && (
+                  <button onClick={() => setShowPremiumPage(true)} style={s.premBtn}>
+                    ✦ Passer à Premium — PDF · Audio · Lectures illimitées →
+                  </button>
+                )}
+                <span style={s.time}>
                   {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             </div>
           ))}
 
-          {loading && (
-            <div className="msg-row msg-ai">
-              <div className="msg-av"><HexLogo size={28} /></div>
-              <div className="msg-bubble msg-typing">
-                <span /><span /><span />
+          {isTyping && (
+            <div style={{ ...s.msgRow, justifyContent: 'flex-start' }}>
+              <div style={s.av}>HA</div>
+              <div style={{ ...s.bub, ...s.bubAI, padding: '14px 18px' }}>
+                <div style={s.dots}>
+                  {[0, 1, 2].map(i => (
+                    <span key={i} style={{ ...s.dot, animationDelay: `${i * 0.18}s` }} />
+                  ))}
+                </div>
               </div>
             </div>
           )}
           <div ref={endRef} />
         </div>
 
-        {/* Chips */}
-        <div className="chat-chips">
-          {chips.map((c, i) => (
-            <button key={i} className="chip" onClick={() => send(c)}>{c}</button>
-          ))}
-          <button className="chip chip-birth" onClick={handleNewAnalysis}>
-            ✦ Analyse personnalisée
-          </button>
-        </div>
-
         {/* Composer */}
-        <div className="chat-composer">
-          <div className="composer-inner">
+        <div style={s.composerWrap}>
+          {/* Titre centré */}
+          <div style={s.analyseTitle}>Analyse personnalisée</div>
+
+          <div style={s.compInner}>
+            <button
+              onClick={() => setShowBirthModal(true)}
+              style={s.birthBtn}
+              title="Saisir mes données de naissance"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </button>
+
             <textarea
               ref={taRef}
-              className="composer-ta"
-              placeholder="Écris ta question… (décision, relation, direction, blocage)"
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={onKey}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+              }}
+              placeholder="Pose ta question à HexAstra..."
               rows={1}
+              style={s.ta}
             />
+
             <button
-              className="composer-send"
-              onClick={() => send(input)}
-              disabled={loading || !input.trim()}
+              onClick={() => handleSend()}
+              disabled={!input.trim() || isTyping}
+              style={{ ...s.sendBtn, opacity: !input.trim() || isTyping ? 0.3 : 1 }}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           </div>
-          <div className="composer-micro">Analyse conversationnelle claire · Aucun conseil médical ou thérapeutique</div>
+
+          <div style={s.compFooter}>
+            <span style={s.compHint}>Entrée pour envoyer · Shift+Entrée pour nouvelle ligne</span>
+            <button style={s.premiumHintBtn} onClick={() => setShowPremiumPage(true)}>
+              ✦ Premium
+            </button>
+          </div>
         </div>
       </main>
 
-      {showBirth && (
+      {showBirthModal && (
         <BirthModal
-          onSubmit={handleBirthSubmit}
-          onClose={() => setShowBirth(false)}
+          onSubmit={data => { setShowBirthModal(false); handleSend(undefined, data) }}
+          onClose={() => setShowBirthModal(false)}
         />
       )}
     </div>
   )
 }
 
-// ── Styles ───────────────────────────────────────────────────────────────────
-const CHAT_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-a{text-decoration:none;color:inherit}
-button{border:none;cursor:pointer;background:none}
+// ─────────────────────────────────────────────────────────────────
+// PAGE PREMIUM (dédiée, pas de retour landing)
+// ─────────────────────────────────────────────────────────────────
 
-/* SIDEBAR */
-.sidebar{width:220px;min-width:220px;height:100dvh;background:#14100C;border-right:1px solid rgba(198,163,95,0.18);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.sb-top{padding:20px 16px;border-bottom:1px solid rgba(198,163,95,0.12)}
-.sb-logo{display:flex;align-items:center;gap:10px}
-.sb-logo-text{display:flex;flex-direction:column;gap:1px}
-.sb-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:500;color:#F3EFEA;line-height:1.1}
-.sb-sub{font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:#C6A35F;line-height:1.1}
-.sb-nav{padding:16px 8px;flex:1}
-.sb-nav-label{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(243,239,234,0.35);padding:0 8px 8px}
-.sb-item{display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;font-weight:400;color:rgba(243,239,234,0.55);transition:all .2s;text-align:left}
-.sb-item:hover{background:rgba(255,255,255,0.04);color:rgba(243,239,234,0.85)}
-.sb-item-on{color:#C6A35F!important;background:rgba(198,163,95,0.08)!important;border-left:2px solid #C6A35F}
-.sb-stages{padding:14px 16px;border-top:1px solid rgba(198,163,95,0.1)}
-.sb-stage-label{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(243,239,234,0.35);margin-bottom:10px}
-.sb-stage{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;color:rgba(243,239,234,0.28);padding:4px 0;transition:color .4s}
-.sb-stage-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.5}
-.sb-stage-on{color:#C6A35F}
-.sb-stage-on .sb-stage-dot{opacity:1;box-shadow:0 0 4px #C6A35F}
-.sb-birth{padding:10px 16px;border-top:1px solid rgba(198,163,95,0.1)}
-.sb-birth-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:#C6A35F;margin-bottom:5px}
-.sb-birth-val{font-family:'DM Mono',monospace;font-size:10px;color:rgba(243,239,234,0.55);line-height:1.6}
-.sb-bottom{padding:14px;border-top:1px solid rgba(198,163,95,0.12)}
-.sb-upgrade{display:flex;align-items:center;justify-content:center;padding:9px;background:rgba(198,163,95,0.08);border:1px solid rgba(198,163,95,0.22);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:#C6A35F;transition:all .2s}
-.sb-upgrade:hover{background:rgba(198,163,95,0.15)}
+function PremiumPage({ onBack, userEmail }: { onBack: () => void; userEmail: string }) {
+  const [loading, setLoading] = useState<string | null>(null)
 
-/* MAIN */
-.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-.chat-header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(198,163,95,0.15);background:rgba(14,11,8,0.85);backdrop-filter:blur(16px);flex-shrink:0;gap:12px}
-.chat-header-left{display:flex;align-items:center;gap:12px}
-.chat-header-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.chat-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:500;color:#F3EFEA}
-.chat-online{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:rgba(243,239,234,0.45);text-transform:uppercase}
-.online-dot{width:5px;height:5px;border-radius:50%;background:#5db87a;animation:pulse 2.5s ease infinite;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.new-analysis-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(198,163,95,0.1);border:1px solid rgba(198,163,95,0.3);border-radius:20px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;color:#C6A35F;transition:all .2s;white-space:nowrap}
-.new-analysis-btn:hover{background:rgba(198,163,95,0.2)}
-.mode-toggle{display:flex;background:rgba(255,255,255,0.05);border:1px solid rgba(198,163,95,0.18);border-radius:6px;overflow:hidden}
-.mode-btn{padding:6px 14px;font-family:'DM Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:rgba(243,239,234,0.45);transition:all .2s}
-.mode-on{background:rgba(198,163,95,0.12)!important;color:#C6A35F!important}
+  const checkout = async (priceKey: string) => {
+    setLoading(priceKey)
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceKey }),
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch {
+      setLoading(null)
+    }
+  }
 
-/* MESSAGES */
-.chat-msgs{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
-.chat-msgs::-webkit-scrollbar{width:2px}
-.chat-msgs::-webkit-scrollbar-thumb{background:rgba(198,163,95,0.2);border-radius:2px}
-.msg-row{display:flex;align-items:flex-end;gap:10px;animation:fadeUp .32s cubic-bezier(0.16,1,0.3,1) both}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.msg-user{flex-direction:row-reverse}
-.msg-av{width:38px;height:38px;border-radius:50%;border:1px solid rgba(198,163,95,0.25);background:rgba(198,163,95,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
-.msg-bubble{font-family:'Inter',sans-serif;font-size:14px;font-weight:300;line-height:1.75;padding:12px 16px;border-radius:16px;max-width:min(68ch,75%);position:relative}
-.msg-ai .msg-bubble{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(243,239,234,0.82);border-radius:16px 16px 16px 4px}
-.msg-user .msg-bubble{background:rgba(198,163,95,0.12);border:1px solid rgba(198,163,95,0.22);color:#F3EFEA;border-radius:16px 16px 4px 16px}
-.msg-time{display:block;font-family:'DM Mono',monospace;font-size:9px;color:rgba(243,239,234,0.3);margin-top:6px;text-align:right}
-.msg-typing{display:flex!important;align-items:center;gap:5px;padding:14px 16px!important;min-width:54px}
-.msg-typing span{width:6px;height:6px;border-radius:50%;background:#C6A35F;animation:dots 1.2s ease infinite;flex-shrink:0}
-.msg-typing span:nth-child(2){animation-delay:.18s}
-.msg-typing span:nth-child(3){animation-delay:.36s}
-@keyframes dots{0%,80%,100%{opacity:.2;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
+  const plans = [
+    {
+      key: 'lecture_unique',
+      badge: 'ESSENTIEL',
+      name: 'Lecture Unique',
+      price: '19',
+      desc: 'Une lecture complète PDF personnalisée avec ton thème natal et Human Design.',
+      features: ['Lecture PDF complète', 'Thème natal + Human Design', 'Numérologie + Kua', 'Livraison immédiate'],
+      cta: 'Obtenir ma lecture',
+      accent: false,
+    },
+    {
+      key: 'premium_mensuel',
+      badge: 'POPULAIRE',
+      name: 'Premium Mensuel',
+      price: '29',
+      desc: 'Accès illimité aux lectures, audio ElevenLabs, et analyses approfondies.',
+      features: ['Lectures illimitées', 'Audio IA (ElevenLabs)', 'PDF haute qualité', 'Toutes les sciences', 'Mode Praticien complet', 'Historique conservé'],
+      cta: 'Commencer Premium',
+      accent: true,
+    },
+    {
+      key: 'cabinet',
+      badge: 'PRO',
+      name: 'Cabinet',
+      price: '89',
+      desc: 'Pour coachs et consultants — analyses clients, rapports exportables.',
+      features: ['Tout Premium +', 'Analyses clients illimitées', 'Rapports exportables', 'Mode Cabinet exclusif', 'Support prioritaire'],
+      cta: 'Accès Cabinet',
+      accent: false,
+    },
+  ]
 
-/* CHIPS */
-.chat-chips{display:flex;flex-wrap:wrap;gap:7px;padding:10px 24px;border-top:1px solid rgba(255,255,255,0.05)}
-.chip{font-family:'Inter',sans-serif;font-size:12px;font-weight:400;color:rgba(184,157,150,0.9);background:rgba(184,157,150,0.07);border:1px solid rgba(184,157,150,0.2);border-radius:50px;padding:5px 14px;transition:all .2s;white-space:nowrap}
-.chip:hover{background:rgba(184,157,150,0.16);border-color:rgba(184,157,150,0.38);color:#F3EFEA}
-.chip-birth{color:#C6A35F;background:rgba(198,163,95,0.07);border-color:rgba(198,163,95,0.25)}
-.chip-birth:hover{background:rgba(198,163,95,0.16);border-color:rgba(198,163,95,0.45)}
+  return (
+    <div style={pp.root}>
+      <div style={pp.bgGlow} />
 
-/* COMPOSER */
-.chat-composer{padding:12px 20px 18px;border-top:1px solid rgba(198,163,95,0.18);background:rgba(14,11,8,0.7);backdrop-filter:blur(12px);flex-shrink:0}
-.composer-inner{display:flex;align-items:flex-end;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(198,163,95,0.2);border-radius:14px;padding:12px 14px;transition:border-color .2s}
-.composer-inner:focus-within{border-color:rgba(198,163,95,0.4)}
-.composer-ta{flex:1;background:transparent;border:none;color:#F3EFEA;font-family:'Inter',sans-serif;font-size:14px;font-weight:300;line-height:1.55;resize:none;min-height:22px;max-height:120px;overflow-y:auto}
-.composer-ta::placeholder{color:rgba(243,239,234,0.35)}
-.composer-ta:focus{outline:none}
-.composer-send{width:36px;height:36px;border-radius:50%;background:#C6A35F;color:#0E0B08;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;box-shadow:0 4px 14px rgba(198,163,95,0.28)}
-.composer-send:hover:not(:disabled){background:#d4b26e;transform:scale(1.06)}
-.composer-send:disabled{opacity:.35;cursor:not-allowed}
-.composer-micro{font-family:'DM Mono',monospace;font-size:9px;color:rgba(243,239,234,0.3);text-align:center;letter-spacing:.08em;margin-top:8px}
+      {/* Header */}
+      <header style={pp.header}>
+        <div style={pp.headerLeft}>
+          <button onClick={onBack} style={pp.backBtn}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Retour au chat
+          </button>
+        </div>
+        <div style={pp.logo}>
+          <div style={pp.logoHex} />
+          <span style={pp.logoName}>Hex<span style={{ color: 'var(--amber)' }}>Astra</span></span>
+        </div>
+        <div style={pp.headerRight}>
+          <span style={pp.userBadge}>{userEmail}</span>
+        </div>
+      </header>
 
-/* MOBILE */
-@media(max-width:700px){
-  .sidebar{display:none}
-  .chat-header{padding:12px 16px}
-  .chat-title{font-size:14px}
-  .new-analysis-btn span{display:none}
-  .chat-msgs{padding:16px}
-  .chat-chips{padding:8px 14px}
-  .chat-composer{padding:10px 14px 16px}
+      {/* Hero */}
+      <div style={pp.hero}>
+        <div style={pp.heroTag}>// ABONNEMENTS & LECTURES</div>
+        <h1 style={pp.heroTitle}>Accède à la profondeur<br /><span style={pp.heroAccent}>complète de HexAstra</span></h1>
+        <p style={pp.heroSub}>
+          Lectures personnalisées par Swiss Ephemeris · Audio IA · Human Design précis · 12 sciences intégrées
+        </p>
+      </div>
+
+      {/* Plans */}
+      <div style={pp.plans}>
+        {plans.map(plan => (
+          <div key={plan.key} style={{ ...pp.card, ...(plan.accent ? pp.cardAccent : {}) }}>
+            {plan.accent && <div style={pp.popularBadge}>✦ Le plus choisi</div>}
+            <div style={pp.cardBadge}>{plan.badge}</div>
+            <div style={pp.cardName}>{plan.name}</div>
+            <div style={pp.cardPrice}>
+              <span style={pp.currency}>€</span>
+              <span style={pp.amount}>{plan.price}</span>
+              <span style={pp.period}>{plan.key === 'lecture_unique' ? '/lecture' : '/mois'}</span>
+            </div>
+            <p style={pp.cardDesc}>{plan.desc}</p>
+            <div style={pp.divider} />
+            <ul style={pp.features}>
+              {plan.features.map(f => (
+                <li key={f} style={pp.feature}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13l4 4L19 7" stroke="var(--amber)" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => checkout(plan.key)}
+              disabled={loading === plan.key}
+              style={{ ...pp.cta, ...(plan.accent ? pp.ctaAccent : {}) }}
+            >
+              {loading === plan.key ? (
+                <span style={pp.ctaLoading}>
+                  <span style={pp.ctaSpinner} /> Redirection...
+                </span>
+              ) : plan.cta}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Garantie */}
+      <div style={pp.guarantee}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" strokeWidth="1.8">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span style={pp.guaranteeTxt}>Paiement sécurisé Stripe · Satisfaction garantie · Annulation à tout moment</span>
+      </div>
+
+      <style>{`
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes amberPop { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.75;transform:scale(0.96)} }
+      `}</style>
+    </div>
+  )
 }
-`
 
-// ── Modal Styles ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// BIRTH MODAL
+// ─────────────────────────────────────────────────────────────────
+
+function BirthModal({ onSubmit, onClose }: { onSubmit: (d: any) => void; onClose: () => void }) {
+  const [name, setName] = useState('')
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
+  const [timeUnknown, setTimeUnknown] = useState(false)
+  const [city, setCity] = useState('')
+  const [lat, setLat] = useState('')
+  const [lon, setLon] = useState('')
+  const [error, setError] = useState('')
+
+  const submit = () => {
+    if (!date) { setError('La date de naissance est requise.'); return }
+    if (!timeUnknown && !time) { setError("Indique l'heure ou coche « heure inconnue »."); return }
+    onSubmit({
+      name, date, time: timeUnknown ? 'inconnue' : time,
+      place: city,
+      lat: lat ? parseFloat(lat) : undefined,
+      lon: lon ? parseFloat(lon) : undefined,
+    })
+  }
+
+  return (
+    <div style={m.overlay}>
+      <div style={m.modal}>
+        <div style={m.hdr}>
+          <div>
+            <div style={m.stepLbl}>// Données de naissance</div>
+            <h2 style={m.title}>Profil personnel</h2>
+          </div>
+          <button onClick={onClose} style={m.closeBtn}>✕</button>
+        </div>
+        <p style={m.sub}>Ces données permettent de calculer ton thème natal, ton Human Design et tes cycles personnels.</p>
+        <div style={m.divider} />
+        <div style={m.fields}>
+          <div style={m.field}>
+            <label style={m.label}>Prénom</label>
+            <input placeholder="Ton prénom" value={name} onChange={e => setName(e.target.value)} style={m.input} />
+          </div>
+          <div style={m.field}>
+            <label style={m.label}>Date de naissance</label>
+            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={m.input} />
+          </div>
+          <div style={m.field}>
+            <label style={m.label}>Heure de naissance</label>
+            <input type="time" value={time} onChange={e => setTime(e.target.value)} disabled={timeUnknown} style={{ ...m.input, opacity: timeUnknown ? 0.4 : 1 }} />
+            <label style={m.checkRow}>
+              <input type="checkbox" checked={timeUnknown} onChange={e => setTimeUnknown(e.target.checked)} style={{ accentColor: 'var(--amber)' }} />
+              <span style={m.checkTxt}>Heure inconnue (lecture probabiliste)</span>
+            </label>
+          </div>
+          <div style={m.field}>
+            <label style={m.label}>Ville de naissance</label>
+            <input placeholder="Paris, France" value={city} onChange={e => setCity(e.target.value)} style={m.input} />
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ ...m.field, flex: 1 }}>
+              <label style={m.label}>Latitude (optionnel)</label>
+              <input type="number" placeholder="48.8566" value={lat} onChange={e => setLat(e.target.value)} style={m.input} step="0.0001" />
+            </div>
+            <div style={{ ...m.field, flex: 1 }}>
+              <label style={m.label}>Longitude (optionnel)</label>
+              <input type="number" placeholder="2.3522" value={lon} onChange={e => setLon(e.target.value)} style={m.input} step="0.0001" />
+            </div>
+          </div>
+        </div>
+        {error && <p style={m.err}>{error}</p>}
+        <button onClick={submit} style={m.btn}>
+          Lancer ma lecture
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STYLES — CHAT
+// ─────────────────────────────────────────────────────────────────
+
+const s: Record<string, React.CSSProperties> = {
+  root: { display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--deep)', position: 'relative' },
+  bgGlow: {
+    position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+    background: 'radial-gradient(ellipse 50% 50% at 20% 50%,rgba(255,140,0,0.04),transparent)',
+  },
+  sidebar: {
+    width: '220px', minWidth: '220px', height: '100vh',
+    background: 'var(--pitch)', borderRight: '1px solid var(--b1)',
+    display: 'flex', flexDirection: 'column', zIndex: 10,
+  },
+  sbTop: {
+    padding: '18px 16px 12px', display: 'flex', alignItems: 'center', gap: '9px',
+    borderBottom: '1px solid var(--b1)',
+  },
+  sbHex: {
+    width: '22px', height: '22px', flexShrink: 0, background: 'var(--amber)',
+    clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+    boxShadow: '0 0 10px rgba(255,140,0,0.4)',
+    animation: 'amberPop 4s ease-in-out infinite',
+  },
+  sbName: { fontFamily: 'var(--f-display)', fontSize: '16px', letterSpacing: '0.1em', color: 'var(--chrome)', textTransform: 'uppercase' },
+  sbAccent: { color: 'var(--amber)' },
+  sbSectionLabel: { padding: '14px 16px 5px', fontFamily: 'var(--f-mono)', fontSize: '8px', letterSpacing: '0.18em', color: 'var(--tx3)', textTransform: 'uppercase' },
+  nav: { display: 'flex', flexDirection: 'column', gap: '2px', padding: '0 8px' },
+  navItem: {
+    display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 10px', borderRadius: '6px',
+    fontFamily: 'var(--f-ui)', fontSize: '12.5px', color: 'var(--tx3)', transition: 'all 0.18s', textAlign: 'left' as const,
+    background: 'transparent', border: 'none', cursor: 'pointer',
+  },
+  navActive: { color: 'var(--amber)', background: 'rgba(255,140,0,0.07)', borderLeft: '2px solid var(--amber)' },
+  navIcon: { width: '13px', height: '13px', opacity: 0.6, flexShrink: 0 },
+
+  // Progression
+  progressSection: { padding: '14px 12px 8px', flex: 1 },
+  progressLabel: { fontFamily: 'var(--f-mono)', fontSize: '8px', letterSpacing: '0.18em', color: 'var(--tx3)', textTransform: 'uppercase', marginBottom: '12px', paddingLeft: '4px' },
+  stepRow: { display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: '4px', position: 'relative' as const },
+  stepDot: {
+    width: '14px', height: '14px', borderRadius: '50%', flexShrink: 0,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    marginTop: '2px', transition: 'all 0.3s',
+  },
+  stepDotInner: { width: '5px', height: '5px', borderRadius: '50%', background: 'var(--amber)' },
+  stepLine: {
+    position: 'absolute' as const, left: '6px', top: '18px',
+    width: '2px', height: '18px', borderRadius: '1px',
+  },
+  stepInfo: { flex: 1, paddingBottom: '12px' },
+  stepName: { fontFamily: 'var(--f-mono)', fontSize: '10px', letterSpacing: '0.06em', transition: 'color 0.3s' },
+  stepDesc: { fontFamily: 'var(--f-ui)', fontSize: '10px', color: 'var(--tx3)', lineHeight: 1.5, marginTop: '3px' },
+
+  sbBottom: { padding: '12px', borderTop: '1px solid var(--b1)', display: 'flex', flexDirection: 'column', gap: '8px' },
+  userRow: { display: 'flex', alignItems: 'center', gap: '8px' },
+  userAv: {
+    width: '26px', height: '26px', borderRadius: '50%', flexShrink: 0,
+    background: 'var(--lift)', border: '1px solid var(--b2)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: 'var(--f-mono)', fontSize: '10px', color: 'var(--tx2)',
+  },
+  userEmail: { fontFamily: 'var(--f-mono)', fontSize: '9.5px', color: 'var(--tx3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const },
+  logoutBtn: { fontFamily: 'var(--f-mono)', fontSize: '9px', color: 'var(--tx3)', textAlign: 'left' as const, padding: '2px 0', textDecoration: 'underline', background: 'transparent', border: 'none', cursor: 'pointer' },
+
+  // Main
+  main: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 10 },
+
+  msgs: {
+    flex: 1, overflowY: 'auto' as const, padding: '20px 24px',
+    display: 'flex', flexDirection: 'column' as const, gap: '12px',
+  },
+  msgRow: { display: 'flex', alignItems: 'flex-end', gap: '10px' },
+  av: {
+    width: '28px', height: '28px', minWidth: '28px',
+    background: 'var(--amber)', clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: 'var(--f-mono)', fontSize: '6px', fontWeight: 600, color: 'var(--void)',
+    marginBottom: '2px', flexShrink: 0,
+  },
+  bub: { maxWidth: '70%', borderRadius: '12px', padding: '11px 14px', position: 'relative' as const },
+  bubU: { background: 'rgba(255,140,0,0.07)', border: '1px solid var(--ab1)', borderBottomRightRadius: '2px', color: 'var(--tx1)' },
+  bubAI: { background: 'rgba(255,255,255,0.03)', border: '1px solid var(--b1)', borderBottomLeftRadius: '2px' },
+  bubTxt: { fontFamily: 'var(--f-ui)', fontSize: '13.5px', lineHeight: 1.72, color: 'var(--tx2)', whiteSpace: 'pre-wrap' as const, margin: 0 },
+  cachedBadge: { display: 'inline-block', fontFamily: 'var(--f-mono)', fontSize: '8px', color: 'var(--tx3)', marginTop: '4px', opacity: 0.6 },
+  premBtn: {
+    display: 'block', marginTop: '10px', width: '100%',
+    background: 'rgba(255,140,0,0.06)', border: '1px solid var(--ab1)',
+    color: 'var(--amber)', fontFamily: 'var(--f-mono)', fontSize: '10px',
+    letterSpacing: '0.08em', padding: '9px 12px', borderRadius: '5px',
+    textTransform: 'uppercase' as const, transition: 'all 0.2s', cursor: 'pointer',
+    textAlign: 'left' as const,
+  },
+  time: { display: 'block', fontFamily: 'var(--f-mono)', fontSize: '8px', color: 'var(--tx3)', marginTop: '5px', textAlign: 'right' as const },
+  dots: { display: 'flex', gap: '5px', alignItems: 'center' },
+  dot: { width: '5px', height: '5px', borderRadius: '50%', background: 'var(--tx3)', display: 'inline-block', animation: 'blink 1.4s ease-in-out infinite' },
+
+  // Composer
+  composerWrap: {
+    padding: '10px 20px 16px', borderTop: '1px solid var(--b1)',
+    background: 'rgba(5,5,8,0.6)', backdropFilter: 'blur(16px)', flexShrink: 0,
+  },
+  analyseTitle: {
+    textAlign: 'center' as const, fontFamily: 'var(--f-mono)', fontSize: '9.5px',
+    letterSpacing: '0.2em', color: 'var(--tx3)', textTransform: 'uppercase' as const,
+    marginBottom: '8px',
+  },
+  compInner: {
+    display: 'flex', alignItems: 'flex-end', gap: '8px',
+    background: 'rgba(255,255,255,0.03)', border: '1px solid var(--b2)',
+    borderRadius: '10px', padding: '8px 10px', transition: 'border-color 0.2s',
+  },
+  birthBtn: {
+    width: '28px', height: '28px', flexShrink: 0, borderRadius: '6px',
+    background: 'rgba(255,140,0,0.07)', border: '1px solid var(--ab1)',
+    color: 'var(--amber)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', transition: 'all 0.2s',
+  },
+  ta: {
+    flex: 1, background: 'transparent', border: 'none',
+    color: 'var(--tx1)', fontSize: '13px', lineHeight: '1.55',
+    minHeight: '20px', maxHeight: '100px', overflowY: 'auto' as const,
+    resize: 'none' as const, padding: '2px 0',
+  },
+  sendBtn: {
+    width: '30px', height: '30px', flexShrink: 0,
+    background: 'var(--amber)', borderRadius: '7px',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    color: 'var(--void)', transition: 'all 0.2s',
+    boxShadow: '0 3px 12px rgba(255,140,0,0.25)', cursor: 'pointer',
+  },
+  compFooter: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: '6px', padding: '0 2px',
+  },
+  compHint: { fontFamily: 'var(--f-mono)', fontSize: '8px', color: 'var(--tx3)', letterSpacing: '0.06em' },
+  premiumHintBtn: {
+    fontFamily: 'var(--f-mono)', fontSize: '8.5px', color: 'var(--amber)',
+    background: 'transparent', border: 'none', cursor: 'pointer',
+    letterSpacing: '0.1em', opacity: 0.8,
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STYLES — PREMIUM PAGE
+// ─────────────────────────────────────────────────────────────────
+
+const pp: Record<string, React.CSSProperties> = {
+  root: {
+    minHeight: '100vh', background: 'var(--deep)', position: 'relative',
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    padding: '0 24px 60px',
+  },
+  bgGlow: {
+    position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
+    background: 'radial-gradient(ellipse 60% 40% at 50% 20%,rgba(255,140,0,0.05),transparent)',
+  },
+  header: {
+    width: '100%', maxWidth: '1100px', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', padding: '20px 0', zIndex: 10,
+    borderBottom: '1px solid var(--b1)', marginBottom: '0',
+  },
+  headerLeft: { flex: 1 },
+  backBtn: {
+    display: 'flex', alignItems: 'center', gap: '7px',
+    fontFamily: 'var(--f-mono)', fontSize: '10.5px', letterSpacing: '0.1em',
+    color: 'var(--tx3)', background: 'transparent', border: 'none',
+    cursor: 'pointer', transition: 'color 0.2s',
+  },
+  logo: { display: 'flex', alignItems: 'center', gap: '9px' },
+  logoHex: {
+    width: '20px', height: '20px',
+    background: 'var(--amber)', clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+    boxShadow: '0 0 10px rgba(255,140,0,0.4)',
+  },
+  logoName: { fontFamily: 'var(--f-display)', fontSize: '16px', letterSpacing: '0.1em', color: 'var(--chrome)', textTransform: 'uppercase' },
+  headerRight: { flex: 1, display: 'flex', justifyContent: 'flex-end' },
+  userBadge: { fontFamily: 'var(--f-mono)', fontSize: '9.5px', color: 'var(--tx3)' },
+
+  hero: {
+    textAlign: 'center' as const, padding: '60px 0 48px', zIndex: 10,
+    maxWidth: '680px', animation: 'fadeUp 0.5s ease both',
+  },
+  heroTag: { fontFamily: 'var(--f-mono)', fontSize: '9px', letterSpacing: '0.2em', color: 'var(--amber)', textTransform: 'uppercase', marginBottom: '18px' },
+  heroTitle: {
+    fontFamily: 'var(--f-display)', fontSize: 'clamp(32px,5vw,56px)',
+    letterSpacing: '0.04em', textTransform: 'uppercase',
+    color: 'var(--chrome)', lineHeight: 1.1, marginBottom: '18px',
+  },
+  heroAccent: { color: 'var(--amber)' },
+  heroSub: { fontFamily: 'var(--f-ui)', fontSize: '15px', color: 'var(--tx2)', lineHeight: 1.7 },
+
+  plans: {
+    display: 'flex', gap: '20px', zIndex: 10, flexWrap: 'wrap' as const,
+    justifyContent: 'center', width: '100%', maxWidth: '1100px',
+    animation: 'fadeUp 0.6s ease 0.1s both',
+  },
+  card: {
+    flex: '1 1 280px', maxWidth: '340px',
+    background: 'var(--pitch)', border: '1px solid var(--b2)',
+    borderRadius: '16px', padding: '32px 28px',
+    display: 'flex', flexDirection: 'column', gap: '14px',
+    position: 'relative' as const, transition: 'border-color 0.2s',
+  },
+  cardAccent: {
+    border: '1px solid var(--ab2)',
+    background: 'rgba(255,140,0,0.03)',
+    boxShadow: '0 0 40px rgba(255,140,0,0.06)',
+  },
+  popularBadge: {
+    position: 'absolute' as const, top: '-13px', left: '50%', transform: 'translateX(-50%)',
+    background: 'var(--amber)', color: 'var(--void)',
+    fontFamily: 'var(--f-mono)', fontSize: '9px', letterSpacing: '0.14em',
+    padding: '4px 14px', borderRadius: '20px', whiteSpace: 'nowrap' as const,
+  },
+  cardBadge: {
+    fontFamily: 'var(--f-mono)', fontSize: '8.5px', letterSpacing: '0.2em',
+    color: 'var(--amber)', textTransform: 'uppercase',
+  },
+  cardName: { fontFamily: 'var(--f-display)', fontSize: '22px', letterSpacing: '0.06em', color: 'var(--chrome)', textTransform: 'uppercase' },
+  cardPrice: { display: 'flex', alignItems: 'baseline', gap: '3px' },
+  currency: { fontFamily: 'var(--f-mono)', fontSize: '18px', color: 'var(--tx2)' },
+  amount: { fontFamily: 'var(--f-display)', fontSize: '48px', color: 'var(--chrome)', lineHeight: 1 },
+  period: { fontFamily: 'var(--f-mono)', fontSize: '11px', color: 'var(--tx3)' },
+  cardDesc: { fontFamily: 'var(--f-ui)', fontSize: '13px', color: 'var(--tx2)', lineHeight: 1.65 },
+  divider: { height: '1px', background: 'var(--b1)' },
+  features: { display: 'flex', flexDirection: 'column', gap: '9px', listStyle: 'none', padding: 0, flex: 1 },
+  feature: {
+    display: 'flex', alignItems: 'center', gap: '9px',
+    fontFamily: 'var(--f-ui)', fontSize: '12.5px', color: 'var(--tx2)',
+  },
+  cta: {
+    padding: '13px 20px', width: '100%',
+    background: 'rgba(255,140,0,0.07)', border: '1px solid var(--ab1)',
+    color: 'var(--amber)', fontFamily: 'var(--f-mono)', fontSize: '10.5px',
+    letterSpacing: '0.14em', textTransform: 'uppercase', borderRadius: '6px',
+    transition: 'all 0.2s', cursor: 'pointer', marginTop: 'auto',
+  },
+  ctaAccent: {
+    background: 'var(--amber)', color: 'var(--void)', border: '1px solid var(--amber)',
+    boxShadow: '0 6px 24px rgba(255,140,0,0.25)',
+  },
+  ctaLoading: { display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' },
+  ctaSpinner: {
+    display: 'inline-block', width: '10px', height: '10px',
+    border: '2px solid rgba(0,0,0,0.2)', borderTop: '2px solid currentColor',
+    borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+  },
+
+  guarantee: {
+    display: 'flex', alignItems: 'center', gap: '10px',
+    marginTop: '40px', zIndex: 10,
+    padding: '14px 22px', borderRadius: '8px',
+    border: '1px solid var(--b1)', background: 'rgba(255,255,255,0.02)',
+  },
+  guaranteeTxt: { fontFamily: 'var(--f-mono)', fontSize: '10.5px', color: 'var(--tx3)', letterSpacing: '0.06em' },
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STYLES — BIRTH MODAL
+// ─────────────────────────────────────────────────────────────────
+
 const m: Record<string, React.CSSProperties> = {
   overlay: {
     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.88)',
@@ -467,36 +836,33 @@ const m: Record<string, React.CSSProperties> = {
     justifyContent: 'center', zIndex: 100, padding: '24px',
   },
   modal: {
-    background: '#1A1510', border: '1px solid rgba(198,163,95,0.25)',
-    borderRadius: '16px', padding: '36px 32px',
-    width: '100%', maxWidth: '420px',
+    background: 'var(--panel)', border: '1px solid var(--b2)', borderRadius: '16px',
+    padding: '32px 28px', width: '100%', maxWidth: '420px',
     boxShadow: '0 40px 100px rgba(0,0,0,0.7)',
-    display: 'flex', flexDirection: 'column', gap: '18px',
+    display: 'flex', flexDirection: 'column', gap: '16px',
     animation: 'fadeUp 0.35s cubic-bezier(0.16,1,0.3,1) both',
   },
   hdr: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
-  tag: { fontFamily: "'DM Mono',monospace", fontSize: '9px', letterSpacing: '.18em', color: '#C6A35F', textTransform: 'uppercase', marginBottom: '6px' },
-  title: { fontFamily: "'Playfair Display',serif", fontSize: '26px', letterSpacing: '.05em', textTransform: 'uppercase', color: '#F3EFEA' },
-  closeBtn: { fontFamily: "'DM Mono',monospace", fontSize: '14px', color: 'rgba(243,239,234,0.4)', padding: '4px 8px', background: 'transparent', border: 'none', marginTop: '-2px' },
-  sub: { fontFamily: "'Playfair Display',serif", fontStyle: 'italic', fontSize: '14px', color: 'rgba(243,239,234,0.6)', lineHeight: 1.7 },
-  divider: { height: '1px', background: 'rgba(198,163,95,0.15)' },
-  fields: { display: 'flex', flexDirection: 'column', gap: '14px' },
+  stepLbl: { fontFamily: 'var(--f-mono)', fontSize: '8.5px', letterSpacing: '0.18em', color: 'var(--amber)', textTransform: 'uppercase', marginBottom: '5px' },
+  title: { fontFamily: 'var(--f-display)', fontSize: '24px', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--chrome)' },
+  closeBtn: { fontFamily: 'var(--f-mono)', fontSize: '14px', color: 'var(--tx3)', padding: '4px 8px', background: 'transparent', border: 'none', cursor: 'pointer' },
+  sub: { fontFamily: 'var(--f-serif)', fontStyle: 'italic', fontSize: '13px', color: 'var(--tx2)', lineHeight: 1.7 },
+  divider: { height: '1px', background: 'var(--b1)' },
+  fields: { display: 'flex', flexDirection: 'column', gap: '12px' },
   field: { display: 'flex', flexDirection: 'column', gap: '5px' },
-  label: { fontFamily: "'DM Mono',monospace", fontSize: '9px', letterSpacing: '.14em', color: 'rgba(243,239,234,0.4)', textTransform: 'uppercase' },
-  hint: { fontFamily: "'DM Mono',monospace", fontSize: '9px', color: 'rgba(243,239,234,0.25)', letterSpacing: '.06em' },
+  label: { fontFamily: 'var(--f-mono)', fontSize: '8.5px', letterSpacing: '0.14em', color: 'var(--tx3)', textTransform: 'uppercase' },
   input: {
-    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(198,163,95,0.2)',
-    borderRadius: '6px', padding: '10px 13px',
-    color: '#F3EFEA', fontSize: '14px', fontFamily: "'Inter',sans-serif",
-    outline: 'none',
+    background: 'rgba(255,255,255,0.04)', border: '1px solid var(--b2)',
+    borderRadius: '6px', padding: '9px 12px', color: 'var(--tx1)', fontSize: '13px', width: '100%',
   },
-  err: { fontFamily: "'DM Mono',monospace", fontSize: '11px', color: '#ff8080' },
+  checkRow: { display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', cursor: 'pointer' },
+  checkTxt: { fontFamily: 'var(--f-mono)', fontSize: '9.5px', color: 'var(--tx3)', letterSpacing: '0.06em' },
+  err: { fontFamily: 'var(--f-mono)', fontSize: '10.5px', color: '#ff8080' },
   btn: {
-    padding: '14px 20px', background: '#C6A35F', color: '#0E0B08',
-    fontFamily: "'DM Mono',monospace", fontSize: '11px', letterSpacing: '.14em',
-    textTransform: 'uppercase', fontWeight: 600, borderRadius: '6px',
+    padding: '13px 20px', background: 'var(--amber)', color: 'var(--void)',
+    fontFamily: 'var(--f-mono)', fontSize: '10.5px', letterSpacing: '0.14em',
+    textTransform: 'uppercase', fontWeight: 600, borderRadius: '4px',
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-    boxShadow: '0 8px 28px rgba(198,163,95,0.25)', border: 'none',
+    boxShadow: '0 6px 24px rgba(255,140,0,0.22)', cursor: 'pointer',
   },
-  note: { fontFamily: "'DM Mono',monospace", fontSize: '9px', color: 'rgba(243,239,234,0.25)', textAlign: 'center', letterSpacing: '.06em' },
 }
