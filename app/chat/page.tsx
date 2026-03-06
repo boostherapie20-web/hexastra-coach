@@ -18,22 +18,42 @@ type Reading = { id:string; title:string; science:string; date:string; preview:s
    DS TOKENS — single source of truth, mirrors globals.css
 ═══════════════════════════════════════════════════════════════ */
 const DS = {
+  // Backgrounds
   bg0:    '#0f0a07',
   bg1:    '#1b1410',
   bgCard: 'rgba(20,14,10,0.75)',
   bgInput:'rgba(255,255,255,0.03)',
+  // Accents
   amber:  '#d4a574',
   bronze: '#8c6239',
+  // Text
   tx1:    '#f5f1ea',
   tx2:    '#cbb9a4',
   tx3:    'rgba(203,185,164,0.45)',
+  // Borders
   border: 'rgba(255,255,255,0.06)',
   borderW:'rgba(212,165,116,0.16)',
   glow:   'rgba(212,165,116,0.15)',
-  // helpers
+  // Typography — Sora for titles, Inter for everything else
+  fontTitle: "'Sora', system-ui, sans-serif",
+  fontBody:  "'Inter', system-ui, sans-serif",
+  fontMono:  "'SF Mono', 'Fira Code', ui-monospace, monospace",
+  // Helpers
   gradBtn:'linear-gradient(135deg,#d4a574,#8c6239)',
   shadowCard:'0 30px 120px rgba(0,0,0,0.5)',
   shadowBtn: '0 10px 30px rgba(212,165,116,0.25)',
+  // Gradient title style (applied inline where needed)
+  gradTitle: {
+    fontFamily: "'Sora', system-ui, sans-serif" as const,
+    fontWeight: 600,
+    letterSpacing: '0.04em',
+    lineHeight: 1.15,
+    background: 'linear-gradient(90deg, #f5f1ea 0%, #e9dcc7 38%, #d4a574 68%, #f5f1ea 100%)',
+    WebkitBackgroundClip: 'text' as const,
+    WebkitTextFillColor: 'transparent' as const,
+    backgroundClip: 'text' as const,
+    filter: 'drop-shadow(0 0 18px rgba(212,165,116,0.18))',
+  } as React.CSSProperties,
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -139,7 +159,7 @@ function BtnPrimary({ children, onClick, disabled, style }: { children:React.Rea
   return (
     <button onClick={onClick} disabled={disabled}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8,padding:'13px 28px',borderRadius:12,background:disabled?'rgba(255,255,255,0.06)':DS.gradBtn,color:disabled?DS.tx3:'#fff',fontSize:14,fontWeight:500,letterSpacing:'0.01em',border:'none',cursor:disabled?'not-allowed':'pointer',transition:'all 0.25s ease',transform:hov&&!disabled?'translateY(-2px)':'none',boxShadow:hov&&!disabled?DS.shadowBtn:'none',fontFamily:'var(--font-body)',...style}}>
+      style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8,padding:'13px 28px',borderRadius:12,background:disabled?'rgba(255,255,255,0.06)':DS.gradBtn,color:disabled?DS.tx3:'#fff',fontSize:14,fontWeight:500,letterSpacing:'0.01em',border:'none',cursor:disabled?'not-allowed':'pointer',transition:'all 0.25s ease',transform:hov&&!disabled?'translateY(-2px)':'none',boxShadow:hov&&!disabled?DS.shadowBtn:'none',fontFamily:DS.fontBody,...style}}>
       {children}
     </button>
   )
@@ -151,7 +171,7 @@ function BtnGhost({ children, onClick, active, style }: { children:React.ReactNo
   return (
     <button onClick={onClick}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:7,padding:'10px 20px',borderRadius:10,background:active?'rgba(212,165,116,0.1)':hov?'rgba(212,165,116,0.06)':'rgba(255,255,255,0.03)',color:active?DS.amber:hov?DS.tx2:DS.tx3,border:`1px solid ${active?DS.borderW:hov?DS.borderW:DS.border}`,fontSize:13,fontWeight:400,cursor:'pointer',transition:'all 0.2s ease',fontFamily:'var(--font-body)',...style}}>
+      style={{display:'inline-flex',alignItems:'center',justifyContent:'center',gap:7,padding:'10px 20px',borderRadius:10,background:active?'rgba(212,165,116,0.1)':hov?'rgba(212,165,116,0.06)':'rgba(255,255,255,0.03)',color:active?DS.amber:hov?DS.tx2:DS.tx3,border:`1px solid ${active?DS.borderW:hov?DS.borderW:DS.border}`,fontSize:13,fontWeight:400,cursor:'pointer',transition:'all 0.2s ease',fontFamily:DS.fontBody,...style}}>
       {children}
     </button>
   )
@@ -163,7 +183,7 @@ function NavItem({ icon, label, active, onClick }: { icon:string; label:string; 
   return (
     <button onClick={onClick}
       onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',width:'100%',textAlign:'left' as const,borderRadius:8,fontSize:13,fontWeight:400,color:active?DS.amber:hov?DS.tx2:DS.tx3,background:active?'rgba(212,165,116,0.07)':hov?'rgba(255,255,255,0.03)':'transparent',borderLeft:`2px solid ${active?DS.amber:'transparent'}`,borderRight:'none',borderTop:'none',borderBottom:'none',cursor:'pointer',transition:'all 0.18s ease',fontFamily:'var(--font-body)'}}>
+      style={{display:'flex',alignItems:'center',gap:9,padding:'8px 10px',width:'100%',textAlign:'left' as const,borderRadius:8,fontSize:13,fontWeight:400,color:active?DS.amber:hov?DS.tx2:DS.tx3,background:active?'rgba(212,165,116,0.07)':hov?'rgba(255,255,255,0.03)':'transparent',borderLeft:`2px solid ${active?DS.amber:'transparent'}`,borderRight:'none',borderTop:'none',borderBottom:'none',cursor:'pointer',transition:'all 0.18s ease',fontFamily:DS.fontBody}}>
       <span style={{width:16,textAlign:'center' as const,fontSize:13,flexShrink:0,opacity:active?1:0.6}}>{icon}</span>
       {label}
     </button>
@@ -172,7 +192,7 @@ function NavItem({ icon, label, active, onClick }: { icon:string; label:string; 
 
 // Label
 function Label({ children }: { children:React.ReactNode }) {
-  return <div style={{fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase' as const,color:DS.tx3,fontFamily:'var(--font-mono)',marginBottom:6}}>{children}</div>
+  return <div style={{fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase' as const,color:DS.tx3,fontFamily:DS.fontMono,marginBottom:6}}>{children}</div>
 }
 
 // Divider
@@ -191,7 +211,7 @@ function IconBtn({ children, onClick, tooltip, active }: { children:React.ReactN
         {children}
       </button>
       {hov&&tooltip&&(
-        <div style={{position:'absolute',bottom:'calc(100% + 7px)',left:'50%',transform:'translateX(-50%)',background:'rgba(20,14,10,0.97)',border:`1px solid ${DS.borderW}`,borderRadius:6,padding:'4px 10px',fontSize:11,color:DS.tx2,whiteSpace:'nowrap',pointerEvents:'none',zIndex:200,boxShadow:'0 8px 24px rgba(0,0,0,0.5)',fontFamily:'var(--font-mono)',letterSpacing:'0.04em'}}>
+        <div style={{position:'absolute',bottom:'calc(100% + 7px)',left:'50%',transform:'translateX(-50%)',background:'rgba(20,14,10,0.97)',border:`1px solid ${DS.borderW}`,borderRadius:6,padding:'4px 10px',fontSize:11,color:DS.tx2,whiteSpace:'nowrap',pointerEvents:'none',zIndex:200,boxShadow:'0 8px 24px rgba(0,0,0,0.5)',fontFamily:DS.fontMono,letterSpacing:'0.04em'}}>
           {tooltip}
         </div>
       )}
@@ -226,8 +246,8 @@ function CityInput({ value, onChange, placeholder }: { value:string; onChange:(v
         <div style={{position:'absolute',top:'calc(100% + 4px)',left:0,right:0,zIndex:500,background:'rgba(20,14,10,0.98)',border:`1px solid ${DS.borderW}`,borderRadius:12,overflow:'hidden',boxShadow:'0 16px 48px rgba(0,0,0,0.8)',maxHeight:220,overflowY:'auto'}}>
           {sugg.map((s,i)=>(
             <button key={i} onMouseDown={()=>pick(s)} style={{display:'block',width:'100%',padding:'9px 14px',textAlign:'left' as const,borderBottom:`1px solid ${DS.border}`,cursor:'pointer',background:'transparent',border:'none',borderBottom:`1px solid ${DS.border}`,transition:'background 0.15s'}}>
-              <div style={{fontSize:13,color:DS.tx1,fontFamily:'var(--font-body)'}}>{s.display_name.split(',').slice(0,2).join(', ')}</div>
-              <div style={{fontSize:10,color:DS.tx3,marginTop:2,fontFamily:'var(--font-mono)'}}>{parseFloat(s.lat).toFixed(3)}, {parseFloat(s.lon).toFixed(3)}</div>
+              <div style={{fontSize:13,color:DS.tx1,fontFamily:DS.fontBody}}>{s.display_name.split(',').slice(0,2).join(', ')}</div>
+              <div style={{fontSize:10,color:DS.tx3,marginTop:2,fontFamily:DS.fontMono}}>{parseFloat(s.lat).toFixed(3)}, {parseFloat(s.lon).toFixed(3)}</div>
             </button>
           ))}
         </div>
@@ -241,14 +261,14 @@ function CityInput({ value, onChange, placeholder }: { value:string; onChange:(v
 ═══════════════════════════════════════════════════════════════ */
 const fmInp: React.CSSProperties = {
   width:'100%',background:'rgba(255,255,255,0.04)',border:`1px solid ${DS.border}`,borderRadius:10,
-  padding:'10px 14px',color:DS.tx1,fontSize:14,fontFamily:'var(--font-body)',outline:'none',
+  padding:'10px 14px',color:DS.tx1,fontSize:14,fontFamily:DS.fontBody,outline:'none',
   transition:'border-color 0.2s, box-shadow 0.2s',
 }
 
 function FormInput({ label, req, children }: { label:string; req?:boolean; children:React.ReactNode }) {
   return (
     <div style={{display:'flex',flexDirection:'column',gap:5}}>
-      <label style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:DS.tx3,fontFamily:'var(--font-mono)'}}>
+      <label style={{fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:DS.tx3,fontFamily:DS.fontMono}}>
         {label}{req&&<span style={{color:DS.amber,marginLeft:3}}>*</span>}
       </label>
       {children}
@@ -320,7 +340,7 @@ function BirthModal({ existing, onSubmit, onClose }: { existing?:any; onSubmit:(
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
           <div>
             <Label>// Profil personnel</Label>
-            <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:DS.tx1,fontFamily:'var(--font-body)'}}>Données de naissance</h2>
+            <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:DS.tx1,fontFamily:DS.fontTitle}}>Données de naissance</h2>
             <p style={{fontSize:13,color:DS.tx3,marginTop:6,lineHeight:1.6,fontStyle:'italic'}}>Ces données personnalisent chaque lecture automatiquement.</p>
           </div>
           <button onClick={onClose} style={{color:DS.tx3,fontSize:16,cursor:'pointer',background:'none',border:'none',padding:'4px 8px',borderRadius:6,lineHeight:1}}>✕</button>
@@ -344,13 +364,13 @@ function BirthModal({ existing, onSubmit, onClose }: { existing?:any; onSubmit:(
           <FormInput label="Ville de naissance" req>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
               <span/>
-              <button onClick={gps} disabled={gpsLoad} style={{display:'flex',alignItems:'center',gap:5,fontSize:11,color:DS.amber,cursor:'pointer',background:'none',border:'none',fontFamily:'var(--font-mono)'}}>
+              <button onClick={gps} disabled={gpsLoad} style={{display:'flex',alignItems:'center',gap:5,fontSize:11,color:DS.amber,cursor:'pointer',background:'none',border:'none',fontFamily:DS.fontMono}}>
                 {gpsLoad?<span style={{width:8,height:8,border:`1.5px solid ${DS.amber}`,borderTop:'1.5px solid transparent',borderRadius:'50%',display:'inline-block',animation:'spin 0.8s linear infinite'}}/>:<span>⊕</span>}
                 {gpsLoad?'Localisation...':'Ma position GPS'}
               </button>
             </div>
             <CityInput value={city} onChange={(v,lat,lon)=>{setCity(v);if(lat!==undefined){setCityLat(lat);setCityLon(lon)}}} placeholder="Rechercher la ville de naissance..."/>
-            {cityLat&&<p style={{fontSize:10,color:DS.tx3,marginTop:4,fontFamily:'var(--font-mono)'}}>📍 {cityLat.toFixed(4)}, {cityLon?.toFixed(4)}</p>}
+            {cityLat&&<p style={{fontSize:10,color:DS.tx3,marginTop:4,fontFamily:DS.fontMono}}>📍 {cityLat.toFixed(4)}, {cityLon?.toFixed(4)}</p>}
           </FormInput>
           <FormInput label="Pays de naissance" req><CountrySelect value={country} onChange={setCountry}/></FormInput>
         </div>
@@ -393,7 +413,7 @@ function ClientModal({ onSubmit, onClose }: { onSubmit:(d:any)=>void; onClose:()
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
           <div>
             <Label>// Mode Praticien</Label>
-            <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:DS.tx1,fontFamily:'var(--font-body)'}}>Profil Client</h2>
+            <h2 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:DS.tx1,fontFamily:DS.fontTitle}}>Profil Client</h2>
           </div>
           <button onClick={onClose} style={{color:DS.tx3,fontSize:16,cursor:'pointer',background:'none',border:'none',padding:'4px 8px'}}>✕</button>
         </div>
@@ -430,7 +450,7 @@ function ClientModal({ onSubmit, onClose }: { onSubmit:(d:any)=>void; onClose:()
           </FormInput>
         </div>
         {err&&<p style={{fontSize:12,color:'#ff7070',marginTop:12}}>{err}</p>}
-        <button onClick={submit} style={{width:'100%',marginTop:18,padding:'13px',background:'rgba(0,200,255,0.12)',border:'1px solid rgba(0,200,255,0.28)',color:'#7de8ff',borderRadius:12,fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:'var(--font-body)',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+        <button onClick={submit} style={{width:'100%',marginTop:18,padding:'13px',background:'rgba(0,200,255,0.12)',border:'1px solid rgba(0,200,255,0.28)',color:'#7de8ff',borderRadius:12,fontSize:14,fontWeight:500,cursor:'pointer',fontFamily:DS.fontBody,display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
           Générer la lecture client →
         </button>
       </Card>
@@ -455,25 +475,25 @@ function SearchModal({ readings, onClose, onSelect }: { readings:Reading[]; onCl
       <Card style={{position:'relative',zIndex:1,width:'100%',maxWidth:560,padding:0,overflow:'hidden',animation:'slideUp 0.28s ease both'}}>
         <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 18px',borderBottom:`1px solid ${DS.border}`}}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={DS.tx3} strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input ref={iRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Rechercher des lectures..." style={{flex:1,background:'transparent',border:'none',color:DS.tx1,fontSize:14,fontFamily:'var(--font-body)',outline:'none'}}/>
+          <input ref={iRef} value={q} onChange={e=>setQ(e.target.value)} placeholder="Rechercher des lectures..." style={{flex:1,background:'transparent',border:'none',color:DS.tx1,fontSize:14,fontFamily:DS.fontBody,outline:'none'}}/>
           <button onClick={onClose} style={{color:DS.tx3,cursor:'pointer',background:'none',border:'none',fontSize:14}}>✕</button>
         </div>
         <div style={{maxHeight:400,overflowY:'auto'}}>
           {groups.map(g=>g.items.length>0&&(
             <div key={g.l}>
-              <div style={{padding:'10px 18px 5px',fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:DS.tx3,fontFamily:'var(--font-mono)'}}>{g.l}</div>
+              <div style={{padding:'10px 18px 5px',fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase' as const,color:DS.tx3,fontFamily:DS.fontMono}}>{g.l}</div>
               {g.items.map(r=>(
                 <button key={r.id} onClick={()=>{onSelect(r);onClose()}} style={{display:'flex',alignItems:'center',gap:12,width:'100%',padding:'10px 18px',textAlign:'left' as const,borderBottom:`1px solid ${DS.border}`,cursor:'pointer',background:'transparent',border:'none',borderBottom:`1px solid ${DS.border}`,transition:'background 0.15s'}}>
                   <div style={{width:30,height:30,borderRadius:8,background:'rgba(212,165,116,0.08)',border:`1px solid ${DS.borderW}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:12,color:DS.amber}}>◈</span></div>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:13,color:DS.tx1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:'var(--font-body)'}}>{r.title}</div>
-                    <div style={{fontSize:10,color:DS.amber,marginTop:2,fontFamily:'var(--font-mono)'}}>{r.science} · {new Date(r.date).toLocaleDateString('fr-FR')}</div>
+                    <div style={{fontSize:13,color:DS.tx1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:DS.fontBody}}>{r.title}</div>
+                    <div style={{fontSize:10,color:DS.amber,marginTop:2,fontFamily:DS.fontMono}}>{r.science} · {new Date(r.date).toLocaleDateString('fr-FR')}</div>
                   </div>
                 </button>
               ))}
             </div>
           ))}
-          {f.length===0&&<div style={{padding:36,textAlign:'center' as const,fontSize:13,color:DS.tx3,fontFamily:'var(--font-mono)'}}>Aucune lecture trouvée</div>}
+          {f.length===0&&<div style={{padding:36,textAlign:'center' as const,fontSize:13,color:DS.tx3,fontFamily:DS.fontMono}}>Aucune lecture trouvée</div>}
         </div>
       </Card>
     </div>
@@ -499,21 +519,21 @@ function ShareModal({ messages, onClose }: { messages:Msg[]; onClose:()=>void })
       <div style={{position:'absolute',inset:0,background:'rgba(0,0,0,0.85)',backdropFilter:'blur(12px)'}} onClick={onClose}/>
       <Card style={{position:'relative',zIndex:1,width:'100%',maxWidth:480,padding:0,overflow:'hidden',animation:'slideUp 0.28s ease both'}}>
         <div style={{padding:'18px 20px',borderBottom:`1px solid ${DS.border}`,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div><Label>// Partager une lecture</Label><h3 style={{fontSize:17,fontWeight:600,color:DS.tx1,fontFamily:'var(--font-body)'}}>Sélectionner</h3></div>
+          <div><Label>// Partager une lecture</Label><h3 style={{fontSize:17,fontWeight:600,color:DS.tx1,fontFamily:DS.fontTitle}}>Sélectionner</h3></div>
           <button onClick={onClose} style={{color:DS.tx3,cursor:'pointer',background:'none',border:'none',fontSize:14}}>✕</button>
         </div>
         <div style={{padding:'8px 20px 10px',borderBottom:`1px solid ${DS.border}`,display:'flex',gap:12}}>
-          <button onClick={()=>setSel(new Set(aiMsgs.map(m=>m.id)))} style={{fontSize:11,color:DS.amber,cursor:'pointer',background:'none',border:'none',fontFamily:'var(--font-mono)',letterSpacing:'0.08em',textTransform:'uppercase' as const}}>Tout sélect.</button>
-          <button onClick={()=>setSel(new Set())} style={{fontSize:11,color:DS.tx3,cursor:'pointer',background:'none',border:'none',fontFamily:'var(--font-mono)',letterSpacing:'0.08em',textTransform:'uppercase' as const}}>Effacer</button>
+          <button onClick={()=>setSel(new Set(aiMsgs.map(m=>m.id)))} style={{fontSize:11,color:DS.amber,cursor:'pointer',background:'none',border:'none',fontFamily:DS.fontMono,letterSpacing:'0.08em',textTransform:'uppercase' as const}}>Tout sélect.</button>
+          <button onClick={()=>setSel(new Set())} style={{fontSize:11,color:DS.tx3,cursor:'pointer',background:'none',border:'none',fontFamily:DS.fontMono,letterSpacing:'0.08em',textTransform:'uppercase' as const}}>Effacer</button>
         </div>
         <div style={{maxHeight:300,overflowY:'auto'}}>
           {aiMsgs.map(m=>(
             <label key={m.id} style={{display:'flex',alignItems:'flex-start',gap:10,padding:'11px 20px',borderBottom:`1px solid ${DS.border}`,cursor:'pointer'}}>
               <input type="checkbox" checked={sel.has(m.id)} onChange={()=>toggle(m.id)} style={{accentColor:DS.amber,marginTop:3,flexShrink:0}}/>
-              <p style={{fontSize:13,color:DS.tx2,lineHeight:1.6,margin:0,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any,fontFamily:'var(--font-body)'}}>{m.content}</p>
+              <p style={{fontSize:13,color:DS.tx2,lineHeight:1.6,margin:0,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical' as any,fontFamily:DS.fontBody}}>{m.content}</p>
             </label>
           ))}
-          {aiMsgs.length===0&&<div style={{padding:28,textAlign:'center' as const,fontSize:13,color:DS.tx3,fontFamily:'var(--font-body)'}}>Aucune lecture à partager</div>}
+          {aiMsgs.length===0&&<div style={{padding:28,textAlign:'center' as const,fontSize:13,color:DS.tx3,fontFamily:DS.fontBody}}>Aucune lecture à partager</div>}
         </div>
         <div style={{padding:'14px 20px'}}>
           <BtnPrimary onClick={share} disabled={sel.size===0} style={{width:'100%'}}>
@@ -540,15 +560,15 @@ function ProfileMenu({ userEmail, mode, onLogout, onClose }: { userEmail:string;
   return (
     <div style={{position:'absolute',bottom:'calc(100% + 8px)',left:0,right:0,zIndex:300,background:'rgba(20,14,10,0.98)',border:`1px solid ${DS.borderW}`,borderRadius:14,overflow:'hidden',boxShadow:'0 -20px 60px rgba(0,0,0,0.7)',animation:'slideUp 0.2s ease both'}}>
       <div style={{padding:'12px 14px',borderBottom:`1px solid ${DS.border}`,display:'flex',alignItems:'center',gap:10}}>
-        <div style={{width:30,height:30,borderRadius:'50%',background:'rgba(212,165,116,0.12)',border:`1px solid ${DS.borderW}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:DS.amber,fontFamily:'var(--font-mono)',flexShrink:0}}>{init}</div>
+        <div style={{width:30,height:30,borderRadius:'50%',background:'rgba(212,165,116,0.12)',border:`1px solid ${DS.borderW}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,color:DS.amber,fontFamily:DS.fontMono,flexShrink:0}}>{init}</div>
         <div style={{minWidth:0}}>
-          <div style={{fontSize:13,color:DS.tx1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:'var(--font-body)'}}>{userEmail}</div>
-          <div style={{fontSize:10,color:DS.amber,textTransform:'capitalize' as const,fontFamily:'var(--font-mono)'}}>{mode}</div>
+          <div style={{fontSize:13,color:DS.tx1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:DS.fontBody}}>{userEmail}</div>
+          <div style={{fontSize:10,color:DS.amber,textTransform:'capitalize' as const,fontFamily:DS.fontMono}}>{mode}</div>
         </div>
       </div>
       {items.map((item,i)=>(
         <button key={i} onClick={()=>{if(item.label==='Se déconnecter')onLogout();onClose()}}
-          style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'9px 14px',textAlign:'left' as const,borderBottom:i<items.length-1?`1px solid ${DS.border}`:'none',fontSize:13,color:item.danger?DS.tx3:DS.tx2,cursor:'pointer',background:'transparent',border:'none',borderBottom:i<items.length-1?`1px solid ${DS.border}`:'none',transition:'background 0.15s',fontFamily:'var(--font-body)'}}>
+          style={{display:'flex',alignItems:'center',gap:10,width:'100%',padding:'9px 14px',textAlign:'left' as const,borderBottom:i<items.length-1?`1px solid ${DS.border}`:'none',fontSize:13,color:item.danger?DS.tx3:DS.tx2,cursor:'pointer',background:'transparent',border:'none',borderBottom:i<items.length-1?`1px solid ${DS.border}`:'none',transition:'background 0.15s',fontFamily:DS.fontBody}}>
           <span style={{width:18,textAlign:'center' as const,fontSize:13,color:item.danger?DS.tx3:DS.amber,flexShrink:0}}>{item.icon}</span>
           {item.label}
           {item.arrow&&<span style={{marginLeft:'auto',fontSize:11,color:DS.tx3}}>›</span>}
@@ -556,8 +576,20 @@ function ProfileMenu({ userEmail, mode, onLogout, onClose }: { userEmail:string;
       ))}
       <div style={{padding:'10px 14px',borderTop:`1px solid ${DS.border}`,display:'flex',alignItems:'center',gap:9}}>
         <div style={{width:26,height:26,borderRadius:'50%',background:'rgba(212,165,116,0.08)',border:`1px solid ${DS.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:DS.amber,flexShrink:0}}>{init}</div>
-        <div><div style={{fontSize:12,color:DS.tx2,fontFamily:'var(--font-body)'}}>{userEmail.split('@')[0]}</div><div style={{fontSize:10,color:DS.tx3,textTransform:'capitalize' as const,fontFamily:'var(--font-mono)'}}>{mode}</div></div>
+        <div><div style={{fontSize:12,color:DS.tx2,fontFamily:DS.fontBody}}>{userEmail.split('@')[0]}</div><div style={{fontSize:10,color:DS.tx3,textTransform:'capitalize' as const,fontFamily:DS.fontMono}}>{mode}</div></div>
       </div>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPOSER BOX — focus state wrapper
+═══════════════════════════════════════════════════════════════ */
+function ComposerBox({ children }: { children:(focused:boolean)=>React.ReactNode }) {
+  const [focused,setFocused] = useState(false)
+  return (
+    <div onFocusCapture={()=>setFocused(true)} onBlurCapture={()=>setFocused(false)}>
+      {children(focused)}
     </div>
   )
 }
@@ -598,13 +630,13 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
       <div style={{padding:'14px 16px 12px',display:'flex',alignItems:'center',gap:9,borderBottom:`1px solid ${DS.border}`,flexShrink:0}}>
         <img src="/logo/hexastra-logo-transparent.png" alt="HexAstra" style={{height:24,objectFit:'contain'}} onError={e=>{(e.currentTarget as HTMLImageElement).style.display='none'}}/>
         <div style={{width:18,height:18,background:DS.gradBtn,clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',flexShrink:0,animation:'amberPop 5s ease-in-out infinite'}}/>
-        <span style={{fontSize:14,fontWeight:600,letterSpacing:'0.08em',color:DS.tx1,textTransform:'uppercase' as const,fontFamily:'var(--font-body)'}}>Hex<span style={{color:DS.amber}}>Astra</span></span>
+        <span style={{fontSize:14,fontWeight:600,letterSpacing:'0.1em',color:DS.tx1,textTransform:'uppercase' as const,fontFamily:DS.fontTitle}}>Hex<span style={{color:DS.amber}}>Astra</span></span>
       </div>
 
       {/* New reading */}
       <div style={{padding:'10px 12px 6px',flexShrink:0}}>
         <button onClick={()=>setView('chat')}
-          style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'8px 14px',borderRadius:10,background:'rgba(212,165,116,0.07)',border:`1px solid ${DS.borderW}`,color:DS.amber,fontSize:12,fontWeight:500,cursor:'pointer',transition:'all 0.2s ease',fontFamily:'var(--font-body)'}}>
+          style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:7,padding:'8px 14px',borderRadius:10,background:'rgba(212,165,116,0.07)',border:`1px solid ${DS.borderW}`,color:DS.amber,fontSize:12,fontWeight:500,cursor:'pointer',transition:'all 0.2s ease',fontFamily:DS.fontBody}}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
           Nouvelle lecture
         </button>
@@ -643,8 +675,8 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
           <div style={{display:'flex',gap:6,marginBottom:6}}>
             <input autoFocus value={newName} onChange={e=>setNewName(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter')createProject();if(e.key==='Escape'){setNewInput(false);setNewName('')}}}
-              placeholder="Nom du projet..." style={{flex:1,background:'rgba(255,255,255,0.05)',border:`1px solid ${DS.borderW}`,borderRadius:8,padding:'6px 10px',color:DS.tx1,fontSize:12,fontFamily:'var(--font-body)',outline:'none'}}/>
-            <button onClick={createProject} style={{background:DS.amber,color:'#0f0a07',borderRadius:7,padding:'5px 10px',fontSize:11,fontWeight:600,cursor:'pointer',border:'none',fontFamily:'var(--font-mono)'}}>OK</button>
+              placeholder="Nom du projet..." style={{flex:1,background:'rgba(255,255,255,0.05)',border:`1px solid ${DS.borderW}`,borderRadius:8,padding:'6px 10px',color:DS.tx1,fontSize:12,fontFamily:DS.fontBody,outline:'none'}}/>
+            <button onClick={createProject} style={{background:DS.amber,color:'#0f0a07',borderRadius:7,padding:'5px 10px',fontSize:11,fontWeight:600,cursor:'pointer',border:'none',fontFamily:DS.fontMono}}>OK</button>
           </div>
         )}
 
@@ -664,18 +696,18 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
                     <input autoFocus value={editName} onChange={e=>setEditName(e.target.value)}
                       onBlur={()=>{onRenameProject(p.id,editName);setEditPId(null)}}
                       onKeyDown={e=>{if(e.key==='Enter'){onRenameProject(p.id,editName);setEditPId(null)}}}
-                      style={{flex:1,background:'transparent',border:'none',borderBottom:`1px solid ${DS.amber}`,color:DS.amber,fontSize:12,fontFamily:'var(--font-body)',outline:'none'}}/>
+                      style={{flex:1,background:'transparent',border:'none',borderBottom:`1px solid ${DS.amber}`,color:DS.amber,fontSize:12,fontFamily:DS.fontBody,outline:'none'}}/>
                   ):(
-                    <span style={{flex:1,fontSize:12,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',cursor:'pointer',fontFamily:'var(--font-body)'}}
+                    <span style={{flex:1,fontSize:12,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',cursor:'pointer',fontFamily:DS.fontBody}}
                       onDoubleClick={()=>{setEditPId(p.id);setEditName(p.name)}}>{p.name}</span>
                   )}
-                  <span style={{fontSize:9,color:DS.tx3,fontFamily:'var(--font-mono)',flexShrink:0}}>{pR.length}</span>
+                  <span style={{fontSize:9,color:DS.tx3,fontFamily:DS.fontMono,flexShrink:0}}>{pR.length}</span>
                 </div>
-                {isDrop&&<div style={{padding:'3px 22px 4px',fontSize:10,color:DS.amber,fontFamily:'var(--font-mono)'}}>↓ Déposer</div>}
+                {isDrop&&<div style={{padding:'3px 22px 4px',fontSize:10,color:DS.amber,fontFamily:DS.fontMono}}>↓ Déposer</div>}
               </div>
             )
           })}
-          {projects.length===0&&!newInput&&<div style={{padding:'6px 6px',fontSize:11,color:DS.tx3,textAlign:'center' as const,fontFamily:'var(--font-body)'}}>Aucun projet</div>}
+          {projects.length===0&&!newInput&&<div style={{padding:'6px 6px',fontSize:11,color:DS.tx3,textAlign:'center' as const,fontFamily:DS.fontBody}}>Aucun projet</div>}
         </div>
       </div>
 
@@ -697,8 +729,8 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
                 {i<3&&<div style={{width:1.5,height:14,borderRadius:1,margin:'2px 0',background:done?'rgba(212,165,116,0.3)':DS.border}}/>}
               </div>
               <div style={{paddingBottom:8,flex:1}}>
-                <div style={{fontSize:10,color:done||active?DS.tx1:DS.tx3,transition:'color 0.3s',fontFamily:'var(--font-body)',fontWeight:done||active?500:400}}>{label}</div>
-                {active&&<div style={{fontSize:10,color:DS.tx3,lineHeight:1.5,marginTop:1,fontFamily:'var(--font-body)'}}>{desc}</div>}
+                <div style={{fontSize:10,color:done||active?DS.tx1:DS.tx3,transition:'color 0.3s',fontFamily:DS.fontBody,fontWeight:done||active?500:400}}>{label}</div>
+                {active&&<div style={{fontSize:10,color:DS.tx3,lineHeight:1.5,marginTop:1,fontFamily:DS.fontBody}}>{desc}</div>}
               </div>
             </div>
           )
@@ -711,10 +743,10 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
       <div style={{padding:'8px 10px',position:'relative',flexShrink:0}}>
         <button onClick={()=>setShowMenu(o=>!o)}
           style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'7px 9px',borderRadius:10,background:showMenu?'rgba(212,165,116,0.07)':'rgba(255,255,255,0.03)',border:`1px solid ${showMenu?DS.borderW:DS.border}`,cursor:'pointer',transition:'all 0.2s ease'}}>
-          <div style={{width:26,height:26,borderRadius:'50%',background:'rgba(212,165,116,0.12)',border:`1px solid ${DS.borderW}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:DS.amber,flexShrink:0,fontFamily:'var(--font-mono)'}}>{userEmail[0]?.toUpperCase()||'U'}</div>
+          <div style={{width:26,height:26,borderRadius:'50%',background:'rgba(212,165,116,0.12)',border:`1px solid ${DS.borderW}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:DS.amber,flexShrink:0,fontFamily:DS.fontMono}}>{userEmail[0]?.toUpperCase()||'U'}</div>
           <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:12,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:'var(--font-body)'}}>{userEmail.split('@')[0]}</div>
-            <div style={{fontSize:10,color:DS.amber,textTransform:'capitalize' as const,fontFamily:'var(--font-mono)'}}>{mode}</div>
+            <div style={{fontSize:12,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:DS.fontBody}}>{userEmail.split('@')[0]}</div>
+            <div style={{fontSize:10,color:DS.amber,textTransform:'capitalize' as const,fontFamily:DS.fontMono}}>{mode}</div>
           </div>
           <span style={{fontSize:9,color:DS.tx3}}>{showMenu?'▾':'▴'}</span>
         </button>
@@ -738,7 +770,7 @@ function RightSidebar({ mode, readings, onSend, onOpenReading, dragId, setDragId
 
       {/* Mode header */}
       <div style={{padding:'12px 12px 10px',borderBottom:`1px solid ${DS.border}`,flexShrink:0}}>
-        <div style={{fontSize:9,letterSpacing:'0.18em',textTransform:'uppercase' as const,color:DS.amber,fontFamily:'var(--font-mono)',opacity:0.8}}>{modeLabel}</div>
+        <div style={{fontSize:9,letterSpacing:'0.18em',textTransform:'uppercase' as const,color:DS.amber,fontFamily:DS.fontMono,opacity:0.8}}>{modeLabel}</div>
       </div>
 
       {/* Vos lectures */}
@@ -751,14 +783,14 @@ function RightSidebar({ mode, readings, onSend, onOpenReading, dragId, setDragId
         {lectOpen&&(
           <div style={{maxHeight:130,overflowY:'auto',padding:'0 8px 6px'}}>
             {freeR.length===0
-              ?<div style={{padding:'6px 4px',fontSize:11,color:DS.tx3,textAlign:'center' as const,fontFamily:'var(--font-body)'}}>Aucune lecture</div>
+              ?<div style={{padding:'6px 4px',fontSize:11,color:DS.tx3,textAlign:'center' as const,fontFamily:DS.fontBody}}>Aucune lecture</div>
               :freeR.map((r:Reading)=>(
                 <div key={r.id} draggable onDragStart={()=>setDragId(r.id)} onDragEnd={()=>setDragId(null)} onClick={()=>onOpenReading(r)}
                   style={{display:'flex',alignItems:'center',gap:7,padding:'6px 8px',borderRadius:8,marginBottom:2,cursor:'grab',background:dragId===r.id?'rgba(212,165,116,0.07)':'rgba(255,255,255,0.02)',border:`1px solid ${dragId===r.id?DS.borderW:'transparent'}`,transition:'all 0.15s'}}>
                   <span style={{fontSize:9,color:DS.amber,flexShrink:0}}>◈</span>
                   <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:11,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:'var(--font-body)'}}>{r.title}</div>
-                    <div style={{fontSize:9,color:DS.tx3,marginTop:1,fontFamily:'var(--font-mono)'}}>{r.science}</div>
+                    <div style={{fontSize:11,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:DS.fontBody}}>{r.title}</div>
+                    <div style={{fontSize:9,color:DS.tx3,marginTop:1,fontFamily:DS.fontMono}}>{r.science}</div>
                   </div>
                 </div>
               ))
@@ -782,8 +814,8 @@ function RightSidebar({ mode, readings, onSend, onOpenReading, dragId, setDragId
               style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'6px 8px',borderRadius:8,textAlign:'left' as const,marginBottom:2,cursor:'pointer',background:hov?'rgba(212,165,116,0.06)':'transparent',border:`1px solid ${hov?DS.borderW:'transparent'}`,transition:'all 0.15s'}}>
               <span style={{fontSize:11,flexShrink:0,color:DS.amber,opacity:hov?1:0.65}}>{item.sym}</span>
               <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:11,color:hov?DS.tx1:DS.tx2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontFamily:'var(--font-body)',fontWeight:hov?500:400,transition:'color 0.15s'}}>{item.label}</div>
-                <div style={{fontSize:9,color:DS.tx3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginTop:1,fontFamily:'var(--font-body)'}}>{item.sub}</div>
+                <div style={{fontSize:11,color:hov?DS.tx1:DS.tx2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontFamily:DS.fontBody,fontWeight:hov?500:400,transition:'color 0.15s'}}>{item.label}</div>
+                <div style={{fontSize:9,color:DS.tx3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginTop:1,fontFamily:DS.fontBody}}>{item.sub}</div>
               </div>
             </button>
           )
@@ -929,7 +961,7 @@ export default function ChatPage() {
           <div style={{display:'flex',background:'rgba(255,255,255,0.02)',border:`1px solid ${DS.border}`,borderRadius:10,overflow:'hidden',gap:0}}>
             {(['essentiel','premium','praticien'] as Mode[]).map(m=>(
               <button key={m} onClick={()=>switchMode(m)}
-                style={{padding:'6px 14px',fontSize:12,fontWeight:mode===m?500:400,color:mode===m?DS.amber:DS.tx3,background:mode===m?'rgba(212,165,116,0.09)':'transparent',cursor:'pointer',border:'none',transition:'all 0.2s ease',display:'flex',alignItems:'center',gap:5,fontFamily:'var(--font-body)',textTransform:'capitalize' as const}}>
+                style={{padding:'6px 14px',fontSize:12,fontWeight:mode===m?500:400,color:mode===m?DS.amber:DS.tx3,background:mode===m?'rgba(212,165,116,0.09)':'transparent',cursor:'pointer',border:'none',transition:'all 0.2s ease',display:'flex',alignItems:'center',gap:5,fontFamily:DS.fontBody,textTransform:'capitalize' as const}}>
                 {m}
                 {(m==='premium'||m==='praticien')&&mode==='essentiel'&&<span style={{fontSize:9,opacity:0.6}}>🔒</span>}
               </button>
@@ -952,7 +984,7 @@ export default function ChatPage() {
                 <Card style={{padding:'44px 48px',display:'flex',flexDirection:'column',alignItems:'center',gap:22,textAlign:'center',background:'rgba(15,10,7,0.7)'}}>
 
                   {/* Micro-label */}
-                  <div style={{fontSize:10,letterSpacing:'0.2em',textTransform:'uppercase' as const,color:'rgba(212,165,116,0.4)',fontFamily:'var(--font-mono)'}}>
+                  <div style={{fontSize:10,letterSpacing:'0.2em',textTransform:'uppercase' as const,color:'rgba(212,165,116,0.4)',fontFamily:DS.fontMono}}>
                     Conversation privée · Réponse en quelques secondes
                   </div>
 
@@ -960,12 +992,14 @@ export default function ChatPage() {
                   <div style={{width:48,height:48,background:DS.gradBtn,clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',animation:'floatGlow 4s ease-in-out infinite'}}/>
 
                   {/* Headline */}
-                  <div style={{display:'flex',flexDirection:'column',gap:8,maxWidth:440}}>
-                    <h1 style={{fontSize:'clamp(24px,3.5vw,32px)',fontWeight:600,letterSpacing:'-0.02em',color:DS.tx1,fontFamily:'var(--font-body)',lineHeight:1.1}}>HexAstra Coach</h1>
-                    <p style={{fontSize:16,color:'rgba(212,165,116,0.7)',fontWeight:400,fontFamily:'var(--font-body)',lineHeight:1.5}}>Explore ta situation avec plus de clarté.</p>
+                  <div style={{display:'flex',flexDirection:'column',gap:10,maxWidth:460}}>
+                    <h1 style={{fontSize:'clamp(26px,3.8vw,38px)',lineHeight:1.1,...DS.gradTitle}}>
+                      HexAstra Coach
+                    </h1>
+                    <p style={{fontSize:16,color:'rgba(212,165,116,0.65)',fontWeight:400,fontFamily:DS.fontBody,lineHeight:1.6,letterSpacing:'0.01em'}}>Explore ta situation avec plus de clarté.</p>
                   </div>
 
-                  <p style={{fontSize:14,color:DS.tx3,lineHeight:1.75,fontFamily:'var(--font-body)',maxWidth:380}}>
+                  <p style={{fontSize:14,color:DS.tx3,lineHeight:1.75,fontFamily:DS.fontBody,maxWidth:380}}>
                     Je suis HexAstra.<br/>Choisis ta langue pour commencer.
                   </p>
 
@@ -982,14 +1016,14 @@ export default function ChatPage() {
                   <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginTop:4}}>
                     {['Comprendre une période de vie','Clarifier une décision','Explorer une dynamique relationnelle','Mieux lire mon moment actuel'].map(q=>(
                       <button key={q} onClick={()=>send(q)}
-                        style={{padding:'7px 16px',borderRadius:99,background:'rgba(255,255,255,0.03)',border:`1px solid ${DS.border}`,color:'rgba(203,185,164,0.6)',fontSize:12,cursor:'pointer',transition:'all 0.2s ease',fontFamily:'var(--font-body)',letterSpacing:'0.01em'}}>
+                        style={{padding:'7px 16px',borderRadius:99,background:'rgba(255,255,255,0.03)',border:`1px solid ${DS.border}`,color:'rgba(203,185,164,0.6)',fontSize:12,cursor:'pointer',transition:'all 0.2s ease',fontFamily:DS.fontBody,letterSpacing:'0.01em'}}>
                         {q}
                       </button>
                     ))}
                   </div>
 
                   {/* Legal */}
-                  <p style={{fontSize:11,color:'rgba(255,255,255,0.22)',lineHeight:1.7,fontStyle:'italic',maxWidth:400,fontFamily:'var(--font-body)',marginTop:4}}>
+                  <p style={{fontSize:11,color:'rgba(255,255,255,0.22)',lineHeight:1.7,fontStyle:'italic',maxWidth:400,fontFamily:DS.fontBody,marginTop:4}}>
                     HexAstra Coach est un outil d'exploration et de réflexion personnelle.<br/>
                     Il ne remplace pas un avis médical, juridique ou financier.
                   </p>
@@ -1002,21 +1036,36 @@ export default function ChatPage() {
             <div style={{flex:1,overflowY:'auto',padding:'28px 32px',display:'flex',flexDirection:'column',gap:20,maxWidth:900,width:'100%',margin:'0 auto',boxSizing:'border-box'}}>
 
               {/* Micro-label */}
-              <div style={{textAlign:'center' as const,fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase' as const,color:'rgba(212,165,116,0.25)',fontFamily:'var(--font-mono)',marginBottom:4}}>
+              <div style={{textAlign:'center' as const,fontSize:10,letterSpacing:'0.16em',textTransform:'uppercase' as const,color:'rgba(212,165,116,0.25)',fontFamily:DS.fontMono,marginBottom:4}}>
                 Conversation privée · Analyse personnelle générée instantanément
               </div>
 
               {messages.map((msg,i)=>(
                 <div key={msg.id} style={{display:'flex',alignItems:'flex-start',gap:14,justifyContent:msg.role==='user'?'flex-end':'flex-start',animation:'fadeUp 0.4s ease both',animationDelay:`${Math.min(i,4)*0.05}s`}}>
                   {msg.role==='assistant'&&(
-                    <div style={{width:24,height:24,minWidth:24,flexShrink:0,marginTop:2,opacity:0.8}}>
+                    <div style={{width:26,height:26,minWidth:26,flexShrink:0,marginTop:3,opacity:0.85}}>
                       <div style={{width:'100%',height:'100%',background:DS.gradBtn,clipPath:'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)'}}/>
                     </div>
                   )}
-                  <div style={{maxWidth:'80%',...(msg.role==='user'?{background:'rgba(212,165,116,0.07)',border:`1px solid ${DS.borderW}`,borderRadius:16,borderBottomRightRadius:4,padding:'12px 16px'}:{padding:'2px 0'})}}>
-                    <p style={{fontSize:15,lineHeight:1.8,color:msg.role==='user'?'rgba(245,241,234,0.88)':'rgba(245,241,234,0.84)',whiteSpace:'pre-wrap',margin:0,fontFamily:'var(--font-body)',fontWeight:400}}>{msg.content}</p>
-                    {msg.cached&&<span style={{fontSize:9,color:DS.tx3,marginTop:4,display:'block',fontFamily:'var(--font-mono)'}}>⚡ cache</span>}
-                    <span style={{display:'block',fontSize:9,color:DS.tx3,marginTop:6,textAlign:msg.role==='user'?'right' as const:'left' as const,fontFamily:'var(--font-mono)'}}>{new Date(msg.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
+                  <div style={{
+                    maxWidth:'min(680px,82%)',
+                    ...(msg.role==='user'
+                      ? {background:'rgba(212,165,116,0.07)',border:`1px solid ${DS.borderW}`,borderRadius:16,borderBottomRightRadius:4,padding:'13px 17px'}
+                      : {background:'rgba(20,14,10,0.55)',backdropFilter:'blur(12px)',WebkitBackdropFilter:'blur(12px)',border:'1px solid rgba(255,255,255,0.05)',borderRadius:18,padding:'18px 22px',transition:'border-color 0.3s ease'}
+                    )
+                  }}>
+                    <p style={{
+                      fontSize:16,
+                      lineHeight:1.78,
+                      letterSpacing:'0.01em',
+                      color:msg.role==='user'?'rgba(245,241,234,0.9)':'rgba(245,241,234,0.86)',
+                      whiteSpace:'pre-wrap',
+                      margin:0,
+                      fontFamily:DS.fontBody,
+                      fontWeight:400,
+                    }}>{msg.content}</p>
+                    {msg.cached&&<span style={{fontSize:9,color:DS.tx3,marginTop:5,display:'block',fontFamily:DS.fontMono}}>⚡ cache</span>}
+                    <span style={{display:'block',fontSize:9,color:DS.tx3,marginTop:7,textAlign:msg.role==='user'?'right' as const:'left' as const,fontFamily:DS.fontMono,letterSpacing:'0.06em'}}>{new Date(msg.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>
                   </div>
                 </div>
               ))}
@@ -1039,7 +1088,7 @@ export default function ChatPage() {
         {/* ── COMPOSER ── */}
         <div style={{padding:'10px 24px 14px',borderTop:`1px solid ${DS.border}`,background:'rgba(8,5,2,0.75)',backdropFilter:'blur(24px)',flexShrink:0}}>
           {/* Supra label */}
-          <div style={{textAlign:'center' as const,fontSize:10,letterSpacing:'0.22em',textTransform:'uppercase' as const,color:'rgba(212,165,116,0.5)',fontFamily:'var(--font-mono)',marginBottom:9}}>
+          <div style={{textAlign:'center' as const,fontSize:10,letterSpacing:'0.22em',textTransform:'uppercase' as const,color:'rgba(212,165,116,0.5)',fontFamily:DS.fontMono,marginBottom:9}}>
             HexAstra t'aide à y voir plus clair
           </div>
 
@@ -1048,7 +1097,7 @@ export default function ChatPage() {
             <div style={{display:'flex',gap:7,flexWrap:'wrap',justifyContent:'center',marginBottom:10}}>
               {['Comprendre une situation que je traverse','Clarifier une décision importante','Explorer une période de ma vie','Énergie du moment'].map(q=>(
                 <button key={q} onClick={()=>send(q)}
-                  style={{padding:'5px 13px',borderRadius:99,background:'rgba(255,255,255,0.025)',border:`1px solid ${DS.border}`,color:'rgba(203,185,164,0.5)',fontSize:12,cursor:'pointer',transition:'all 0.2s ease',fontFamily:'var(--font-body)',whiteSpace:'nowrap'}}>
+                  style={{padding:'5px 13px',borderRadius:99,background:'rgba(255,255,255,0.025)',border:`1px solid ${DS.border}`,color:'rgba(203,185,164,0.5)',fontSize:12,cursor:'pointer',transition:'all 0.2s ease',fontFamily:DS.fontBody,whiteSpace:'nowrap'}}>
                   {q}
                 </button>
               ))}
@@ -1056,34 +1105,38 @@ export default function ChatPage() {
           )}
 
           {/* Input row */}
-          <div style={{display:'flex',alignItems:'flex-end',gap:8,background:'rgba(255,255,255,0.03)',border:`1px solid rgba(255,255,255,0.07)`,borderRadius:16,padding:'10px 12px',maxWidth:900,margin:'0 auto',transition:'border-color 0.25s, box-shadow 0.25s'}}>
-            {/* Profile btn */}
-            <IconBtn tooltip={mode==='praticien'?'Profil client':'Données de naissance'} onClick={()=>mode==='praticien'?setShowClient(true):setShowBirth(true)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-            </IconBtn>
+          <ComposerBox>
+            {(focused)=>(
+            <div style={{display:'flex',alignItems:'flex-end',gap:8,background:'rgba(255,255,255,0.03)',border:`1px solid ${focused?'rgba(212,165,116,0.38)':'rgba(255,255,255,0.07)'}`,borderRadius:16,padding:'10px 12px',maxWidth:900,margin:'0 auto',transition:'border-color 0.25s ease, box-shadow 0.25s ease',boxShadow:focused?'0 0 0 2px rgba(212,165,116,0.12), 0 0 20px rgba(212,165,116,0.08)':'none'}}>
+              {/* Profile btn */}
+              <IconBtn tooltip={mode==='praticien'?'Profil client':'Données de naissance'} onClick={()=>mode==='praticien'?setShowClient(true):setShowBirth(true)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+              </IconBtn>
 
-            {/* Attach */}
-            <IconBtn tooltip="Ajouter des fichiers" onClick={()=>fileRef.current?.click()}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
-            </IconBtn>
-            <input ref={fileRef} type="file" accept="image/*,.pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>handleFile(e.target.files)}/>
+              {/* Attach */}
+              <IconBtn tooltip="Ajouter des fichiers" onClick={()=>fileRef.current?.click()}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+              </IconBtn>
+              <input ref={fileRef} type="file" accept="image/*,.pdf,.txt,.doc,.docx" style={{display:'none'}} onChange={e=>handleFile(e.target.files)}/>
 
-            {/* Textarea */}
-            <textarea ref={taRef} value={input} onChange={e=>setInput(e.target.value)}
-              onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
-              placeholder="Parle-moi de ta situation ou pose ta question…" rows={1}
-              style={{flex:1,background:'transparent',border:'none',color:DS.tx1,fontSize:15,lineHeight:'1.6',minHeight:22,maxHeight:96,overflowY:'auto',padding:'4px 0',resize:'none',fontFamily:'var(--font-body)',outline:'none'}}/>
+              {/* Textarea */}
+              <textarea ref={taRef} value={input} onChange={e=>setInput(e.target.value)}
+                onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}}
+                placeholder="Parle-moi de ta situation ou pose ta question…" rows={1}
+                style={{flex:1,background:'transparent',border:'none',color:DS.tx1,fontSize:16,lineHeight:'1.7',letterSpacing:'0.01em',minHeight:24,maxHeight:100,overflowY:'auto',padding:'3px 0',resize:'none',fontFamily:DS.fontBody,outline:'none'}}/>
 
-            {/* Vocal */}
-            <IconBtn tooltip="Message vocal" onClick={toggleRec} active={isRec}>
-              <WaveformIcon active={isRec}/>
-            </IconBtn>
-          </div>
+              {/* Vocal */}
+              <IconBtn tooltip="Message vocal" onClick={toggleRec} active={isRec}>
+                <WaveformIcon active={isRec}/>
+              </IconBtn>
+            </div>
+            )}
+          </ComposerBox>
 
           {/* Footer */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:8,padding:'0 4px',gap:8,maxWidth:900,margin:'8px auto 0'}}>
-            <div style={{fontSize:9,color:'rgba(212,165,116,0.35)',letterSpacing:'0.12em',textTransform:'uppercase' as const,flexShrink:0,border:'1px solid rgba(212,165,116,0.1)',padding:'2px 9px',borderRadius:4,fontFamily:'var(--font-mono)'}}>{modeLabel}</div>
-            <p style={{fontSize:11,color:'rgba(255,255,255,0.2)',textAlign:'center' as const,flex:1,lineHeight:1.6,margin:0,fontStyle:'italic',fontFamily:'var(--font-body)'}}>
+            <div style={{fontSize:9,color:'rgba(212,165,116,0.35)',letterSpacing:'0.12em',textTransform:'uppercase' as const,flexShrink:0,border:'1px solid rgba(212,165,116,0.1)',padding:'2px 9px',borderRadius:4,fontFamily:DS.fontMono}}>{modeLabel}</div>
+            <p style={{fontSize:11,color:'rgba(255,255,255,0.2)',textAlign:'center' as const,flex:1,lineHeight:1.6,margin:0,fontStyle:'italic',fontFamily:DS.fontBody}}>
               HexAstra Coach est un outil d'exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
             </p>
             <div style={{width:60,flexShrink:0}}/>
@@ -1111,7 +1164,7 @@ function PageShell({ children, title, back }: { children:React.ReactNode; title:
       <div style={{position:'relative',zIndex:10,maxWidth:820,margin:'0 auto',padding:'0 32px 60px'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'24px 0 20px',borderBottom:`1px solid ${DS.border}`,marginBottom:32}}>
           <BtnGhost onClick={back} style={{padding:'7px 14px',fontSize:12}}>← Retour</BtnGhost>
-          <h1 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:DS.tx1,fontFamily:'var(--font-body)'}}>{title}</h1>
+          <h1 style={{fontSize:22,fontWeight:600,letterSpacing:'-0.01em',color:DS.tx1,fontFamily:DS.fontTitle}}>{title}</h1>
           <div style={{width:80}}/>
         </div>
         {children}
@@ -1126,7 +1179,7 @@ function ProfileViewPage({ profile, onEdit, onBack }: any) {
       {!profile?(
         <Card style={{padding:'48px',display:'flex',flexDirection:'column',alignItems:'center',gap:16,textAlign:'center' as const}}>
           <div style={{fontSize:56,opacity:0.15}}>⬡</div>
-          <p style={{fontSize:14,color:DS.tx3,fontFamily:'var(--font-body)'}}>Aucun profil enregistré.</p>
+          <p style={{fontSize:14,color:DS.tx3,fontFamily:DS.fontBody}}>Aucun profil enregistré.</p>
           <BtnPrimary onClick={onEdit}>Saisir mes données</BtnPrimary>
         </Card>
       ):(
@@ -1138,8 +1191,8 @@ function ProfileViewPage({ profile, onEdit, onBack }: any) {
           <div style={{display:'flex',flexDirection:'column',gap:8}}>
             {[['Prénom',profile.firstName],['Nom',profile.lastName],['Date de naissance',profile.date],['Heure',profile.time],['Ville',profile.place],['Pays',profile.country],['Fuseau',profile.timezone]].filter(([,v])=>v).map(([l,v])=>(
               <div key={l as string} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:'rgba(255,255,255,0.02)',borderRadius:10,border:`1px solid ${DS.border}`}}>
-                <span style={{fontSize:11,color:DS.tx3,textTransform:'uppercase' as const,letterSpacing:'0.1em',fontFamily:'var(--font-mono)'}}>{l as string}</span>
-                <span style={{fontSize:14,color:DS.tx1,fontWeight:500,fontFamily:'var(--font-body)'}}>{v as string}</span>
+                <span style={{fontSize:11,color:DS.tx3,textTransform:'uppercase' as const,letterSpacing:'0.1em',fontFamily:DS.fontMono}}>{l as string}</span>
+                <span style={{fontSize:14,color:DS.tx1,fontWeight:500,fontFamily:DS.fontBody}}>{v as string}</span>
               </div>
             ))}
           </div>
@@ -1173,7 +1226,7 @@ function ProjetsPage({ projects, readings, onBack, onNewProject, onRenameProject
                   onKeyDown={e=>{if(e.key==='Enter'){onRenameProject(p.id,editName);setEditing(null)}}}
                   style={{flex:1,...fmInp,padding:'4px 8px',fontSize:14,borderColor:DS.amber}}/>
               ):(
-                <span style={{flex:1,fontSize:15,fontWeight:500,color:DS.tx1,cursor:'pointer',fontFamily:'var(--font-body)'}}
+                <span style={{flex:1,fontSize:15,fontWeight:500,color:DS.tx1,cursor:'pointer',fontFamily:DS.fontBody}}
                   onDoubleClick={()=>{setEditing(p.id);setEditName(p.name)}}>{p.name}</span>
               )}
               <BtnGhost onClick={()=>{setEditing(p.id);setEditName(p.name)}} style={{padding:'4px 10px',fontSize:11}}>✎</BtnGhost>
@@ -1183,17 +1236,17 @@ function ProjetsPage({ projects, readings, onBack, onNewProject, onRenameProject
               <button key={r.id} onClick={()=>{onOpenReading(r);onBack()}}
                 style={{display:'flex',alignItems:'center',gap:9,width:'100%',padding:'7px 8px',textAlign:'left' as const,cursor:'pointer',background:'transparent',border:'none',borderBottom:`1px solid ${DS.border}`,marginBottom:2,transition:'background 0.15s'}}>
                 <span style={{fontSize:11,color:DS.amber}}>◈</span>
-                <span style={{fontSize:13,color:DS.tx2,fontFamily:'var(--font-body)'}}>{r.title}</span>
-                <span style={{marginLeft:'auto',fontSize:10,color:DS.tx3,fontFamily:'var(--font-mono)'}}>{new Date(r.date).toLocaleDateString('fr-FR')}</span>
+                <span style={{fontSize:13,color:DS.tx2,fontFamily:DS.fontBody}}>{r.title}</span>
+                <span style={{marginLeft:'auto',fontSize:10,color:DS.tx3,fontFamily:DS.fontMono}}>{new Date(r.date).toLocaleDateString('fr-FR')}</span>
               </button>
             ))}
-            {pR.length===0&&<p style={{fontSize:12,color:DS.tx3,fontFamily:'var(--font-body)',paddingLeft:26}}>Glisse des lectures depuis la barre de droite</p>}
+            {pR.length===0&&<p style={{fontSize:12,color:DS.tx3,fontFamily:DS.fontBody,paddingLeft:26}}>Glisse des lectures depuis la barre de droite</p>}
           </Card>
         )
       })}
       {projects.length===0&&(
         <Card style={{padding:'48px',textAlign:'center' as const}}>
-          <p style={{fontSize:14,color:DS.tx3,fontFamily:'var(--font-body)'}}>Aucun projet. Crée-en un ci-dessus.</p>
+          <p style={{fontSize:14,color:DS.tx3,fontFamily:DS.fontBody}}>Aucun projet. Crée-en un ci-dessus.</p>
         </Card>
       )}
     </PageShell>
@@ -1220,30 +1273,30 @@ function AbonnementsPage({ onBack, userEmail, onSuccess }: any) {
           <BtnGhost onClick={onBack} style={{padding:'7px 14px',fontSize:12}}>← Retour</BtnGhost>
           <div style={{textAlign:'center' as const}}>
             <Label>// Accès complet HexAstra</Label>
-            <h1 style={{fontSize:'clamp(26px,3.5vw,38px)',fontWeight:600,letterSpacing:'-0.02em',color:DS.tx1,fontFamily:'var(--font-body)',marginTop:4}}>
-              Lectures précises.<br/><span style={{color:DS.amber}}>Swiss Ephemeris.</span>
+            <h1 style={{fontSize:'clamp(26px,3.5vw,38px)',letterSpacing:'-0.02em',lineHeight:1.15,marginTop:4,...DS.gradTitle}}>
+              Lectures précises.<br/><span>Swiss Ephemeris.</span>
             </h1>
           </div>
-          <span style={{fontSize:11,color:DS.tx3,fontFamily:'var(--font-mono)'}}>{userEmail}</span>
+          <span style={{fontSize:11,color:DS.tx3,fontFamily:DS.fontMono}}>{userEmail}</span>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:20}}>
           {plans.map(p=>(
             <Card key={p.key} hover style={{padding:'28px 24px',display:'flex',flexDirection:'column',gap:16,position:'relative',border:p.highlight?`1px solid ${DS.borderW}`:undefined}}>
-              {p.highlight&&<div style={{position:'absolute',top:-13,left:'50%',transform:'translateX(-50%)',background:DS.gradBtn,color:'#fff',fontSize:10,letterSpacing:'0.14em',padding:'3px 14px',borderRadius:99,whiteSpace:'nowrap',fontFamily:'var(--font-mono)'}}>✦ Le plus choisi</div>}
+              {p.highlight&&<div style={{position:'absolute',top:-13,left:'50%',transform:'translateX(-50%)',background:DS.gradBtn,color:'#fff',fontSize:10,letterSpacing:'0.14em',padding:'3px 14px',borderRadius:99,whiteSpace:'nowrap',fontFamily:DS.fontMono}}>✦ Le plus choisi</div>}
               <div>
-                <div style={{fontSize:9,letterSpacing:'0.2em',color:DS.amber,textTransform:'uppercase' as const,fontFamily:'var(--font-mono)',marginBottom:6}}>{p.badge}</div>
-                <div style={{fontSize:22,fontWeight:600,color:DS.tx1,fontFamily:'var(--font-body)'}}>{p.name}</div>
+                <div style={{fontSize:9,letterSpacing:'0.2em',color:DS.amber,textTransform:'uppercase' as const,fontFamily:DS.fontMono,marginBottom:6}}>{p.badge}</div>
+                <div style={{fontSize:22,fontWeight:600,color:DS.tx1,fontFamily:DS.fontBody}}>{p.name}</div>
               </div>
               <div style={{display:'flex',alignItems:'baseline',gap:2}}>
-                {p.price!=='0'&&<span style={{fontSize:16,color:DS.tx2,fontFamily:'var(--font-body)'}}>€</span>}
-                <span style={{fontSize:46,fontWeight:600,letterSpacing:'-0.02em',color:DS.tx1,lineHeight:1,fontFamily:'var(--font-body)'}}>{p.price==='0'?'Gratuit':p.price}</span>
-                {p.period&&<span style={{fontSize:12,color:DS.tx3,fontFamily:'var(--font-body)'}}>{p.period}</span>}
+                {p.price!=='0'&&<span style={{fontSize:16,color:DS.tx2,fontFamily:DS.fontBody}}>€</span>}
+                <span style={{fontSize:46,fontWeight:600,letterSpacing:'-0.02em',color:DS.tx1,lineHeight:1,fontFamily:DS.fontBody}}>{p.price==='0'?'Gratuit':p.price}</span>
+                {p.period&&<span style={{fontSize:12,color:DS.tx3,fontFamily:DS.fontBody}}>{p.period}</span>}
               </div>
               <Divider/>
               <ul style={{listStyle:'none',display:'flex',flexDirection:'column',gap:8,flex:1}}>
                 {p.features.map(f=>(
-                  <li key={f} style={{display:'flex',alignItems:'center',gap:9,fontSize:13,color:DS.tx2,fontFamily:'var(--font-body)'}}>
+                  <li key={f} style={{display:'flex',alignItems:'center',gap:9,fontSize:13,color:DS.tx2,fontFamily:DS.fontBody}}>
                     <span style={{color:DS.amber,flexShrink:0}}>✓</span>{f}
                   </li>
                 ))}
@@ -1255,7 +1308,7 @@ function AbonnementsPage({ onBack, userEmail, onSuccess }: any) {
           ))}
         </div>
 
-        <p style={{textAlign:'center' as const,fontSize:12,color:DS.tx3,marginTop:32,fontFamily:'var(--font-body)'}}>
+        <p style={{textAlign:'center' as const,fontSize:12,color:DS.tx3,marginTop:32,fontFamily:DS.fontBody}}>
           Paiement sécurisé Stripe · Annulation à tout moment · hexastra.fr
         </p>
       </div>
