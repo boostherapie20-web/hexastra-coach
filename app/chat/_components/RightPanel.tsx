@@ -1,15 +1,62 @@
 'use client'
 
-import { DS, MENU_BY_MODE, cardStyle, type Mode, type Reading } from '../_lib/chat'
+import { DS, cardStyle, type Mode, type Reading } from '../_lib/chat'
 
-type Props = {
+type RightPanelProps = {
   mode: Mode
   readings: Reading[]
-  collapsed: boolean
-  onToggleCollapse: () => void
+  collapsed?: boolean
+  onToggleCollapse?: () => void
   onPrompt: (value: string) => void
   onOpenReading: (reading: Reading) => void
 }
+
+const personalDataItems = [
+  {
+    title: 'Date de naissance',
+    value: 'À compléter',
+  },
+  {
+    title: 'Heure de naissance',
+    value: 'À compléter',
+  },
+  {
+    title: 'Lieu de naissance',
+    value: 'À compléter',
+  },
+  {
+    title: 'Profil actuel',
+    value: 'Mode Essentiel',
+  },
+]
+
+const categories = [
+  {
+    title: 'NeuroKua™',
+    subtitle: 'État intérieur du moment',
+    prompt: 'Analyse mon état intérieur du moment avec HexAstra.',
+  },
+  {
+    title: 'Énergie du moment',
+    subtitle: 'Tendance de fond',
+    prompt: 'Quelle est mon énergie dominante en ce moment ?',
+  },
+  {
+    title: 'Amour / Relations',
+    subtitle: 'Lecture affective',
+    prompt: 'Aide-moi à comprendre ma dynamique relationnelle actuelle.',
+  },
+  {
+    title: 'Travail / Argent',
+    subtitle: 'Stabilité et mouvement',
+    prompt: 'Analyse ma zone travail et argent en ce moment.',
+  },
+  {
+    title: 'Lecture générale',
+    subtitle: 'Vue synthétique',
+    prompt: 'Fais-moi une lecture générale claire de ma situation actuelle.',
+  },
+]
 
 export default function RightPanel({
   mode,
@@ -18,146 +65,191 @@ export default function RightPanel({
   onToggleCollapse,
   onPrompt,
   onOpenReading,
-}: Props) {
-  const items = MENU_BY_MODE[mode]
-  const looseReadings = readings.filter((item) => !item.projectId).slice(0, 5)
+}: RightPanelProps) {
+  if (collapsed) {
+    return (
+      <aside
+        style={{
+          width: 72,
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <button
+          onClick={onToggleCollapse}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 16,
+            border: '1px solid rgba(255,255,255,0.09)',
+            background: 'rgba(255,255,255,0.03)',
+            color: DS.text,
+            cursor: 'pointer',
+            marginTop: 4,
+          }}
+        >
+          ›
+        </button>
+      </aside>
+    )
+  }
 
   return (
     <aside
       style={{
-        width: collapsed ? 82 : 252,
-        minWidth: collapsed ? 82 : 252,
-        height: '100vh',
-        padding: collapsed ? 14 : 18,
+        width: '100%',
+        minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        background: 'linear-gradient(180deg, rgba(10,7,5,0.58), rgba(10,7,5,0.78))',
-        borderLeft: `1px solid ${DS.line}`,
-        backdropFilter: 'blur(28px)',
-        WebkitBackdropFilter: 'blur(28px)',
-        transition: 'width 0.26s ease, min-width 0.26s ease, padding 0.26s ease',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: collapsed ? 'center' : 'space-between', alignItems: 'center' }}>
-        {!collapsed && (
-          <div>
-            <div style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: DS.textFaint, fontFamily: DS.monoFont }}>
-              Outils
-            </div>
-            <div style={{ marginTop: 4, fontFamily: DS.titleFont, fontSize: 15, fontWeight: 600 }}>
-              Accès rapide
-            </div>
-          </div>
-        )}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: DS.textMuted,
+            fontFamily: DS.monoFont,
+          }}
+        >
+          Outils
+        </div>
 
         <button
-          type="button"
           onClick={onToggleCollapse}
-          aria-label={collapsed ? 'Ouvrir le rail' : 'Réduire le rail'}
           style={{
             width: 38,
             height: 38,
-            borderRadius: 12,
-            display: 'grid',
-            placeItems: 'center',
-            border: `1px solid ${DS.line}`,
+            borderRadius: 14,
+            border: '1px solid rgba(255,255,255,0.08)',
             background: 'rgba(255,255,255,0.03)',
-            color: DS.textSoft,
+            color: DS.text,
+            cursor: 'pointer',
           }}
         >
-          {collapsed ? '‹' : '›'}
+          ‹
         </button>
       </div>
 
-      {!collapsed && (
-        <div style={cardStyle({ padding: 14 })}>
-          <div style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: DS.textFaint, fontFamily: DS.monoFont, marginBottom: 10 }}>
-            Lectures libres
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {looseReadings.length > 0 ? (
-              looseReadings.map((reading) => (
+      <section
+        style={cardStyle({
+          padding: 18,
+          borderRadius: 28,
+        })}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: DS.textMuted,
+            marginBottom: 14,
+            fontFamily: DS.monoFont,
+          }}
+        >
+          Données personnelles
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {personalDataItems.map((item) => (
+            <div
+              key={item.title}
+              style={{
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 18,
+                padding: '12px 14px',
+                background: 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <div style={{ color: DS.textSoft, fontSize: 14, fontWeight: 600 }}>{item.title}</div>
+              <div style={{ color: DS.textFaint, fontSize: 13, marginTop: 4 }}>{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        style={cardStyle({
+          padding: 18,
+          borderRadius: 28,
+          flex: 1,
+        })}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: DS.textMuted,
+            marginBottom: 14,
+            fontFamily: DS.monoFont,
+          }}
+        >
+          Catégories
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {categories.map((item) => (
+            <button
+              key={item.title}
+              onClick={() => onPrompt(item.prompt)}
+              style={{
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 18,
+                padding: '14px 14px',
+                background: 'rgba(255,255,255,0.025)',
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ color: DS.text, fontSize: 15, fontWeight: 600 }}>{item.title}</div>
+              <div style={{ color: DS.textMuted, fontSize: 13, marginTop: 4 }}>{item.subtitle}</div>
+            </button>
+          ))}
+        </div>
+
+        {readings.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <div
+              style={{
+                fontSize: 10,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                color: DS.textMuted,
+                marginBottom: 10,
+                fontFamily: DS.monoFont,
+              }}
+            >
+              Dernières lectures
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {readings.slice(0, 3).map((reading) => (
                 <button
                   key={reading.id}
-                  type="button"
                   onClick={() => onOpenReading(reading)}
                   style={{
+                    border: '1px solid rgba(212,165,116,0.10)',
+                    borderRadius: 16,
+                    padding: '12px 14px',
+                    background: 'rgba(212,165,116,0.04)',
+                    color: DS.textSoft,
                     textAlign: 'left',
-                    padding: '10px 11px',
-                    borderRadius: 15,
-                    border: `1px solid ${DS.line}`,
-                    background: 'rgba(255,255,255,0.02)',
+                    cursor: 'pointer',
                   }}
                 >
-                  <div style={{ fontSize: 12, color: DS.textSoft, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {reading.title}
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 10, color: DS.amber, fontFamily: DS.monoFont }}>
-                    {reading.science}
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{reading.title}</div>
+                  <div style={{ fontSize: 12, color: DS.textFaint, marginTop: 4 }}>
+                    {mode} · {new Date(reading.date).toLocaleDateString('fr-FR')}
                   </div>
                 </button>
-              ))
-            ) : (
-              <div style={{ fontSize: 12, color: DS.textFaint }}>Aucune lecture détachée</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div style={cardStyle({ padding: collapsed ? 10 : 14, flex: 1, minHeight: 0 })}>
-        {!collapsed && (
-          <div style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: DS.textFaint, fontFamily: DS.monoFont, marginBottom: 10 }}>
-            Catégories
+              ))}
+            </div>
           </div>
         )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: collapsed ? 8 : 6, overflowY: 'auto' }}>
-          {items.map((item) =>
-            collapsed ? (
-              <button
-                key={item.id}
-                type="button"
-                title={item.label}
-                onClick={() => onPrompt(item.label)}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
-                  border: `1px solid ${DS.line}`,
-                  background: 'rgba(255,255,255,0.03)',
-                  color: DS.amber,
-                  fontSize: 13,
-                  alignSelf: 'center',
-                }}
-              >
-                {item.icon}
-              </button>
-            ) : (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onPrompt(`${item.label} — ${item.sub}`)}
-                style={{
-                  textAlign: 'left',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: 10,
-                  padding: '11px 11px',
-                  borderRadius: 16,
-                  border: `1px solid ${DS.line}`,
-                  background: 'rgba(255,255,255,0.02)',
-                }}
-              >
-                <span style={{ color: DS.amber, marginTop: 1 }}>{item.icon}</span>
-                <span style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontSize: 12, color: DS.text }}>{item.label}</span>
-                  <span style={{ display: 'block', marginTop: 3, fontSize: 10, color: DS.textFaint }}>{item.sub}</span>
-                </span>
-              </button>
-            ),
-          )}
-        </div>
-      </div>
+      </section>
     </aside>
   )
 }
