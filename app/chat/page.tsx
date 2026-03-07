@@ -1915,8 +1915,16 @@ export default function ChatPage() {
 
   const modeLabel = mode === 'essentiel' ? 'Essentiel' : mode === 'premium' ? 'Premium' : 'Praticien'
 
-  return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: DS.bg0, position: 'relative' }}>
+    return (
+    <div
+      style={{
+        display: 'flex',
+        height: '100vh',
+        overflow: 'hidden',
+        background: DS.bg0,
+        position: 'relative',
+      }}
+    >
       <CosmicBackground />
 
       <LeftSidebar
@@ -1934,112 +1942,557 @@ export default function ChatPage() {
         onOpenReading={openReading}
         onAddToProject={addToProject}
         onSearch={() => setShowSearch(true)}
-        onLogout={async () => { await supabase.auth.signOut(); router.push('/login') }}
+        onLogout={async () => {
+          await supabase.auth.signOut()
+          router.push('/login')
+        }}
         dragId={dragId}
       />
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', zIndex: 10, minWidth: 0, position: 'relative' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', borderBottom: `1px solid ${DS.border}`, background: 'rgba(10,6,3,0.8)', backdropFilter: 'blur(24px)', flexShrink: 0, height: 50 }}>
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', border: `1px solid ${DS.border}`, borderRadius: 10, overflow: 'hidden', gap: 0 }}>
-            {(['essentiel', 'premium', 'praticien'] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => switchMode(m)}
-                style={{ padding: '6px 14px', fontSize: 12, fontWeight: mode === m ? 500 : 400, color: mode === m ? DS.amber : DS.tx3, background: mode === m ? 'rgba(212,165,116,0.09)' : 'transparent', cursor: 'pointer', border: 'none', transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: 5, fontFamily: DS.fontBody, textTransform: 'capitalize' }}
+      <main
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: 10,
+          minWidth: 0,
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            padding: '14px 18px 10px',
+            borderBottom: `1px solid ${DS.border}`,
+            background: 'linear-gradient(180deg, rgba(11,7,5,0.82), rgba(11,7,5,0.58))',
+            backdropFilter: 'blur(24px)',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+              maxWidth: 1100,
+              margin: '0 auto',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(212,165,116,0.44)',
+                  fontFamily: DS.fontMono,
+                  marginBottom: 5,
+                }}
               >
-                {m}
-                {(m === 'premium' || m === 'praticien') && mode === 'essentiel' && <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span>}
-              </button>
-            ))}
-          </div>
+                Espace conversationnel
+              </div>
+              <div
+                style={{
+                  fontSize: 20,
+                  color: DS.tx1,
+                  fontFamily: DS.fontTitle,
+                  fontWeight: 600,
+                  lineHeight: 1.2,
+                }}
+              >
+                HexAstra <span style={{ color: DS.amber }}>Coach</span>
+              </div>
+            </div>
 
-          <IconBtn tooltip="Partager une lecture" onClick={() => setShowShare(true)}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-          </IconBtn>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  background: 'rgba(255,255,255,0.02)',
+                  border: `1px solid ${DS.border}`,
+                  borderRadius: 14,
+                  overflow: 'hidden',
+                  gap: 0,
+                }}
+              >
+                {(['essentiel', 'premium', 'praticien'] as Mode[]).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => switchMode(m)}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: 12,
+                      fontWeight: mode === m ? 600 : 400,
+                      color: mode === m ? DS.tx1 : DS.tx3,
+                      background:
+                        mode === m ? 'rgba(212,165,116,0.10)' : 'transparent',
+                      cursor: 'pointer',
+                      border: 'none',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      fontFamily: DS.fontBody,
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {m}
+                    {(m === 'premium' || m === 'praticien') &&
+                      mode === 'essentiel' && (
+                        <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span>
+                      )}
+                  </button>
+                ))}
+              </div>
+
+              <IconBtn tooltip="Partager une lecture" onClick={() => setShowShare(true)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+              </IconBtn>
+            </div>
+          </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <div
+          style={{
+            flex: 1,
+            overflowY: 'auto',
+            position: 'relative',
+          }}
+        >
           {isWelcome ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 20px', animation: 'welcomeFade 0.65s ease both' }}>
-              <div style={{ width: '100%', maxWidth: 600 }}>
-                <Card style={{ padding: '44px 48px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, textAlign: 'center', background: 'rgba(15,10,7,0.7)' }}>
-                  <div style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.4)', fontFamily: DS.fontMono }}>Conversation privée · Réponse en quelques secondes</div>
-                  <div style={{ width: 48, height: 48, background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', animation: 'floatGlow 4s ease-in-out infinite' }} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 460 }}>
-                    <h1 style={{ fontSize: 'clamp(26px,3.8vw,38px)', lineHeight: 1.1, ...DS.gradTitle }}>HexAstra Coach</h1>
-                    <p style={{ fontSize: 16, color: 'rgba(212,165,116,0.65)', fontWeight: 400, fontFamily: DS.fontBody, lineHeight: 1.6, letterSpacing: '0.01em' }}>Explore ta situation avec plus de clarté.</p>
+            <div
+              style={{
+                minHeight: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '32px 24px 24px',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  maxWidth: 1100,
+                  display: 'grid',
+                  gridTemplateColumns: '1.05fr 0.95fr',
+                  gap: 22,
+                  alignItems: 'stretch',
+                }}
+              >
+                <Card
+                  style={{
+                    padding: '38px 40px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: 18,
+                    minHeight: 520,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: '0.22em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(212,165,116,0.48)',
+                      fontFamily: DS.fontMono,
+                    }}
+                  >
+                    Interface de clarté assistée par IA
                   </div>
 
-                  <p style={{ fontSize: 14, color: DS.tx3, lineHeight: 1.75, fontFamily: DS.fontBody, maxWidth: 380 }}>
-                    Je suis HexAstra.<br />Choisis ta langue pour commencer.
+                  <div
+                    style={{
+                      width: 54,
+                      height: 54,
+                      background: DS.gradBtn,
+                      clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+                      boxShadow: '0 0 34px rgba(212,165,116,0.22)',
+                    }}
+                  />
+
+                  <div style={{ maxWidth: 560 }}>
+                    <h1
+                      style={{
+                        fontSize: 'clamp(34px,4.2vw,56px)',
+                        lineHeight: 1.05,
+                        margin: 0,
+                        ...DS.gradTitle,
+                      }}
+                    >
+                      Une conversation premium pour lire votre moment.
+                    </h1>
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize: 16,
+                      color: DS.tx2,
+                      lineHeight: 1.8,
+                      margin: 0,
+                      maxWidth: 580,
+                      fontFamily: DS.fontBody,
+                    }}
+                  >
+                    HexAstra commence par vous écouter, clarifie votre question,
+                    puis approfondit si nécessaire avec vos données de naissance.
                   </p>
 
-                  <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     {[{ label: 'Français', msg: 'Français' }, { label: 'English', msg: 'English' }].map((l) => (
-                      <BtnPrimary key={l.label} onClick={() => send(l.msg)} style={{ padding: '12px 32px', fontSize: 15 }}>
+                      <BtnPrimary key={l.label} onClick={() => send(l.msg)} style={{ minWidth: 152 }}>
                         {l.label}
                       </BtnPrimary>
                     ))}
                   </div>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 4 }}>
-                    {['Comprendre une période de vie', 'Clarifier une décision', 'Explorer une dynamique relationnelle', 'Mieux lire mon moment actuel'].map((q) => (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
+                    {[
+                      'Comprendre une période de vie',
+                      'Clarifier une décision',
+                      'Explorer une dynamique relationnelle',
+                      'Mieux lire mon moment actuel',
+                    ].map((q) => (
                       <button
                         key={q}
                         onClick={() => send(q)}
-                        style={{ padding: '7px 16px', borderRadius: 99, background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, color: 'rgba(203,185,164,0.6)', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: DS.fontBody, letterSpacing: '0.01em' }}
+                        style={{
+                          padding: '9px 14px',
+                          borderRadius: 999,
+                          background: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${DS.border}`,
+                          color: 'rgba(203,185,164,0.66)',
+                          fontSize: 12,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          fontFamily: DS.fontBody,
+                        }}
                       >
                         {q}
                       </button>
                     ))}
                   </div>
 
-                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.22)', lineHeight: 1.7, fontStyle: 'italic', maxWidth: 400, fontFamily: DS.fontBody, marginTop: 4 }}>
-                    HexAstra Coach est un outil d'exploration et de réflexion personnelle.<br />
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: 'rgba(255,255,255,0.22)',
+                      lineHeight: 1.75,
+                      fontStyle: 'italic',
+                      maxWidth: 500,
+                      fontFamily: DS.fontBody,
+                      marginTop: 2,
+                    }}
+                  >
+                    HexAstra Coach est un outil d’exploration et de réflexion personnelle.
                     Il ne remplace pas un avis médical, juridique ou financier.
                   </p>
+                </Card>
+
+                <Card
+                  style={{
+                    padding: 0,
+                    overflow: 'hidden',
+                    minHeight: 520,
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '18px 20px',
+                      borderBottom: `1px solid ${DS.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 10,
+                          letterSpacing: '0.18em',
+                          textTransform: 'uppercase',
+                          color: 'rgba(212,165,116,0.48)',
+                          fontFamily: DS.fontMono,
+                        }}
+                      >
+                        Aperçu du chat
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 14,
+                          color: DS.tx1,
+                          fontFamily: DS.fontTitle,
+                          fontWeight: 600,
+                          marginTop: 4,
+                        }}
+                      >
+                        Conversation en direct
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        fontSize: 12,
+                        color: DS.tx2,
+                        fontFamily: DS.fontBody,
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: '#57d27c',
+                          boxShadow: '0 0 0 5px rgba(87,210,124,0.10)',
+                        }}
+                      />
+                      En ligne
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 14,
+                      padding: 20,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{ display: 'flex' }}>
+                      <div
+                        style={{
+                          maxWidth: '82%',
+                          padding: '14px 15px',
+                          borderRadius: 18,
+                          background: 'rgba(255,255,255,0.04)',
+                          border: `1px solid rgba(255,255,255,0.05)`,
+                          color: DS.tx1,
+                          fontSize: 14,
+                          lineHeight: 1.7,
+                          fontFamily: DS.fontBody,
+                        }}
+                      >
+                        Bienvenue. Dis-moi ce que tu veux éclaircir aujourd’hui.
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <div
+                        style={{
+                          maxWidth: '78%',
+                          padding: '14px 15px',
+                          borderRadius: 18,
+                          background: 'rgba(212,165,116,0.12)',
+                          border: `1px solid rgba(212,165,116,0.18)`,
+                          color: DS.tx1,
+                          fontSize: 14,
+                          lineHeight: 1.7,
+                          fontFamily: DS.fontBody,
+                        }}
+                      >
+                        J’hésite entre continuer mon activité actuelle ou lancer autre chose.
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex' }}>
+                      <div
+                        style={{
+                          maxWidth: '82%',
+                          padding: '14px 15px',
+                          borderRadius: 18,
+                          background: 'rgba(255,255,255,0.04)',
+                          border: `1px solid rgba(255,255,255,0.05)`,
+                          color: DS.tx1,
+                          fontSize: 14,
+                          lineHeight: 1.7,
+                          fontFamily: DS.fontBody,
+                        }}
+                      >
+                        On peut clarifier cela en 3 temps : ton état actuel, le vrai nœud de décision, puis le bon timing d’action.
+                      </div>
+                    </div>
+                  </div>
                 </Card>
               </div>
             </div>
           ) : (
-            <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px', display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
-              <div style={{ textAlign: 'center', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.25)', fontFamily: DS.fontMono, marginBottom: 4 }}>
-                Conversation privée · Analyse personnelle générée instantanément
+            <div
+              style={{
+                width: '100%',
+                maxWidth: 980,
+                margin: '0 auto',
+                padding: '30px 28px 22px',
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 18,
+              }}
+            >
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: 10,
+                  letterSpacing: '0.16em',
+                  textTransform: 'uppercase',
+                  color: 'rgba(212,165,116,0.24)',
+                  fontFamily: DS.fontMono,
+                }}
+              >
+                Conversation privée · Analyse personnelle
               </div>
 
               {messages.map((msg, i) => (
-                <div key={msg.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', animation: 'fadeUp 0.4s ease both', animationDelay: `${Math.min(i, 4) * 0.05}s` }}>
+                <div
+                  key={msg.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 14,
+                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                    animation: 'fadeUp 0.4s ease both',
+                    animationDelay: `${Math.min(i, 4) * 0.05}s`,
+                  }}
+                >
                   {msg.role === 'assistant' && (
-                    <div style={{ width: 26, height: 26, minWidth: 26, flexShrink: 0, marginTop: 3, opacity: 0.85 }}>
-                      <div style={{ width: '100%', height: '100%', background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)' }} />
+                    <div style={{ width: 28, height: 28, minWidth: 28, flexShrink: 0, marginTop: 4 }}>
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          background: DS.gradBtn,
+                          clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+                        }}
+                      />
                     </div>
                   )}
 
-                  <div style={{
-                    maxWidth: 'min(680px,82%)',
-                    ...(msg.role === 'user'
-                      ? { background: 'rgba(212,165,116,0.07)', border: `1px solid ${DS.borderW}`, borderRadius: 16, borderBottomRightRadius: 4, padding: '13px 17px' }
-                      : { background: 'rgba(20,14,10,0.55)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 18, padding: '18px 22px', transition: 'border-color 0.3s ease' }
-                    ),
-                  }}>
-                    <p style={{ fontSize: 16, lineHeight: 1.78, letterSpacing: '0.01em', color: msg.role === 'user' ? 'rgba(245,241,234,0.9)' : 'rgba(245,241,234,0.86)', whiteSpace: 'pre-wrap', margin: 0, fontFamily: DS.fontBody, fontWeight: 400 }}>
+                  <div
+                    style={{
+                      maxWidth: 'min(740px,84%)',
+                      ...(msg.role === 'user'
+                        ? {
+                            background: 'rgba(212,165,116,0.08)',
+                            border: `1px solid ${DS.borderW}`,
+                            borderRadius: 20,
+                            borderBottomRightRadius: 6,
+                            padding: '14px 18px',
+                          }
+                        : {
+                            background: 'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018))',
+                            backdropFilter: 'blur(16px)',
+                            WebkitBackdropFilter: 'blur(16px)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            borderRadius: 22,
+                            padding: '18px 22px',
+                          }),
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontSize: 16,
+                        lineHeight: 1.82,
+                        letterSpacing: '0.01em',
+                        color: msg.role === 'user' ? 'rgba(245,241,234,0.92)' : 'rgba(245,241,234,0.88)',
+                        whiteSpace: 'pre-wrap',
+                        margin: 0,
+                        fontFamily: DS.fontBody,
+                        fontWeight: 400,
+                      }}
+                    >
                       {msg.content}
                     </p>
-                    {msg.cached && <span style={{ fontSize: 9, color: DS.tx3, marginTop: 5, display: 'block', fontFamily: DS.fontMono }}>⚡ cache</span>}
-                    <span style={{ display: 'block', fontSize: 9, color: DS.tx3, marginTop: 7, textAlign: msg.role === 'user' ? 'right' : 'left', fontFamily: DS.fontMono, letterSpacing: '0.06em' }}>
-                      {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+
+                    {msg.cached && (
+                      <span
+                        style={{
+                          fontSize: 9,
+                          color: DS.tx3,
+                          marginTop: 6,
+                          display: 'block',
+                          fontFamily: DS.fontMono,
+                        }}
+                      >
+                        ⚡ cache
+                      </span>
+                    )}
+
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: 9,
+                        color: DS.tx3,
+                        marginTop: 8,
+                        textAlign: msg.role === 'user' ? 'right' : 'left',
+                        fontFamily: DS.fontMono,
+                        letterSpacing: '0.06em',
+                      }}
+                    >
+                      {new Date(msg.created_at).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </div>
                 </div>
               ))}
 
               {isTyping && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, animation: 'fadeUp 0.3s ease both' }}>
-                  <div style={{ width: 24, height: 24, minWidth: 24, flexShrink: 0, opacity: 0.6 }}>
-                    <div style={{ width: '100%', height: '100%', background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)' }} />
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    animation: 'fadeUp 0.3s ease both',
+                  }}
+                >
+                  <div style={{ width: 26, height: 26, minWidth: 26, flexShrink: 0, opacity: 0.6 }}>
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        background: DS.gradBtn,
+                        clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+                      }}
+                    />
                   </div>
                   <div style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
-                    {[0, 1, 2].map((i) => <span key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(212,165,116,0.45)', display: 'inline-block', animation: 'blink 1.4s ease-in-out infinite', animationDelay: `${i * 0.2}s` }} />)}
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        style={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: '50%',
+                          background: 'rgba(212,165,116,0.45)',
+                          display: 'inline-block',
+                          animation: 'blink 1.4s ease-in-out infinite',
+                          animationDelay: `${i * 0.2}s`,
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
               )}
@@ -2049,18 +2502,46 @@ export default function ChatPage() {
           )}
         </div>
 
-        <div style={{ padding: '10px 24px 14px', borderTop: `1px solid ${DS.border}`, background: 'rgba(8,5,2,0.75)', backdropFilter: 'blur(24px)', flexShrink: 0 }}>
-          <div style={{ textAlign: 'center', fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.5)', fontFamily: DS.fontMono, marginBottom: 9 }}>
-            HexAstra t'aide à y voir plus clair
-          </div>
-
+        <div
+          style={{
+            padding: '14px 24px 18px',
+            borderTop: `1px solid ${DS.border}`,
+            background: 'linear-gradient(180deg, rgba(8,5,2,0.42), rgba(8,5,2,0.80))',
+            backdropFilter: 'blur(24px)',
+            flexShrink: 0,
+          }}
+        >
           {!isWelcome && (
-            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 10 }}>
-              {['Comprendre une situation que je traverse', 'Clarifier une décision importante', 'Explorer une période de ma vie', 'Énergie du moment'].map((q) => (
+            <div
+              style={{
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                marginBottom: 12,
+              }}
+            >
+              {[
+                'Comprendre une situation que je traverse',
+                'Clarifier une décision importante',
+                'Explorer une période de ma vie',
+                'Énergie du moment',
+              ].map((q) => (
                 <button
                   key={q}
                   onClick={() => send(q)}
-                  style={{ padding: '5px 13px', borderRadius: 99, background: 'rgba(255,255,255,0.025)', border: `1px solid ${DS.border}`, color: 'rgba(203,185,164,0.5)', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: DS.fontBody, whiteSpace: 'nowrap' }}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${DS.border}`,
+                    color: 'rgba(203,185,164,0.56)',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: DS.fontBody,
+                    whiteSpace: 'nowrap',
+                  }}
                 >
                   {q}
                 </button>
@@ -2070,15 +2551,46 @@ export default function ChatPage() {
 
           <ComposerBox>
             {(focused) => (
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, background: 'rgba(255,255,255,0.03)', border: `1px solid ${focused ? 'rgba(212,165,116,0.38)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 16, padding: '10px 12px', maxWidth: 900, margin: '0 auto', transition: 'border-color 0.25s ease, box-shadow 0.25s ease', boxShadow: focused ? '0 0 0 2px rgba(212,165,116,0.12), 0 0 20px rgba(212,165,116,0.08)' : 'none' }}>
-                <IconBtn tooltip={mode === 'praticien' ? 'Profil client' : 'Données de naissance'} onClick={() => mode === 'praticien' ? setShowClient(true) : setShowBirth(true)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  gap: 10,
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
+                  border: `1px solid ${focused ? 'rgba(212,165,116,0.28)' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: 20,
+                  padding: '12px 14px',
+                  maxWidth: 980,
+                  margin: '0 auto',
+                  transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
+                  boxShadow: focused
+                    ? '0 0 0 2px rgba(212,165,116,0.10), 0 0 30px rgba(212,165,116,0.08)'
+                    : '0 10px 30px rgba(0,0,0,0.18)',
+                }}
+              >
+                <IconBtn
+                  tooltip={mode === 'praticien' ? 'Profil client' : 'Données de naissance'}
+                  onClick={() => (mode === 'praticien' ? setShowClient(true) : setShowBirth(true))}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                  </svg>
                 </IconBtn>
 
                 <IconBtn tooltip="Ajouter des fichiers" onClick={() => fileRef.current?.click()}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" /></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                  </svg>
                 </IconBtn>
-                <input ref={fileRef} type="file" accept="image/*,.pdf,.txt,.doc,.docx" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files)} />
+
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*,.pdf,.txt,.doc,.docx"
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleFile(e.target.files)}
+                />
 
                 <textarea
                   ref={taRef}
@@ -2092,7 +2604,22 @@ export default function ChatPage() {
                   }}
                   placeholder="Parle-moi de ta situation ou pose ta question…"
                   rows={1}
-                  style={{ flex: 1, background: 'transparent', border: 'none', color: DS.tx1, fontSize: 16, lineHeight: '1.7', letterSpacing: '0.01em', minHeight: 24, maxHeight: 100, overflowY: 'auto', padding: '3px 0', resize: 'none', fontFamily: DS.fontBody, outline: 'none' }}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    color: DS.tx1,
+                    fontSize: 16,
+                    lineHeight: '1.75',
+                    letterSpacing: '0.01em',
+                    minHeight: 24,
+                    maxHeight: 110,
+                    overflowY: 'auto',
+                    padding: '5px 0',
+                    resize: 'none',
+                    fontFamily: DS.fontBody,
+                    outline: 'none',
+                  }}
                 />
 
                 <IconBtn tooltip="Message vocal" onClick={toggleRec} active={isRec}>
@@ -2102,7 +2629,12 @@ export default function ChatPage() {
                 <BtnPrimary
                   onClick={() => send()}
                   disabled={!input.trim() && !isRec}
-                  style={{ padding: '10px 16px', minWidth: 54, borderRadius: 12, flexShrink: 0 }}
+                  style={{
+                    minWidth: 56,
+                    padding: '11px 16px',
+                    borderRadius: 14,
+                    flexShrink: 0,
+                  }}
                 >
                   →
                 </BtnPrimary>
@@ -2110,25 +2642,99 @@ export default function ChatPage() {
             )}
           </ComposerBox>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, maxWidth: 900, margin: '8px auto 0', padding: '0 4px' }}>
-            <div style={{ fontSize: 9, color: 'rgba(212,165,116,0.35)', letterSpacing: '0.12em', textTransform: 'uppercase', flexShrink: 0, border: '1px solid rgba(212,165,116,0.1)', padding: '2px 9px', borderRadius: 4, fontFamily: DS.fontMono }}>{modeLabel}</div>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', flex: 1, lineHeight: 1.6, margin: 0, fontStyle: 'italic', fontFamily: DS.fontBody }}>
-              HexAstra Coach est un outil d'exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+              maxWidth: 980,
+              margin: '10px auto 0',
+              padding: '0 4px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: 9,
+                color: 'rgba(212,165,116,0.35)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                flexShrink: 0,
+                border: '1px solid rgba(212,165,116,0.1)',
+                padding: '3px 10px',
+                borderRadius: 999,
+                fontFamily: DS.fontMono,
+              }}
+            >
+              {modeLabel}
+            </div>
+
+            <p
+              style={{
+                fontSize: 11,
+                color: 'rgba(255,255,255,0.22)',
+                textAlign: 'center',
+                flex: 1,
+                lineHeight: 1.65,
+                margin: 0,
+                fontStyle: 'italic',
+                fontFamily: DS.fontBody,
+              }}
+            >
+              HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
             </p>
+
             <div style={{ width: 60, flexShrink: 0 }} />
           </div>
         </div>
       </main>
 
-      <RightSidebar mode={mode} readings={readings} onSend={(t: string) => send(t)} onOpenReading={openReading} dragId={dragId} setDragId={setDragId} />
+      <RightSidebar
+        mode={mode}
+        readings={readings}
+        onSend={(t: string) => send(t)}
+        onOpenReading={openReading}
+        dragId={dragId}
+        setDragId={setDragId}
+      />
 
-      {showBirth && <BirthModal existing={profile} onClose={() => setShowBirth(false)} onSubmit={(d) => { setShowBirth(false); send(undefined, d) }} />}
-      {showClient && <ClientModal onClose={() => setShowClient(false)} onSubmit={(d) => { setShowClient(false); send(undefined, d) }} />}
-      {showSearch && <SearchModal readings={readings} onClose={() => setShowSearch(false)} onSelect={(r) => { openReading(r); setShowSearch(false) }} />}
-      {showShare && <ShareModal messages={messages.filter((m) => m.id !== '0')} onClose={() => setShowShare(false)} />}
+      {showBirth && (
+        <BirthModal
+          existing={profile}
+          onClose={() => setShowBirth(false)}
+          onSubmit={(d) => {
+            setShowBirth(false)
+            send(undefined, d)
+          }}
+        />
+      )}
+      {showClient && (
+        <ClientModal
+          onClose={() => setShowClient(false)}
+          onSubmit={(d) => {
+            setShowClient(false)
+            send(undefined, d)
+          }}
+        />
+      )}
+      {showSearch && (
+        <SearchModal
+          readings={readings}
+          onClose={() => setShowSearch(false)}
+          onSelect={(r) => {
+            openReading(r)
+            setShowSearch(false)
+          }}
+        />
+      )}
+      {showShare && (
+        <ShareModal
+          messages={messages.filter((m) => m.id !== '0')}
+          onClose={() => setShowShare(false)}
+        />
+      )}
     </div>
   )
-}
 
 /* ═══════════════════════════════════════════════════════════════
    FULL-PAGE VIEWS
