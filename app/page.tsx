@@ -5,6 +5,14 @@ import { useMemo, useState } from 'react'
 
 type Lang = 'fr' | 'en'
 
+export default function Home() {
+  return (
+    <main className="hex-light">
+      {/* ton contenu */}
+    </main>
+  )
+}
+
 const T = {
   fr: {
     nav: {
@@ -170,6 +178,20 @@ const T = {
     previewTitle: 'Live conversation',
     previewLabel: 'Chat preview',
   },
+
+  <div className="hx-card">
+  <div className="hx-label">Praticien</div>
+  <div className="hx-t2">49€/mois</div>
+
+  <p className="hx-body-sm">
+  Accès avancé pour thérapeutes, coachs et accompagnants.
+  Lectures complètes, PDF, audio et outils professionnels.
+  </p>
+
+  <button className="hx-btn hx-btn-primary">
+    Accéder à l'espace praticien
+  </button>
+</div>
 } as const
 
 const shellStyle: React.CSSProperties = {
