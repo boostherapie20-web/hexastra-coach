@@ -1433,32 +1433,116 @@ function CategoryButton({ item, onSend }: { item: { id: string; sym: string; lab
   )
 }
 
-function RightSidebar({ mode, readings, onSend, onOpenReading, dragId, setDragId }: any) {
+function RightSidebar({
+  mode,
+  readings,
+  onSend,
+  onOpenReading,
+  dragId,
+  setDragId,
+}: any) {
   const [lectOpen, setLectOpen] = useState(true)
 
-  const menu = mode === 'praticien' ? MENU_PRATICIEN : mode === 'premium' ? MENU_PREMIUM : MENU_ESSENTIEL
+  const menu =
+    mode === 'praticien'
+      ? MENU_PRATICIEN
+      : mode === 'premium'
+        ? MENU_PREMIUM
+        : MENU_ESSENTIEL
+
   const freeR = readings.filter((r: Reading) => !r.projectId)
-  const modeLabel = mode === 'essentiel' ? 'Mode Essentiel' : mode === 'premium' ? 'Mode Premium' : 'Mode Praticien'
+  const modeLabel =
+    mode === 'essentiel'
+      ? 'Mode Essentiel'
+      : mode === 'premium'
+        ? 'Mode Premium'
+        : 'Mode Praticien'
 
   return (
-    <aside style={{ width: 182, minWidth: 182, height: '100vh', background: 'rgba(13,8,5,0.92)', backdropFilter: 'blur(20px)', borderLeft: `1px solid ${DS.border}`, display: 'flex', flexDirection: 'column', zIndex: 10, overflow: 'hidden' }}>
-      <div style={{ padding: '12px 12px 10px', borderBottom: `1px solid ${DS.border}`, flexShrink: 0 }}>
-        <div style={{ fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase', color: DS.amber, fontFamily: DS.fontMono, opacity: 0.8 }}>{modeLabel}</div>
-      </div>
+    <aside
+      style={{
+        width: 232,
+        minWidth: 232,
+        height: '100vh',
+        padding: 14,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        zIndex: 10,
+        background: 'linear-gradient(180deg, rgba(9,6,4,0.82), rgba(12,8,5,0.92))',
+        borderLeft: `1px solid ${DS.border}`,
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      <Card hover={false} style={{ padding: '14px 14px 12px', borderRadius: 20 }}>
+        <Label>{modeLabel}</Label>
+        <div
+          style={{
+            fontSize: 15,
+            color: DS.tx1,
+            fontFamily: DS.fontTitle,
+            fontWeight: 600,
+            lineHeight: 1.35,
+          }}
+        >
+          Accès rapide
+        </div>
+        <p
+          style={{
+            margin: '6px 0 0',
+            fontSize: 12,
+            color: DS.tx3,
+            lineHeight: 1.65,
+            fontFamily: DS.fontBody,
+          }}
+        >
+          Lance une lecture ou rouvre une exploration récente.
+        </p>
+      </Card>
 
-      <div style={{ flexShrink: 0 }}>
+      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
         <button
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px 5px', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', transition: 'all 0.15s' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            marginBottom: lectOpen ? 8 : 0,
+          }}
           onClick={() => setLectOpen((o) => !o)}
         >
           <Label>Vos lectures</Label>
-          <span style={{ fontSize: 9, color: DS.tx3, transition: 'transform 0.2s', display: 'inline-block', transform: lectOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
+          <span
+            style={{
+              fontSize: 10,
+              color: DS.tx3,
+              transition: 'transform 0.2s',
+              display: 'inline-block',
+              transform: lectOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+            }}
+          >
+            ▾
+          </span>
         </button>
 
         {lectOpen && (
-          <div style={{ maxHeight: 130, overflowY: 'auto', padding: '0 8px 6px' }}>
+          <div style={{ maxHeight: 180, overflowY: 'auto' }}>
             {freeR.length === 0 ? (
-              <div style={{ padding: '6px 4px', fontSize: 11, color: DS.tx3, textAlign: 'center', fontFamily: DS.fontBody }}>Aucune lecture</div>
+              <div
+                style={{
+                  padding: '8px 4px',
+                  fontSize: 11,
+                  color: DS.tx3,
+                  textAlign: 'center',
+                  fontFamily: DS.fontBody,
+                }}
+              >
+                Aucune lecture
+              </div>
             ) : (
               freeR.map((r: Reading) => (
                 <div
@@ -1467,30 +1551,62 @@ function RightSidebar({ mode, readings, onSend, onOpenReading, dragId, setDragId
                   onDragStart={() => setDragId(r.id)}
                   onDragEnd={() => setDragId(null)}
                   onClick={() => onOpenReading(r)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 8px', borderRadius: 8, marginBottom: 2, cursor: 'grab', background: dragId === r.id ? 'rgba(212,165,116,0.07)' : 'rgba(255,255,255,0.02)', border: `1px solid ${dragId === r.id ? DS.borderW : 'transparent'}`, transition: 'all 0.15s' }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '8px 9px',
+                    borderRadius: 12,
+                    marginBottom: 6,
+                    cursor: 'grab',
+                    background:
+                      dragId === r.id
+                        ? 'rgba(212,165,116,0.07)'
+                        : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${dragId === r.id ? DS.borderW : 'rgba(255,255,255,0.04)'}`,
+                    transition: 'all 0.15s',
+                  }}
                 >
-                  <span style={{ fontSize: 9, color: DS.amber, flexShrink: 0 }}>◈</span>
+                  <span style={{ fontSize: 10, color: DS.amber, flexShrink: 0 }}>◈</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 11, color: DS.tx2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: DS.fontBody }}>{r.title}</div>
-                    <div style={{ fontSize: 9, color: DS.tx3, marginTop: 1, fontFamily: DS.fontMono }}>{r.science}</div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: DS.tx2,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontFamily: DS.fontBody,
+                      }}
+                    >
+                      {r.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: DS.tx3,
+                        marginTop: 2,
+                        fontFamily: DS.fontMono,
+                      }}
+                    >
+                      {r.science}
+                    </div>
                   </div>
                 </div>
               ))
             )}
           </div>
         )}
-      </div>
+      </Card>
 
-      <Divider />
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px' }}>
-        <div style={{ padding: '6px 4px 4px' }}>
-          <Label>Nos catégories</Label>
+      <Card hover={false} style={{ padding: 12, borderRadius: 20, flex: 1, overflow: 'hidden' }}>
+        <Label>Nos catégories</Label>
+        <div style={{ overflowY: 'auto', height: '100%', paddingRight: 2 }}>
+          {menu.map((item: any) => (
+            <CategoryButton key={item.id} item={item} onSend={onSend} />
+          ))}
         </div>
-        {menu.map((item: any) => (
-          <CategoryButton key={item.id} item={item} onSend={onSend} />
-        ))}
-      </div>
+      </Card>
     </aside>
   )
 }
