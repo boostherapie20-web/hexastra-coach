@@ -759,67 +759,249 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
 /* ═══════════════════════════════════════════════════════════════
    RIGHT SIDEBAR
 ═══════════════════════════════════════════════════════════════ */
-function RightSidebar({ mode, readings, onSend, onOpenReading, dragId, setDragId }: any) {
-  const [lectOpen,setLectOpen] = useState(true)
-  const menu = mode==='praticien'?MENU_PRATICIEN:mode==='premium'?MENU_PREMIUM:MENU_ESSENTIEL
-  const freeR = readings.filter((r:Reading)=>!r.projectId)
-  const modeLabel = mode==='essentiel'?'Mode Essentiel':mode==='premium'?'Mode Premium':'Mode Praticien'
+function CategoryButton({
+  item,
+  onSend,
+}: {
+  item: { id: string; sym: string; label: string; sub: string }
+  onSend: (text: string) => void
+}) {
+  const [hov, setHov] = useState(false)
 
   return (
-    <aside style={{width:182,minWidth:182,height:'100vh',background:'rgba(13,8,5,0.92)',backdropFilter:'blur(20px)',borderLeft:`1px solid ${DS.border}`,display:'flex',flexDirection:'column',zIndex:10,overflow:'hidden'}}>
+    <button
+      key={item.id}
+      onClick={() => onSend(`${item.label} — ${item.sub}`)}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        width: '100%',
+        padding: '6px 8px',
+        borderRadius: 8,
+        textAlign: 'left' as const,
+        marginBottom: 2,
+        cursor: 'pointer',
+        background: hov ? 'rgba(212,165,116,0.06)' : 'transparent',
+        border: `1px solid ${hov ? DS.borderW : 'transparent'}`,
+        transition: 'all 0.15s',
+      }}
+    >
+      <span
+        style={{
+          fontSize: 11,
+          flexShrink: 0,
+          color: DS.amber,
+          opacity: hov ? 1 : 0.65,
+        }}
+      >
+        {item.sym}
+      </span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: hov ? DS.tx1 : DS.tx2,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontFamily: DS.fontBody,
+            fontWeight: hov ? 500 : 400,
+            transition: 'color 0.15s',
+          }}
+        >
+          {item.label}
+        </div>
+        <div
+          style={{
+            fontSize: 9,
+            color: DS.tx3,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            marginTop: 1,
+            fontFamily: DS.fontBody,
+          }}
+        >
+          {item.sub}
+        </div>
+      </div>
+    </button>
+  )
+}
 
-      {/* Mode header */}
-      <div style={{padding:'12px 12px 10px',borderBottom:`1px solid ${DS.border}`,flexShrink:0}}>
-        <div style={{fontSize:9,letterSpacing:'0.18em',textTransform:'uppercase' as const,color:DS.amber,fontFamily:DS.fontMono,opacity:0.8}}>{modeLabel}</div>
+function RightSidebar({
+  mode,
+  readings,
+  onSend,
+  onOpenReading,
+  dragId,
+  setDragId,
+}: any) {
+  const [lectOpen, setLectOpen] = useState(true)
+
+  const menu =
+    mode === 'praticien'
+      ? MENU_PRATICIEN
+      : mode === 'premium'
+        ? MENU_PREMIUM
+        : MENU_ESSENTIEL
+
+  const freeR = readings.filter((r: Reading) => !r.projectId)
+  const modeLabel =
+    mode === 'essentiel'
+      ? 'Mode Essentiel'
+      : mode === 'premium'
+        ? 'Mode Premium'
+        : 'Mode Praticien'
+
+  return (
+    <aside
+      style={{
+        width: 182,
+        minWidth: 182,
+        height: '100vh',
+        background: 'rgba(13,8,5,0.92)',
+        backdropFilter: 'blur(20px)',
+        borderLeft: `1px solid ${DS.border}`,
+        display: 'flex',
+        flexDirection: 'column',
+        zIndex: 10,
+        overflow: 'hidden',
+      }}
+    >
+      <div
+        style={{
+          padding: '12px 12px 10px',
+          borderBottom: `1px solid ${DS.border}`,
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 9,
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase' as const,
+            color: DS.amber,
+            fontFamily: DS.fontMono,
+            opacity: 0.8,
+          }}
+        >
+          {modeLabel}
+        </div>
       </div>
 
-      {/* Vos lectures */}
-      <div style={{flexShrink:0}}>
-        <button style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px 5px',width:'100%',background:'transparent',border:'none',cursor:'pointer',transition:'all 0.15s'}}
-          onClick={()=>setLectOpen(o=>!o)}>
+      <div style={{ flexShrink: 0 }}>
+        <button
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '8px 12px 5px',
+            width: '100%',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.15s',
+          }}
+          onClick={() => setLectOpen((o) => !o)}
+        >
           <Label>Vos lectures</Label>
-          <span style={{fontSize:9,color:DS.tx3,transition:'transform 0.2s',display:'inline-block',transform:lectOpen?'rotate(0deg)':'rotate(-90deg)'}}>▾</span>
+          <span
+            style={{
+              fontSize: 9,
+              color: DS.tx3,
+              transition: 'transform 0.2s',
+              display: 'inline-block',
+              transform: lectOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+            }}
+          >
+            ▾
+          </span>
         </button>
-        {lectOpen&&(
-          <div style={{maxHeight:130,overflowY:'auto',padding:'0 8px 6px'}}>
-            {freeR.length===0
-              ?<div style={{padding:'6px 4px',fontSize:11,color:DS.tx3,textAlign:'center' as const,fontFamily:DS.fontBody}}>Aucune lecture</div>
-              :freeR.map((r:Reading)=>(
-                <div key={r.id} draggable onDragStart={()=>setDragId(r.id)} onDragEnd={()=>setDragId(null)} onClick={()=>onOpenReading(r)}
-                  style={{display:'flex',alignItems:'center',gap:7,padding:'6px 8px',borderRadius:8,marginBottom:2,cursor:'grab',background:dragId===r.id?'rgba(212,165,116,0.07)':'rgba(255,255,255,0.02)',border:`1px solid ${dragId===r.id?DS.borderW:'transparent'}`,transition:'all 0.15s'}}>
-                  <span style={{fontSize:9,color:DS.amber,flexShrink:0}}>◈</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <div style={{fontSize:11,color:DS.tx2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:DS.fontBody}}>{r.title}</div>
-                    <div style={{fontSize:9,color:DS.tx3,marginTop:1,fontFamily:DS.fontMono}}>{r.science}</div>
+
+        {lectOpen && (
+          <div style={{ maxHeight: 130, overflowY: 'auto', padding: '0 8px 6px' }}>
+            {freeR.length === 0 ? (
+              <div
+                style={{
+                  padding: '6px 4px',
+                  fontSize: 11,
+                  color: DS.tx3,
+                  textAlign: 'center' as const,
+                  fontFamily: DS.fontBody,
+                }}
+              >
+                Aucune lecture
+              </div>
+            ) : (
+              freeR.map((r: Reading) => (
+                <div
+                  key={r.id}
+                  draggable
+                  onDragStart={() => setDragId(r.id)}
+                  onDragEnd={() => setDragId(null)}
+                  onClick={() => onOpenReading(r)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 7,
+                    padding: '6px 8px',
+                    borderRadius: 8,
+                    marginBottom: 2,
+                    cursor: 'grab',
+                    background:
+                      dragId === r.id
+                        ? 'rgba(212,165,116,0.07)'
+                        : 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${dragId === r.id ? DS.borderW : 'transparent'}`,
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <span style={{ fontSize: 9, color: DS.amber, flexShrink: 0 }}>◈</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 11,
+                        color: DS.tx2,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        fontFamily: DS.fontBody,
+                      }}
+                    >
+                      {r.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: DS.tx3,
+                        marginTop: 1,
+                        fontFamily: DS.fontMono,
+                      }}
+                    >
+                      {r.science}
+                    </div>
                   </div>
                 </div>
               ))
-            }
+            )}
           </div>
         )}
       </div>
 
-      <Divider/>
+      <Divider />
 
-      {/* Nos catégories */}
-      <div style={{flex:1,overflowY:'auto',padding:'6px 8px'}}>
-        <div style={{padding:'6px 4px 4px'}}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px' }}>
+        <div style={{ padding: '6px 4px 4px' }}>
           <Label>Nos catégories</Label>
         </div>
-        {menu.map((item:any)=>{
-          const [hov,setHov] = useState(false)
-          return (
-            <button key={item.id} onClick={()=>onSend(`${item.label} — ${item.sub}`)}
-              onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-              style={{display:'flex',alignItems:'center',gap:8,width:'100%',padding:'6px 8px',borderRadius:8,textAlign:'left' as const,marginBottom:2,cursor:'pointer',background:hov?'rgba(212,165,116,0.06)':'transparent',border:`1px solid ${hov?DS.borderW:'transparent'}`,transition:'all 0.15s'}}>
-              <span style={{fontSize:11,flexShrink:0,color:DS.amber,opacity:hov?1:0.65}}>{item.sym}</span>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:11,color:hov?DS.tx1:DS.tx2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontFamily:DS.fontBody,fontWeight:hov?500:400,transition:'color 0.15s'}}>{item.label}</div>
-                <div style={{fontSize:9,color:DS.tx3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginTop:1,fontFamily:DS.fontBody}}>{item.sub}</div>
-              </div>
-            </button>
-          )
-        })}
+
+        {menu.map((item: any) => (
+          <CategoryButton key={item.id} item={item} onSend={onSend} />
+        ))}
       </div>
     </aside>
   )
@@ -887,27 +1069,77 @@ export default function ChatPage() {
   const addToProject=useCallback((rId:string,pId:string)=>{ const nr=readings.map(r=>r.id===rId?{...r,projectId:pId}:r); setReadings(nr); localStorage.setItem('hx_readings',JSON.stringify(nr)) },[readings])
   const openReading=useCallback((r:Reading)=>{ setMessages([{id:'0',role:'assistant',created_at:r.date,content:`📖 ${r.title}\n\n${r.preview}...`}]); setView('chat') },[])
 
-  const handleFile=useCallback((files:FileList|null)=>{
-    if(!files||!files[0])return; const file=files[0]; const reader=new FileReader()
-    reader.onload=()=>{ send(`[Fichier joint : ${file.name}]\n${file.type.startsWith('text')?reader.result as string:'[Contenu binaire]'}`) }
-    if(file.type.startsWith('text')||file.type==='application/json') reader.readAsText(file)
-    else send(`[Fichier joint : ${file.name} — ${(file.size/1024).toFixed(1)} Ko]`)
-  },[])
+  const handleFile = useCallback(
+    (files: FileList | null) => {
+      if (!files || !files[0]) return
 
-  const toggleRec=useCallback(async()=>{
-    if(isRec&&mediaRec){mediaRec.stop();setIsRec(false);return}
-    try{
-      const stream=await navigator.mediaDevices.getUserMedia({audio:true}); const rec=new MediaRecorder(stream); const chunks:BlobPart[]=[]
-      rec.ondataavailable=e=>chunks.push(e.data)
-      rec.onstop=async()=>{
-        const blob=new Blob(chunks,{type:'audio/webm'}); const form=new FormData()
-        form.append('file',blob,'audio.webm'); form.append('model','whisper-1'); form.append('language','fr')
-        try{ const r=await fetch('https://api.openai.com/v1/audio/transcriptions',{method:'POST',body:form,headers:{Authorization:`Bearer ${process.env.NEXT_PUBLIC_OPENAI_KEY||''}`}}); const d=await r.json(); if(d.text)setInput(d.text) }catch{}
-        stream.getTracks().forEach(t=>t.stop())
+      const file = files[0]
+      const reader = new FileReader()
+
+      reader.onload = () => {
+        const content =
+          file.type.startsWith('text') || file.type === 'application/json'
+            ? String(reader.result || '')
+            : '[Contenu binaire non affiché]'
+
+        send(`[Fichier joint : ${file.name}]\n${content}`)
       }
-      rec.start(); setMediaRec(rec); setIsRec(true)
-    }catch{ alert('Micro non disponible') }
-  },[isRec,mediaRec])
+
+      if (file.type.startsWith('text') || file.type === 'application/json') {
+        reader.readAsText(file)
+      } else {
+        send(`[Fichier joint : ${file.name} — ${(file.size / 1024).toFixed(1)} Ko]`)
+      }
+    },
+    [send],
+  )
+
+  const toggleRec = useCallback(async () => {
+    if (isRec && mediaRec) {
+      mediaRec.stop()
+      setIsRec(false)
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const rec = new MediaRecorder(stream)
+      const chunks: BlobPart[] = []
+
+      rec.ondataavailable = (e) => chunks.push(e.data)
+
+      rec.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: 'audio/webm' })
+          const form = new FormData()
+          form.append('file', blob, 'audio.webm')
+          form.append('language', 'fr')
+
+          const r = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: form,
+          })
+
+          const d = await r.json()
+
+          if (d?.text) {
+            setInput(d.text)
+          }
+        } catch (error) {
+          console.error('Transcription error:', error)
+        } finally {
+          stream.getTracks().forEach((t) => t.stop())
+        }
+      }
+
+      rec.start()
+      setMediaRec(rec)
+      setIsRec(true)
+    } catch (error) {
+      console.error('Micro unavailable:', error)
+      alert('Micro non disponible')
+    }
+  }, [isRec, mediaRec])
 
   const send=useCallback(async(text?:string,birthData?:any)=>{
     const content=text||input.trim(); if(!content&&!birthData)return
