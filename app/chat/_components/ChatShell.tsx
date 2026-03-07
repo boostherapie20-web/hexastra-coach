@@ -31,7 +31,14 @@ export default function ChatShell({
   desktopRight,
 }: Props) {
   return (
-    <div style={{ minHeight: '100vh', overflow: 'hidden', position: 'relative', background: DS.bg0 }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        overflow: 'hidden',
+        position: 'relative',
+        background: 'linear-gradient(180deg,#fbfdfb 0%,#f7faf6 48%,#f1f6f1 100%)',
+      }}
+    >
       {!desktopLeft && showLeft && (
         <Drawer side="left" onClose={onCloseLeft}>
           {left}
@@ -47,13 +54,16 @@ export default function ChatShell({
       <div
         style={{
           position: 'relative',
-          zIndex: 10,
+          zIndex: 1,
           display: 'grid',
-          gridTemplateColumns: `${desktopLeft ? '278px ' : ''}minmax(0,1fr)${desktopRight ? ' auto' : ''}`,
+          gridTemplateColumns: `${desktopLeft ? '290px ' : ''}minmax(0,1fr)${desktopRight ? ' 320px' : ''}`,
           minHeight: '100vh',
+          gap: 0,
         }}
       >
-        {desktopLeft && left}
+        {desktopLeft && (
+          <aside style={{ padding: '18px 0 18px 18px' }}>{left}</aside>
+        )}
 
         <main style={{ minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
           {header}
@@ -63,7 +73,7 @@ export default function ChatShell({
               flex: 1,
               minHeight: 0,
               overflowY: 'auto',
-              padding: '24px 28px 22px',
+              padding: '24px 28px 18px',
             }}
           >
             {body}
@@ -74,18 +84,19 @@ export default function ChatShell({
               position: 'sticky',
               bottom: 0,
               zIndex: 19,
-              padding: '10px 28px 22px',
-              background:
-                'linear-gradient(180deg, rgba(10,7,5,0.00), rgba(10,7,5,0.62) 24%, rgba(10,7,5,0.96) 100%)',
-              backdropFilter: 'blur(18px)',
-              WebkitBackdropFilter: 'blur(18px)',
+              padding: '10px 28px 20px',
+              background: 'linear-gradient(180deg, rgba(247,250,246,0), rgba(247,250,246,0.88) 18%, rgba(247,250,246,0.98) 100%)',
+              backdropFilter: 'blur(14px)',
+              WebkitBackdropFilter: 'blur(14px)',
             }}
           >
             {composer}
           </div>
         </main>
 
-        {desktopRight && right}
+        {desktopRight && (
+          <aside style={{ padding: '18px 18px 18px 0' }}>{right}</aside>
+        )}
       </div>
     </div>
   )
@@ -106,20 +117,21 @@ function Drawer({
         position: 'fixed',
         inset: 0,
         zIndex: 60,
-        background: 'rgba(0,0,0,0.55)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(18, 30, 23, 0.18)',
+        backdropFilter: 'blur(10px)',
       }}
       onClick={onClose}
     >
       <div
         style={{
-          width: side === 'left' ? 278 : 252,
-          maxWidth: '88vw',
+          width: side === 'left' ? 290 : 320,
+          maxWidth: '92vw',
           marginLeft: side === 'right' ? 'auto' : 0,
+          padding: 18,
         }}
         onClick={(event) => event.stopPropagation()}
       >
-        {children}
+        <div style={{ minHeight: 'calc(100vh - 36px)' }}>{children}</div>
       </div>
     </div>
   )

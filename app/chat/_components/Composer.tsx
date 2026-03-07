@@ -11,20 +11,14 @@ type Props = {
   showQuickPrompts: boolean
 }
 
-export default function Composer({
-  value,
-  onChange,
-  onSend,
-  onQuickPrompt,
-  showQuickPrompts,
-}: Props) {
+export default function Composer({ value, onChange, onSend, onQuickPrompt, showQuickPrompts }: Props) {
   const [focused, setFocused] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
     if (!textareaRef.current) return
     textareaRef.current.style.height = 'auto'
-    textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 110)}px`
+    textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
   }, [value])
 
   return (
@@ -32,12 +26,7 @@ export default function Composer({
       {showQuickPrompts && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 12 }}>
           {QUICK_PROMPTS.map((prompt) => (
-            <button
-              key={prompt}
-              type="button"
-              onClick={() => onQuickPrompt(prompt)}
-              className="hx-chip"
-            >
+            <button key={prompt} type="button" onClick={() => onQuickPrompt(prompt)} className="hx-chip">
               {prompt}
             </button>
           ))}
@@ -51,13 +40,11 @@ export default function Composer({
           gap: 12,
           borderRadius: 28,
           padding: '14px 16px',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.028))',
-          border: `1px solid ${focused ? 'rgba(212,165,116,0.34)' : 'rgba(255,255,255,0.08)'}`,
+          background: '#ffffff',
+          border: `1px solid ${focused ? 'rgba(25,195,125,0.34)' : DS.lineStrong}`,
           boxShadow: focused
-            ? '0 0 0 2px rgba(212,165,116,0.08), 0 30px 90px rgba(0,0,0,0.38), 0 0 44px rgba(212,165,116,0.10)'
-            : '0 20px 64px rgba(0,0,0,0.24)',
-          backdropFilter: 'blur(22px)',
-          WebkitBackdropFilter: 'blur(22px)',
+            ? '0 0 0 4px rgba(25,195,125,0.08), 0 18px 40px rgba(16,24,20,0.08)'
+            : '0 10px 30px rgba(16,24,20,0.08)',
           transition: 'border-color 0.24s ease, box-shadow 0.24s ease',
         }}
       >
@@ -105,11 +92,11 @@ export default function Composer({
             padding: '11px 16px',
             borderRadius: 16,
             border: 'none',
-            background: value.trim() ? DS.gradient : 'rgba(255,255,255,0.05)',
+            background: value.trim() ? DS.gradient : '#E7EFE9',
             color: value.trim() ? '#fff' : DS.textFaint,
             fontWeight: 700,
             cursor: value.trim() ? 'pointer' : 'not-allowed',
-            boxShadow: value.trim() ? '0 14px 34px rgba(212,165,116,0.22)' : 'none',
+            boxShadow: value.trim() ? '0 10px 28px rgba(25,195,125,0.25)' : 'none',
           }}
         >
           →
@@ -125,12 +112,12 @@ export default function Composer({
             padding: '7px 12px',
             borderRadius: 999,
             border: `1px solid ${DS.line}`,
-            background: 'rgba(255,255,255,0.025)',
+            background: 'rgba(255,255,255,0.74)',
             color: DS.textMute,
             fontSize: 11,
           }}
         >
-          <span style={{ color: DS.amber }}>↵</span>
+          <span style={{ color: DS.emerald }}>↵</span>
           Entrée pour envoyer · Maj + Entrée pour revenir à la ligne
         </div>
       </div>
@@ -151,7 +138,7 @@ function IconGhost({ children, title }: { children: React.ReactNode; title: stri
         display: 'grid',
         placeItems: 'center',
         border: `1px solid ${DS.line}`,
-        background: 'rgba(255,255,255,0.025)',
+        background: '#F6FAF6',
         color: DS.textMute,
         flexShrink: 0,
       }}

@@ -25,99 +25,62 @@ export type Reading = {
   projectId?: string
 }
 
-export const DS = {
-  bg0: '#0f0a07',
-  bg1: '#17110d',
-  card: 'rgba(20,14,10,0.72)',
-  cardStrong: 'rgba(20,14,10,0.84)',
-  line: 'rgba(255,255,255,0.06)',
-  lineWarm: 'rgba(212,165,116,0.16)',
-  amber: '#d4a574',
-  amberDeep: '#8c6239',
-  text: '#f5f1ea',
-  textSoft: '#cbb9a4',
-  textMute: 'rgba(203,185,164,0.56)',
-  textFaint: 'rgba(203,185,164,0.34)',
-  success: '#57d27c',
-  shadow: '0 28px 120px rgba(0,0,0,0.46)',
-  shadowSoft: '0 18px 56px rgba(0,0,0,0.28)',
-  gradient: 'linear-gradient(135deg, #e3bc8e 0%, #c7925f 38%, #8c6239 100%)',
-  titleGradient:
-    'linear-gradient(90deg, #f5f1ea 0%, #e9dcc7 36%, #d4a574 68%, #f5f1ea 100%)',
-  radiusLg: 28,
-  radiusMd: 20,
-  radiusSm: 14,
-  titleFont: "var(--font-title)",
-  bodyFont: "var(--font-body)",
-  monoFont: "var(--font-mono)",
+export const STORAGE_KEYS = {
+  readings: 'hexastra.readings.v2',
+  projects: 'hexastra.projects.v2',
 } as const
-
-export const MENU_BY_MODE: Record<Mode, Array<{ id: string; label: string; sub: string; icon: string }>> = {
-  essentiel: [
-    { id: '1', label: 'NeuroKua™', sub: 'État intérieur du moment', icon: '✦' },
-    { id: '2', label: 'Énergie du moment', sub: 'Tendance de fond', icon: '◈' },
-    { id: '3', label: 'Amour / Relations', sub: 'Lecture affective', icon: '♡' },
-    { id: '4', label: 'Travail / Argent', sub: 'Stabilité et mouvement', icon: '◆' },
-    { id: '5', label: 'Lecture générale', sub: 'Vue synthétique', icon: '◎' },
-  ],
-  premium: [
-    { id: '1', label: 'NeuroKua™', sub: 'État intérieur du moment', icon: '✦' },
-    { id: '2', label: 'Énergie du moment', sub: 'Tendance de fond', icon: '◈' },
-    { id: '3', label: 'Amour / Relations', sub: 'Lecture affective', icon: '♡' },
-    { id: '4', label: 'Travail / Argent', sub: 'Stabilité et mouvement', icon: '◆' },
-    { id: '5', label: 'Lecture générale', sub: 'Vue synthétique', icon: '◎' },
-    { id: '6', label: 'Fusion KS™', sub: 'Synthèse globale', icon: '⬢' },
-    { id: '7', label: 'Astrolex™', sub: 'Approfondissement', icon: '❋' },
-  ],
-  praticien: [
-    { id: '1', label: 'Diagnostic rapide', sub: 'Lecture cabinet', icon: '✦' },
-    { id: '2', label: 'Relationnel™', sub: 'Dynamiques et leviers', icon: '◈' },
-    { id: '3', label: 'Professionnel™', sub: 'Positionnement', icon: '◆' },
-    { id: '4', label: 'Cycle à venir™', sub: 'Phase et timing', icon: '◎' },
-    { id: '5', label: 'Décision précise™', sub: 'Comparer A / B', icon: '⊕' },
-    { id: '6', label: 'Fusion KS™', sub: 'Synthèse complète', icon: '⬢' },
-  ],
-}
 
 export const QUICK_PROMPTS = [
-  'Comprendre une situation que je traverse',
-  'Clarifier une décision importante',
-  'Explorer une période de ma vie',
-  'Lire mon énergie du moment',
+  'Je veux une lecture claire de ma situation actuelle.',
+  'Quel est le bon timing pour agir maintenant ?',
+  'Aide-moi à comprendre ce qui se rejoue dans cette relation.',
+  'Quelle direction devient plus naturelle pour moi ?',
 ]
 
-export const HERO_PROMPTS = [
-  'Je me sens bloqué en ce moment',
-  'Est-ce le bon timing pour agir ?',
-  'Pourquoi cette relation me travaille autant ?',
-  'Quelle direction devient plus naturelle ?',
-]
-
-export const STORAGE_KEYS = {
-  readings: 'hx_readings_v2',
-  projects: 'hx_projects_v2',
+export const DS = {
+  bg0: '#f7faf6',
+  bg1: '#ffffff',
+  bg2: '#f1f6f1',
+  panel: 'rgba(255,255,255,0.82)',
+  panelStrong: '#ffffff',
+  glass: 'rgba(255,255,255,0.72)',
+  line: 'rgba(20, 33, 26, 0.08)',
+  lineStrong: 'rgba(20, 33, 26, 0.12)',
+  text: '#14211A',
+  textSoft: '#526157',
+  textMuted: 'rgba(82, 97, 87, 0.82)',
+  textFaint: 'rgba(20, 33, 26, 0.46)',
+  textMute: 'rgba(20, 33, 26, 0.54)',
+  emerald: '#19C37D',
+  emeraldDeep: '#0E8F5B',
+  emeraldSoft: 'rgba(25, 195, 125, 0.10)',
+  emeraldGlow: 'rgba(25, 195, 125, 0.16)',
+  gold: '#19C37D',
+  amber: '#19C37D',
+  gradient: 'linear-gradient(135deg, #19C37D 0%, #0E8F5B 100%)',
+  surfaceGradient: 'linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.76))',
+  bodyFont: "'Inter', system-ui, sans-serif",
+  titleFont: "'Sora', system-ui, sans-serif",
+  monoFont: "'SF Mono', 'Fira Code', ui-monospace, monospace",
+  shadowSoft: '0 8px 24px rgba(16, 24, 20, 0.05)',
+  shadowCard: '0 18px 48px rgba(16, 24, 20, 0.08)',
+  shadowLarge: '0 24px 80px rgba(16, 24, 20, 0.10)',
 } as const
 
-export function makeReadingTitle(input: string) {
-  return input.length > 54 ? `${input.slice(0, 54)}…` : input
-}
-
-export function cardStyle(extra?: CSSProperties): CSSProperties {
+export function cardStyle(overrides?: CSSProperties): CSSProperties {
   return {
-    background:
-      'linear-gradient(180deg, rgba(255,255,255,0.038), rgba(255,255,255,0.018))',
+    background: DS.surfaceGradient,
     border: `1px solid ${DS.line}`,
-    borderRadius: DS.radiusLg,
-    boxShadow: DS.shadow,
-    backdropFilter: 'blur(18px)',
-    WebkitBackdropFilter: 'blur(18px)',
-    ...extra,
+    borderRadius: 28,
+    boxShadow: DS.shadowCard,
+    backdropFilter: 'blur(14px)',
+    WebkitBackdropFilter: 'blur(14px)',
+    ...overrides,
   }
 }
 
-export function formatClock(date: string) {
-  return new Date(date).toLocaleTimeString('fr-FR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+export function makeReadingTitle(input: string): string {
+  const clean = input.replace(/\s+/g, ' ').trim()
+  if (!clean) return 'Lecture HexAstra'
+  return clean.length > 48 ? `${clean.slice(0, 48).trim()}…` : clean
 }

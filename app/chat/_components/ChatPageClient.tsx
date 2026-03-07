@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import ChatShell from './ChatShell'
 import ChatHeader from './ChatHeader'
 import Composer from './Composer'
-import CosmicBackground from './CosmicBackground'
 import LeftSidebar from './LeftSidebar'
 import MessageList from './MessageList'
 import RightPanel from './RightPanel'
@@ -269,122 +268,114 @@ export default function ChatPageClient() {
       onOpenReading={handleOpenReading}
     />
   )
+
   return (
-    <>
-      <CosmicBackground />
+    <ChatShell
+      left={left}
+      right={right}
+      showLeft={showLeft}
+      showRight={showRight}
+      onCloseLeft={() => setShowLeft(false)}
+      onCloseRight={() => setShowRight(false)}
+      desktopLeft={desktopLeft}
+      desktopRight={desktopRight}
+      header={
+        <ChatHeader
+          mode={mode}
+          onModeChange={setMode}
+          onOpenLeft={() => setShowLeft(true)}
+          onOpenRight={() => setShowRight(true)}
+          desktopLeft={desktopLeft}
+          desktopRight={desktopRight}
+        />
+      }
+      body={
+        <div style={{ maxWidth: isWelcome ? 1280 : 1080, margin: '0 auto', minHeight: '100%' }}>
+          {isWelcome ? (
+            <WelcomeHero onPrompt={(value) => void handleSend(value)} />
+          ) : (
+            <MessageList messages={messages} isTyping={isTyping} />
+          )}
 
-      <ChatShell
-        left={left}
-        right={right}
-        showLeft={showLeft}
-        showRight={showRight}
-        onCloseLeft={() => setShowLeft(false)}
-        onCloseRight={() => setShowRight(false)}
-        desktopLeft={desktopLeft}
-        desktopRight={desktopRight}
-        header={
-          <ChatHeader
-            mode={mode}
-            onModeChange={setMode}
-            onOpenLeft={() => setShowLeft(true)}
-            onOpenRight={() => setShowRight(true)}
-            desktopLeft={desktopLeft}
-            desktopRight={desktopRight}
-          />
-        }
-        body={
-          <div style={{ maxWidth: isWelcome ? 1280 : 1080, margin: '0 auto', minHeight: '100%' }}>
-            {isWelcome ? (
-              <WelcomeHero onPrompt={(value) => void handleSend(value)} />
-            ) : (
-              <MessageList messages={messages} isTyping={isTyping} />
-            )}
-
-            {!isWelcome && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+          {!isWelcome && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+              <div
+                style={cardStyle({
+                  maxWidth: 920,
+                  width: '100%',
+                  padding: '10px 14px',
+                  borderRadius: 999,
+                  boxShadow: DS.shadowSoft,
+                  background: 'rgba(255,255,255,0.78)',
+                })}
+              >
                 <div
-                  style={cardStyle({
-                    maxWidth: 920,
-                    width: '100%',
-                    padding: '10px 14px',
-                    borderRadius: 999,
-                    boxShadow: '0 14px 34px rgba(0,0,0,0.18)',
-                    background: 'rgba(255,255,255,0.025)',
-                  })}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    flexWrap: 'wrap',
+                  }}
                 >
                   <div
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                      flexWrap: 'wrap',
+                      fontSize: 9,
+                      color: 'rgba(25,195,125,0.72)',
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      border: '1px solid rgba(25,195,125,0.12)',
+                      padding: '4px 10px',
+                      borderRadius: 999,
+                      fontFamily: DS.monoFont,
                     }}
                   >
-                    <div
-                      style={{
-                        fontSize: 9,
-                        color: 'rgba(212,165,116,0.35)',
-                        letterSpacing: '0.14em',
-                        textTransform: 'uppercase',
-                        border: '1px solid rgba(212,165,116,0.10)',
-                        padding: '4px 10px',
-                        borderRadius: 999,
-                        fontFamily: DS.monoFont,
-                      }}
-                    >
-                      {mode}
-                    </div>
-
-                    <p
-                      style={{
-                        flex: 1,
-                        margin: 0,
-                        textAlign: 'center',
-                        fontSize: 11,
-                        color: 'rgba(255,255,255,0.24)',
-                        lineHeight: 1.7,
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
-                    </p>
-
-                    <div style={{ fontSize: 11, color: DS.textFaint }}>
-                      {userEmail || 'Session locale'}
-                    </div>
+                    {mode}
                   </div>
+
+                  <p
+                    style={{
+                      flex: 1,
+                      margin: 0,
+                      textAlign: 'center',
+                      fontSize: 11,
+                      color: DS.textFaint,
+                      lineHeight: 1.7,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {userEmail || 'Session locale'}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
-        }
-        composer={
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Composer
-              value={input}
-              onChange={setInput}
-              onSend={() => void handleSend()}
-              onQuickPrompt={(value) => void handleSend(value)}
-              showQuickPrompts={!isWelcome}
-            />
-
-            <div
-              style={{
-                textAlign: 'center',
-                fontSize: 12,
-                lineHeight: 1.7,
-                color: 'rgba(255,255,255,0.26)',
-                fontStyle: 'italic',
-                paddingBottom: 2,
-              }}
-            >
-              HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
             </div>
+          )}
+        </div>
+      }
+      composer={
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <Composer
+            value={input}
+            onChange={setInput}
+            onSend={() => void handleSend()}
+            onQuickPrompt={(value) => void handleSend(value)}
+            showQuickPrompts={!isWelcome}
+          />
+
+          <div
+            style={{
+              textAlign: 'center',
+              fontSize: 12,
+              lineHeight: 1.7,
+              color: DS.textFaint,
+              fontStyle: 'italic',
+              paddingBottom: 2,
+            }}
+          >
+            HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
           </div>
-        }
-      />
-    </>
+        </div>
+      }
+    />
   )
 }
-  
