@@ -1915,15 +1915,18 @@ export default function ChatPage() {
 
   const modeLabel = mode === 'essentiel' ? 'Essentiel' : mode === 'premium' ? 'Premium' : 'Praticien'
 
-    return (
-    <div
-      style={{
-        display: 'flex',
-        height: '100vh',
-        overflow: 'hidden',
-        background: DS.bg0,
-        position: 'relative',
-      }}
+return (
+  <div
+    style={{
+      display: 'grid',
+      gridTemplateColumns: '248px minmax(0, 1fr) 232px',
+      height: '100vh',
+      overflow: 'hidden',
+      background:
+        'radial-gradient(circle at top, rgba(212,165,116,0.06), transparent 28%), linear-gradient(180deg, #0f0a07 0%, #120b08 100%)',
+      position: 'relative',
+    }}
+  >
     >
       <CosmicBackground />
 
@@ -1961,23 +1964,44 @@ export default function ChatPage() {
         }}
       >
         <div
-          style={{
-            padding: '14px 18px 10px',
-            borderBottom: `1px solid ${DS.border}`,
-            background: 'linear-gradient(180deg, rgba(11,7,5,0.82), rgba(11,7,5,0.58))',
-            backdropFilter: 'blur(24px)',
-            flexShrink: 0,
-          }}
-        >
-          <div
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 16,
-              maxWidth: 1100,
-              margin: '0 auto',
-            }}
+                padding: '18px 24px 14px',
+                borderBottom: `1px solid rgba(255,255,255,0.05)`,
+                background:
+                  'linear-gradient(180deg, rgba(11,7,5,0.78), rgba(11,7,5,0.42))',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                flexShrink: 0,
+              }}
+
+        >
+               <div style={{ minWidth: 0 }}>
+                 <div
+                   style={{
+                     fontSize: 10,
+                     letterSpacing: '0.2em',
+                     textTransform: 'uppercase',
+                     color: 'rgba(212,165,116,0.48)',
+                     fontFamily: DS.fontMono,
+                     marginBottom: 6,
+                   }}
+                 >
+                   Conversation privée · Clarté assistée
+                 </div>
+                 <div
+                   style={{
+                     fontSize: 22,
+                     color: DS.tx1,
+                     fontFamily: DS.fontTitle,
+                     fontWeight: 600,
+                     lineHeight: 1.12,
+                     letterSpacing: '-0.02em',
+                   }}
+                 >
+                   HexAstra <span style={{ color: DS.amber }}>Coach</span>
+                 </div>
+               </div>
+> 
           >
             <div style={{ minWidth: 0 }}>
               <div
@@ -2339,17 +2363,18 @@ export default function ChatPage() {
               </div>
             </div>
           ) : (
-            <div
-              style={{
-                width: '100%',
-                maxWidth: 980,
-                margin: '0 auto',
-                padding: '30px 28px 22px',
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 18,
-              }}
+               <div
+                 style={{
+                   width: '100%',
+                   maxWidth: 1040,
+                   margin: '0 auto',
+                   padding: '38px 32px 28px',
+                   boxSizing: 'border-box',
+                   display: 'flex',
+                   flexDirection: 'column',
+                   gap: 20,
+                 }}
+>
             >
               <div
                 style={{
@@ -2394,19 +2419,21 @@ export default function ChatPage() {
                       maxWidth: 'min(740px,84%)',
                       ...(msg.role === 'user'
                         ? {
-                            background: 'rgba(212,165,116,0.08)',
-                            border: `1px solid ${DS.borderW}`,
-                            borderRadius: 20,
-                            borderBottomRightRadius: 6,
-                            padding: '14px 18px',
+                           background: 'linear-gradient(180deg, rgba(212,165,116,0.12), rgba(212,165,116,0.08))',
+                           border: `1px solid rgba(212,165,116,0.18)`,
+                           borderRadius: 22,
+                           borderBottomRightRadius: 8,
+                           padding: '15px 18px',
+                           boxShadow: '0 12px 34px rgba(0,0,0,0.16)',
                           }
                         : {
-                            background: 'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018))',
-                            backdropFilter: 'blur(16px)',
-                            WebkitBackdropFilter: 'blur(16px)',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                            borderRadius: 22,
-                            padding: '18px 22px',
+                           background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
+                           backdropFilter: 'blur(18px)',
+                           WebkitBackdropFilter: 'blur(18px)',
+                           border: '1px solid rgba(255,255,255,0.05)',
+                           borderRadius: 24,
+                           padding: '20px 24px',
+                           boxShadow: '0 18px 42px rgba(0,0,0,0.18)',
                           }),
                     }}
                   >
@@ -2552,20 +2579,26 @@ export default function ChatPage() {
           <ComposerBox>
             {(focused) => (
               <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 10,
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
-                  border: `1px solid ${focused ? 'rgba(212,165,116,0.28)' : 'rgba(255,255,255,0.08)'}`,
-                  borderRadius: 20,
-                  padding: '12px 14px',
-                  maxWidth: 980,
-                  margin: '0 auto',
-                  transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
-                  boxShadow: focused
-                    ? '0 0 0 2px rgba(212,165,116,0.10), 0 0 30px rgba(212,165,116,0.08)'
-                    : '0 10px 30px rgba(0,0,0,0.18)',
+                <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      gap: 10,
+                      background:
+                        'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.028))',
+                      border: `1px solid ${
+                        focused ? 'rgba(212,165,116,0.30)' : 'rgba(255,255,255,0.07)'
+                      }`,
+                      borderRadius: 24,
+                      padding: '14px 16px',
+                      maxWidth: 1040,
+                      margin: '0 auto',
+                      transition: 'border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease',
+                      boxShadow: focused
+                        ? '0 0 0 2px rgba(212,165,116,0.10), 0 18px 60px rgba(0,0,0,0.28), 0 0 36px rgba(212,165,116,0.08)'
+                        : '0 14px 40px rgba(0,0,0,0.22)',
+                    }}
+>
                 }}
               >
                 <IconBtn
@@ -2592,34 +2625,34 @@ export default function ChatPage() {
                   onChange={(e) => handleFile(e.target.files)}
                 />
 
-                <textarea
-                  ref={taRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      send()
-                    }
-                  }}
-                  placeholder="Parle-moi de ta situation ou pose ta question…"
-                  rows={1}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    color: DS.tx1,
-                    fontSize: 16,
-                    lineHeight: '1.75',
-                    letterSpacing: '0.01em',
-                    minHeight: 24,
-                    maxHeight: 110,
-                    overflowY: 'auto',
-                    padding: '5px 0',
-                    resize: 'none',
-                    fontFamily: DS.fontBody,
-                    outline: 'none',
-                  }}
+                  <textarea
+                    ref={taRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        send()
+                      }
+                    }}
+                    placeholder="Parle-moi de ta situation ou pose ta question…"
+                    rows={1}
+                    style={{
+                      flex: 1,
+                      background: 'transparent',
+                      border: 'none',
+                      color: DS.tx1,
+                      fontSize: 16,
+                      lineHeight: '1.72',
+                      letterSpacing: '0.01em',
+                      minHeight: 26,
+                      maxHeight: 120,
+                      overflowY: 'auto',
+                      padding: '7px 2px 6px',
+                      resize: 'none',
+                      fontFamily: DS.fontBody,
+                      outline: 'none',
+                    }}
                 />
 
                 <IconBtn tooltip="Message vocal" onClick={toggleRec} active={isRec}>
@@ -2735,7 +2768,7 @@ export default function ChatPage() {
       )}
     </div>
   )
-
+}
 /* ═══════════════════════════════════════════════════════════════
    FULL-PAGE VIEWS
 ═══════════════════════════════════════════════════════════════ */
