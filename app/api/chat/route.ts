@@ -2,118 +2,144 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
-const VECTOR_STORE_ID = process.env.OPENAI_VECTOR_STORE_ID || 'vs_69a9c00b00d08191bbaf302d33f5d6d9'
+const VECTOR_STORE_ID = process.env.OPENAI_VECTOR_STORE_ID || ''
 
-// ─────────────────────────────────────────────────────────────────
-// EPHEMERIS — via routes internes Vercel (pas Railway directement)
-// Architecture : Chat → /api/fusion (Vercel) → Railway → Python
-// ─────────────────────────────────────────────────────────────────
+type ChatRole = 'user' | 'assistant' | 'system'
 
-function internalUrl(path: string, req: NextRequest): string {
-  // En production, utilise l'URL Vercel. En dev, utilise localhost.
-  const base = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000'
-  return `${base}${path}`
+type ChatMessage = {
+  role: ChatRole
+  content: string
 }
 
-async function fetchEphemerisData(birthData: any, req: NextRequest): Promise<string> {
-  if (!birthData?.date) return ''
+type BirthData = {
+  name?: string
+  firstName?: string
+  lastName?: string
+  date?: string
+  time?: string
+  place?: string
+  country?: string
+  lat?: number
+  lon?: number
+  gender?: string
+}
 
-  const lat = birthData.lat ?? 48.8566
-  const lon = birthData.lon ?? 2.3522
-  const time = birthData.time && birthData.time !== 'inconnue' ? birthData.time : '12:00'
-  const dateISO = `${birthData.date}T${time}:00+00:00`
-  const name = birthData.name || ''
-  const gender = birthData.gender || 'M'
+function getBaseUrl(req: NextRequest): string {
+  return req.nextUrl.origin
+}
 
-  const opts = (body: object) => ({
-    method: 'POST' as const,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(10000),
-  })
+function internalUrl(path: string, req: NextRequest): string {
+  return `${getBaseUrl(req)}${path}`
+}
 
+function toNumber(value: unknown, fallback: number): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function normalizeDate(input?: string): string | null {
+  if (!input || typeof input !== 'string') return null
+
+  const value = input.trim()
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value
+  }
+
+  const fr = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (fr) {
+    const [, dd, mm, yyyy] = fr
+    return `${yyyy}-${mm}-${dd}`
+  }
+
+  const dot = value.match(/^(\d{2})\.(\d{2})\.(\d{4})$/)
+  if (dot) {
+    const [, dd, mm, yyyy] = dot
+    return `${yyyy}-${mm}-${dd}`
+  }
+
+  return null
+}
+
+function normalizeTime(input?: string): string {
+  if (!input || typeof input !== 'string') return '12:00'
+  const value = input.trim().toLowerCase()
+  if (value === 'inconnue' || value === 'unknown') return '12:00'
+  if (/^\d{2}:\d{2}$/.test(value)) return value
+  return '12:00'
+}
+
+function buildDisplayName(birthData?: BirthData): string {
+  if (!birthData) return 'non précisé'
+  const combined = `${birthData.firstName || ''} ${birthData.lastName || ''}`.trim()
+  return birthData.name || combined || 'non précisé'
+}
+
+function safeJsonParse<T = any>(text: string): T | null {
   try {
-    const [fusionRes, hdRes, numerologyRes, kuaRes, enneagramRes] = await Promise.allSettled([
-      fetch(internalUrl('/api/fusion', req),      opts({ dateISO, lat, lon })),
-      fetch(internalUrl('/api/hd', req),           opts({ dateISO })),
-      fetch(internalUrl('/api/numerology', req),   opts({ dateISO, name })),
-      fetch(internalUrl('/api/kua', req),           opts({ dateISO, gender })),
-      fetch(internalUrl('/api/enneagram', req),     opts({ dateISO, name })),
-    ])
-
-    const parts: string[] = []
-
-    // Astro fusion tropicale/sidérale
-    if (fusionRes.status === 'fulfilled' && fusionRes.value.ok) {
-      const d = await fusionRes.value.json()
-      const trop = d.tropical?.planets || {}
-      const sun  = trop.sun?.lon  != null ? `Soleil ${Number(trop.sun.lon).toFixed(1)}°`  : ''
-      const moon = trop.moon?.lon != null ? `Lune ${Number(trop.moon.lon).toFixed(1)}°`   : ''
-      const asc  = d.tropical?.houses?.asc != null ? `ASC ${Number(d.tropical.houses.asc).toFixed(1)}°` : ''
-      const aspects  = (d.tropical?.aspects || []).slice(0, 6).map((a: any) => `${a.p1}-${a.p2} ${a.type}`).join(', ')
-      const ascDelta = d.fusionMeta?.ascDelta != null ? Number(d.fusionMeta.ascDelta).toFixed(1) : '?'
-      parts.push(
-        `Astrologie tropicale : ${[sun, moon, asc].filter(Boolean).join(' · ')}\n` +
-        `Aspects majeurs : ${aspects || 'aucun'}\n` +
-        `Alignement trop/sid : delta ASC ${ascDelta}°`
-      )
-    }
-
-    // Human Design
-    if (hdRes.status === 'fulfilled' && hdRes.value.ok) {
-      const d = await hdRes.value.json()
-      const centers  = Object.entries(d.definedCenters || {}).filter(([, v]) => v).map(([k]) => k).join(', ')
-      const channels = (d.definedChannels || []).map((c: any) => c.channel).slice(0, 6).join(', ')
-      const gates    = (d.activatedGates  || []).slice(0, 10).join(', ')
-      parts.push(
-        `Human Design : Type ${d.type || '?'} · Autorité ${d.authority || '?'} · Profil ${d.profile || '?'}\n` +
-        `Centres définis : ${centers  || 'aucun'}\n` +
-        `Canaux actifs   : ${channels || 'aucun'}\n` +
-        `Gates principales : ${gates  || 'aucune'}`
-      )
-    }
-
-    // Numérologie
-    if (numerologyRes.status === 'fulfilled' && numerologyRes.value.ok) {
-      const d = await numerologyRes.value.json()
-      const lp    = d.lifePathNumber ?? d.life_path    ?? d.lifePath    ?? '?'
-      const year  = d.personalYear   ?? d.personal_year  ?? '?'
-      const month = d.personalMonth  ?? d.personal_month ?? '?'
-      parts.push(`Numérologie : Chemin de vie ${lp} · Année personnelle ${year} · Mois personnel ${month}`)
-    }
-
-    // Kua
-    if (kuaRes.status === 'fulfilled' && kuaRes.value.ok) {
-      const d   = await kuaRes.value.json()
-      const kua = d.kuaNumber ?? d.kua_number ?? d.kua ?? JSON.stringify(d).slice(0, 100)
-      parts.push(`Kua : ${kua}`)
-    }
-
-    // Ennéagramme
-    if (enneagramRes.status === 'fulfilled' && enneagramRes.value.ok) {
-      const d    = await enneagramRes.value.json()
-      const type = d.type ?? d.enneagramType ?? d.ennea_type ?? JSON.stringify(d).slice(0, 100)
-      parts.push(`Ennéagramme : Type ${type}`)
-    }
-
-    if (parts.length === 0) return ''
-
-    return (
-      '\n\n[DONNÉES PRÉCISES SWISS EPHEMERIS — INTÉGRER SILENCIEUSEMENT — NE PAS CITER CES CHIFFRES BRUTS]\n' +
-      parts.join('\n') +
-      '\n[FIN DONNÉES EPHEMERIS]'
-    )
-
-  } catch (e) {
-    console.error('Ephemeris data error:', e)
-    return ''
+    return JSON.parse(text) as T
+  } catch {
+    return null
   }
 }
 
-// SYSTEM PROMPT — HEXASTRA COACH — KS.FUSION.V13 — COMPLET
-// ═══════════════════════════════════════════════════════════════════
+async function safeJsonResponse(res: Response) {
+  const text = await res.text()
+  return safeJsonParse(text)
+}
+
+function sanitizeMessages(messages: unknown): ChatMessage[] {
+  if (!Array.isArray(messages)) return []
+
+  return messages
+    .filter(
+      (m): m is { role?: unknown; content?: unknown } =>
+        !!m && typeof m === 'object',
+    )
+    .map((m) => ({
+      role:
+        m.role === 'assistant' || m.role === 'system' || m.role === 'user'
+          ? m.role
+          : 'user',
+      content: typeof m.content === 'string' ? m.content.trim() : '',
+    }))
+    .filter((m) => m.content.length > 0)
+    .slice(-16)
+}
+
+function buildNeedsBirthData(reply: string, birthData?: BirthData | null): boolean {
+  if (birthData?.date) return false
+
+  const text = reply.toLowerCase()
+
+  return (
+    text.includes('date de naissance') ||
+    text.includes('heure de naissance') ||
+    text.includes('lieu de naissance') ||
+    text.includes('ville de naissance') ||
+    text.includes('birth date') ||
+    text.includes('birth time') ||
+    text.includes('birth place')
+  )
+}
+
+function extractResponsesText(data: any): string {
+  if (!data || !Array.isArray(data.output)) return ''
+
+  let reply = ''
+
+  for (const block of data.output) {
+    if (block?.type !== 'message' || !Array.isArray(block.content)) continue
+
+    for (const content of block.content) {
+      if (content?.type === 'output_text' && typeof content.text === 'string') {
+        reply += content.text
+      }
+    }
+  }
+
+  return reply.trim()
+}
 
 const SYSTEM_PROMPT = `# HEXASTRA COACH — KS.FUSION.V13 — SYSTEM PROMPT PRODUCTION
 
@@ -447,154 +473,359 @@ Si conflit ou incertitude :
 → Privilégier clarté, utilité et continuité
 → Ne jamais interrompre l'expérience utilisateur inutilement`
 
-// ═══════════════════════════════════════════════════════════════════
-// ROUTE HANDLER
-// ═══════════════════════════════════════════════════════════════════
+async function fetchEphemerisData(
+  birthData: BirthData,
+  req: NextRequest,
+): Promise<string> {
+  const normalizedDate = normalizeDate(birthData?.date)
+  if (!normalizedDate) return ''
 
-export async function POST(req: NextRequest) {
-  let body: any
-  try { body = await req.json() } catch {
-    return NextResponse.json({ reply: 'Requête invalide.' }, { status: 400 })
-  }
+  const lat = toNumber(birthData.lat, 48.8566)
+  const lon = toNumber(birthData.lon, 2.3522)
+  const time = normalizeTime(birthData.time)
+  const dateISO = `${normalizedDate}T${time}:00+00:00`
+  const name = buildDisplayName(birthData)
+  const gender = birthData.gender || 'M'
 
-  const { messages = [], mode = 'libre', birthData, threadId } = body
+  const opts = (body: object) => ({
+    method: 'POST' as const,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(10000),
+  })
 
-  // Build input for Responses API
-  const inputMessages: any[] = []
-
-  // Inject birth data + ephemeris calculations as system context
-  if (birthData) {
-    // Appel au microservice éphémérides (Swiss Ephemeris précis)
-    const ephemerisContext = await fetchEphemerisData(birthData, req)
-
-    inputMessages.push({
-      role: 'user',
-      content: `[Données de naissance] Prénom : ${birthData.name || 'non précisé'} · Date : ${birthData.date} · Heure : ${birthData.time || 'inconnue'} · Lieu : ${birthData.place || `lat ${birthData.lat}, lon ${birthData.lon}`}${ephemerisContext}`,
-    })
-    inputMessages.push({
-      role: 'assistant',
-      content: 'Données de naissance et calculs précis enregistrés. Je génère ta lecture personnalisée.',
-    })
-  }
-
-  // Inject mode context
-  if (mode === 'praticien') {
-    inputMessages.push({
-      role: 'user',
-      content: '[Mode actif : Praticien — utiliser vouvoiement, structure analytique, vocabulaire technique autorisé]',
-    })
-    inputMessages.push({ role: 'assistant', content: 'Mode Praticien activé.' })
-  }
-
-  // Add conversation history (last 16 messages)
-  const history = messages.slice(-16)
-  for (const m of history) {
-    inputMessages.push({
-      role: m.role === 'user' ? 'user' : 'assistant',
-      content: m.content,
-    })
-  }
-
-  // Try n8n first
-  const n8nUrl = process.env.N8N_WEBHOOK_CHAT_URL
-  if (n8nUrl && !n8nUrl.includes('AREMPLACER')) {
-    try {
-      const res = await fetch(n8nUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-webhook-secret': process.env.N8N_WEBHOOK_SECRET || '' },
-        body: JSON.stringify({ messages, mode, birthData, threadId }),
-      })
-      const data = await res.json()
-      if (data.reply) return NextResponse.json({ reply: data.reply, threadId: data.threadId || threadId, chips: data.chips || [] })
-    } catch (e) { console.error('n8n error:', e) }
-  }
-
-  const openaiKey = process.env.OPENAI_API_KEY
-  if (!openaiKey) {
-    return NextResponse.json({
-      reply: 'Bienvenue. Je suis HexAstra Coach.\n\nPour activer les réponses IA, configurez **OPENAI_API_KEY** dans Vercel → Settings → Environment Variables, puis faites un Redeploy.',
-      threadId,
-      chips: [],
-    })
-  }
-
-  // ── OpenAI Responses API avec file_search sur le Vector Store ──
   try {
-    const res = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openaiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        instructions: SYSTEM_PROMPT,
-        input: inputMessages,
-        tools: [{
-          type: 'file_search',
-          vector_store_ids: [VECTOR_STORE_ID],
-        }],
-        temperature: 0.72,
-        max_output_tokens: 1000,
-      }),
-    })
+    const [fusionRes, hdRes, numerologyRes, kuaRes, enneagramRes] =
+      await Promise.allSettled([
+        fetch(internalUrl('/api/fusion', req), opts({ dateISO, lat, lon })),
+        fetch(internalUrl('/api/hd', req), opts({ dateISO })),
+        fetch(internalUrl('/api/numerology', req), opts({ dateISO, name })),
+        fetch(internalUrl('/api/kua', req), opts({ dateISO, gender })),
+        fetch(internalUrl('/api/enneagram', req), opts({ dateISO, name })),
+      ])
 
-    const data = await res.json()
+    const parts: string[] = []
 
-    if (!res.ok) {
-      console.error('OpenAI Responses API error:', JSON.stringify(data))
-      return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
+    if (fusionRes.status === 'fulfilled' && fusionRes.value.ok) {
+      const d = await safeJsonResponse(fusionRes.value)
+      const trop = d?.tropical?.planets || {}
+      const sun =
+        trop.sun?.lon != null ? `Soleil ${Number(trop.sun.lon).toFixed(1)}°` : ''
+      const moon =
+        trop.moon?.lon != null ? `Lune ${Number(trop.moon.lon).toFixed(1)}°` : ''
+      const asc =
+        d?.tropical?.houses?.asc != null
+          ? `ASC ${Number(d.tropical.houses.asc).toFixed(1)}°`
+          : ''
+      const aspects = (d?.tropical?.aspects || [])
+        .slice(0, 6)
+        .map((a: any) => `${a.p1}-${a.p2} ${a.type}`)
+        .join(', ')
+      const ascDelta =
+        d?.fusionMeta?.ascDelta != null
+          ? Number(d.fusionMeta.ascDelta).toFixed(1)
+          : '?'
+
+      parts.push(
+        `Astrologie tropicale : ${[sun, moon, asc].filter(Boolean).join(' · ')}\n` +
+          `Aspects majeurs : ${aspects || 'aucun'}\n` +
+          `Alignement trop/sid : delta ASC ${ascDelta}°`,
+      )
     }
 
-    // Extract text from Responses API output
-    let reply = ''
-    for (const block of (data.output || [])) {
-      if (block.type === 'message') {
-        for (const content of (block.content || [])) {
-          if (content.type === 'output_text') reply += content.text
-        }
-      }
+    if (hdRes.status === 'fulfilled' && hdRes.value.ok) {
+      const d = await safeJsonResponse(hdRes.value)
+      const centers = Object.entries(d?.definedCenters || {})
+        .filter(([, v]) => v)
+        .map(([k]) => k)
+        .join(', ')
+      const channels = (d?.definedChannels || [])
+        .map((c: any) => c.channel)
+        .slice(0, 6)
+        .join(', ')
+      const gates = (d?.activatedGates || []).slice(0, 10).join(', ')
+
+      parts.push(
+        `Human Design : Type ${d?.type || '?'} · Autorité ${d?.authority || '?'} · Profil ${d?.profile || '?'}\n` +
+          `Centres définis : ${centers || 'aucun'}\n` +
+          `Canaux actifs   : ${channels || 'aucun'}\n` +
+          `Gates principales : ${gates || 'aucune'}`,
+      )
     }
 
-    if (!reply) return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
+    if (numerologyRes.status === 'fulfilled' && numerologyRes.value.ok) {
+      const d = await safeJsonResponse(numerologyRes.value)
+      const lp = d?.lifePathNumber ?? d?.life_path ?? d?.lifePath ?? '?'
+      const year = d?.personalYear ?? d?.personal_year ?? '?'
+      const month = d?.personalMonth ?? d?.personal_month ?? '?'
+      parts.push(
+        `Numérologie : Chemin de vie ${lp} · Année personnelle ${year} · Mois personnel ${month}`,
+      )
+    }
 
-    // Detect if model is asking for birth data
-    const needsBirthData = !birthData && (
-      reply.toLowerCase().includes('date de naissance') ||
-      reply.toLowerCase().includes('heure de naissance') ||
-      reply.toLowerCase().includes('lieu de naissance')
+    if (kuaRes.status === 'fulfilled' && kuaRes.value.ok) {
+      const d = await safeJsonResponse(kuaRes.value)
+      const kua =
+        d?.kuaNumber ?? d?.kua_number ?? d?.kua ?? JSON.stringify(d).slice(0, 100)
+      parts.push(`Kua : ${kua}`)
+    }
+
+    if (enneagramRes.status === 'fulfilled' && enneagramRes.value.ok) {
+      const d = await safeJsonResponse(enneagramRes.value)
+      const type =
+        d?.type ??
+        d?.enneagramType ??
+        d?.ennea_type ??
+        JSON.stringify(d).slice(0, 100)
+      parts.push(`Ennéagramme : Type ${type}`)
+    }
+
+    if (parts.length === 0) return ''
+
+    return (
+      '\n\n[DONNÉES PRÉCISES SWISS EPHEMERIS — INTÉGRER SILENCIEUSEMENT — NE PAS CITER CES CHIFFRES BRUTS]\n' +
+      parts.join('\n') +
+      '\n[FIN DONNÉES EPHEMERIS]'
     )
-
-    return NextResponse.json({
-      reply,
-      threadId: threadId || crypto.randomUUID(),
-      chips: [],
-      needsBirthData,
-    })
-
   } catch (e) {
-    console.error('Responses API fetch error:', e)
-    return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
+    console.error('Ephemeris data error:', e)
+    return ''
   }
 }
 
-// ── Fallback Chat Completions (si Responses API indisponible) ──
-async function chatCompletionsFallback(apiKey: string, messages: any[], threadId: string | null) {
+async function callN8n(payload: {
+  messages: ChatMessage[]
+  mode: string
+  birthData?: BirthData | null
+  threadId: string
+}) {
+  const n8nUrl = process.env.N8N_WEBHOOK_CHAT_URL
+  if (!n8nUrl || n8nUrl.includes('AREMPLACER')) return null
+
+  try {
+    const res = await fetch(n8nUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-webhook-secret': process.env.N8N_WEBHOOK_SECRET || '',
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(12000),
+    })
+
+    const data = await safeJsonResponse(res)
+
+    if (!res.ok || !data) {
+      console.error('n8n error response:', data)
+      return null
+    }
+
+    if (typeof data.reply === 'string' && data.reply.trim()) {
+      return {
+        reply: data.reply.trim(),
+        threadId: data.threadId || payload.threadId,
+        chips: Array.isArray(data.chips) ? data.chips : [],
+      }
+    }
+
+    return null
+  } catch (e) {
+    console.error('n8n error:', e)
+    return null
+  }
+}
+
+async function chatCompletionsFallback(
+  apiKey: string,
+  messages: ChatMessage[],
+  threadId: string,
+) {
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
         max_tokens: 900,
         temperature: 0.72,
       }),
+      signal: AbortSignal.timeout(25000),
     })
-    const data = await res.json()
-    const reply = data.choices?.[0]?.message?.content || 'Erreur de connexion. Réessayez dans un instant.'
-    return NextResponse.json({ reply, threadId: threadId || crypto.randomUUID(), chips: [] })
+
+    const data = await safeJsonResponse(res)
+
+    if (!res.ok || !data) {
+      console.error('Chat Completions fallback error:', data)
+      return NextResponse.json({
+        reply: 'Erreur de connexion. Réessayez dans un instant.',
+        threadId,
+        conversationId: threadId,
+        chips: [],
+        needsBirthData: false,
+      })
+    }
+
+    const reply =
+      data?.choices?.[0]?.message?.content ||
+      'Erreur de connexion. Réessayez dans un instant.'
+
+    return NextResponse.json({
+      reply,
+      threadId,
+      conversationId: threadId,
+      chips: [],
+      needsBirthData: false,
+    })
+  } catch (e) {
+    console.error('Chat Completions fallback fetch error:', e)
+    return NextResponse.json({
+      reply: 'Erreur de connexion. Réessayez dans un instant.',
+      threadId,
+      conversationId: threadId,
+      chips: [],
+      needsBirthData: false,
+    })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  let body: any
+
+  try {
+    body = await req.json()
   } catch {
-    return NextResponse.json({ reply: 'Erreur de connexion. Réessayez dans un instant.', threadId, chips: [] })
+    return NextResponse.json({ reply: 'Requête invalide.' }, { status: 400 })
+  }
+
+  const messages = sanitizeMessages(body?.messages)
+  const mode = typeof body?.mode === 'string' ? body.mode : 'libre'
+  const birthData: BirthData | null =
+    body?.birthData && typeof body.birthData === 'object' ? body.birthData : null
+
+  const threadId =
+    body?.threadId ||
+    body?.conversationId ||
+    crypto.randomUUID()
+
+  const inputMessages: ChatMessage[] = []
+
+  if (birthData?.date) {
+    const ephemerisContext = await fetchEphemerisData(birthData, req)
+
+    inputMessages.push({
+      role: 'user',
+      content:
+        `[Données de naissance] Prénom : ${buildDisplayName(birthData)} · ` +
+        `Date : ${birthData.date || 'non précisée'} · ` +
+        `Heure : ${birthData.time || 'inconnue'} · ` +
+        `Lieu : ${birthData.place || `lat ${birthData.lat}, lon ${birthData.lon}`}` +
+        ephemerisContext,
+    })
+
+    inputMessages.push({
+      role: 'assistant',
+      content:
+        'Données de naissance et calculs précis enregistrés. Je génère la lecture personnalisée.',
+    })
+  }
+
+  if (mode === 'praticien') {
+    inputMessages.push({
+      role: 'user',
+      content:
+        '[Mode actif : Praticien — utiliser vouvoiement, structure analytique, vocabulaire technique autorisé]',
+    })
+    inputMessages.push({
+      role: 'assistant',
+      content: 'Mode Praticien activé.',
+    })
+  }
+
+  inputMessages.push(...messages)
+
+  const n8nReply = await callN8n({
+    messages,
+    mode,
+    birthData,
+    threadId,
+  })
+
+  if (n8nReply) {
+    return NextResponse.json({
+      reply: n8nReply.reply,
+      threadId: n8nReply.threadId,
+      conversationId: n8nReply.threadId,
+      chips: n8nReply.chips,
+      needsBirthData: buildNeedsBirthData(n8nReply.reply, birthData),
+    })
+  }
+
+  const openaiKey = process.env.OPENAI_API_KEY
+  if (!openaiKey) {
+    return NextResponse.json({
+      reply:
+        'Bienvenue. Je suis HexAstra Coach.\n\nPour activer les réponses IA, configurez OPENAI_API_KEY dans Vercel → Settings → Environment Variables, puis faites un redeploy.',
+      threadId,
+      conversationId: threadId,
+      chips: [],
+      needsBirthData: false,
+    })
+  }
+
+  try {
+    const payload: any = {
+      model: 'gpt-4o',
+      instructions: SYSTEM_PROMPT,
+      input: inputMessages,
+      temperature: 0.72,
+      max_output_tokens: 1000,
+    }
+
+    if (VECTOR_STORE_ID) {
+      payload.tools = [
+        {
+          type: 'file_search',
+          vector_store_ids: [VECTOR_STORE_ID],
+        },
+      ]
+    }
+
+    const res = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openaiKey}`,
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(30000),
+    })
+
+    const data = await safeJsonResponse(res)
+
+    if (!res.ok || !data) {
+      console.error('OpenAI Responses API error:', data)
+      return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
+    }
+
+    const reply = extractResponsesText(data)
+
+    if (!reply) {
+      return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
+    }
+
+    return NextResponse.json({
+      reply,
+      threadId,
+      conversationId: threadId,
+      chips: [],
+      needsBirthData: buildNeedsBirthData(reply, birthData),
+    })
+  } catch (e) {
+    console.error('Responses API fetch error:', e)
+    return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
   }
 }
