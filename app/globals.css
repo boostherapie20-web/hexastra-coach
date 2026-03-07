@@ -553,3 +553,15 @@ optgroup       { color: var(--amber); font-style: normal; }
     animation-duration: 0.01ms !important;
   }
 }
+
+@media (max-width: 1100px) {
+  .hx-welcome-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .hx-welcome-points {
+    grid-template-columns: 1fr !important;
+  }
+}
