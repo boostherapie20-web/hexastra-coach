@@ -120,17 +120,91 @@ const MENU_PRATICIEN = [
 ═══════════════════════════════════════════════════════════════ */
 function CosmicBackground() {
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', overflow: 'hidden' }} aria-hidden="true">
-      <div className="hx-stars" style={{ position: 'absolute', inset: 0, opacity: 0.55 }} />
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 32% 22%, rgba(212,165,116,0.07) 0%, transparent 55%), radial-gradient(ellipse at 72% 76%, rgba(140,98,57,0.04) 0%, transparent 45%)' }} />
-      <div className="hx-sacred-halo" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 'min(1100px,86vw)', height: 'min(1100px,86vw)', borderRadius: '9999px', background: 'radial-gradient(circle, rgba(212,165,116,0.13) 0%, rgba(212,165,116,0.05) 32%, transparent 68%)', filter: 'blur(110px)', opacity: 0.28 }} />
-      <div className="hx-sacred-geometry" style={{ position: 'absolute', left: '50%', top: '50%', width: 'min(860px,78vw)', opacity: 0.035, filter: 'blur(0.9px)', transform: 'translate(-50%,-50%)' }}>
-        <img src="/hexastra-sacred-geometry.png" alt="" aria-hidden="true" draggable={false} style={{ width: '100%', height: 'auto', display: 'block' }} />
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none',
+        overflow: 'hidden',
+        background:
+          'radial-gradient(circle at 50% 0%, rgba(212,165,116,0.09), transparent 34%), linear-gradient(180deg, #0b0807 0%, #0f0a07 42%, #120b08 100%)',
+      }}
+      aria-hidden="true"
+    >
+      <div className="hx-stars" style={{ position: 'absolute', inset: 0, opacity: 0.8 }} />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(ellipse at 18% 22%, rgba(212,165,116,0.08) 0%, transparent 45%), radial-gradient(ellipse at 82% 18%, rgba(212,165,116,0.05) 0%, transparent 36%), radial-gradient(ellipse at 55% 72%, rgba(140,98,57,0.06) 0%, transparent 34%)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, rgba(7,5,4,0.15) 0%, rgba(7,5,4,0.28) 100%)',
+          mixBlendMode: 'multiply',
+        }}
+      />
+      <div
+        className="hx-sacred-halo"
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '47%',
+          transform: 'translate(-50%,-50%)',
+          width: 'min(1240px, 96vw)',
+          height: 'min(1240px, 96vw)',
+          borderRadius: '50%',
+          background:
+            'radial-gradient(circle, rgba(212,165,116,0.12) 0%, rgba(212,165,116,0.05) 28%, rgba(212,165,116,0.02) 46%, transparent 66%)',
+          filter: 'blur(120px)',
+          opacity: 0.34,
+        }}
+      />
+      <div
+        className="hx-sacred-geometry"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: 0.08,
+        }}
+      >
+        <img
+          src="/hexastra-sacred-geometry.png"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          style={{
+            width: 'min(980px, 86vw)',
+            height: 'auto',
+            display: 'block',
+            filter: 'drop-shadow(0 0 60px rgba(212,165,116,0.08)) blur(0.4px)',
+          }}
+        />
       </div>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(circle at center, transparent 0%, rgba(6,4,3,0.08) 58%, rgba(6,4,3,0.34) 100%)',
+        }}
+      />
     </div>
   )
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PRIMITIVES
+═══════════════════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════════════════
    PRIMITIVES
 ═══════════════════════════════════════════════════════════════ */
@@ -967,36 +1041,31 @@ function LeftSidebar({
   return (
     <aside
       style={{
-        width: 248,
-        minWidth: 248,
+        width: 272,
+        minWidth: 272,
         height: '100vh',
-        padding: 14,
+        padding: 18,
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        zIndex: 10,
-        background: 'linear-gradient(180deg, rgba(9,6,4,0.92), rgba(12,8,5,0.82))',
-        borderRight: `1px solid ${DS.border}`,
-        backdropFilter: 'blur(20px)',
+        gap: 14,
+        zIndex: 15,
+        background: 'linear-gradient(180deg, rgba(10,7,5,0.78), rgba(10,7,5,0.58))',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(28px)',
+        WebkitBackdropFilter: 'blur(28px)',
+        boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.02)',
       }}
     >
-      <Card hover={false} style={{ padding: '14px 14px 12px', borderRadius: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img
-            src="/logo/hexastra-logo-transparent.png"
-            alt="HexAstra"
-            style={{ height: 26, objectFit: 'contain' }}
-            onError={(e) => {
-              ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-            }}
-          />
+      <Card hover={false} style={{ padding: 18, borderRadius: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div
             style={{
-              width: 18,
-              height: 18,
+              width: 24,
+              height: 24,
               background: DS.gradBtn,
               clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
               flexShrink: 0,
+              boxShadow: '0 0 30px rgba(212,165,116,0.18)',
             }}
           />
           <div style={{ minWidth: 0 }}>
@@ -1004,29 +1073,26 @@ function LeftSidebar({
               style={{
                 fontSize: 14,
                 fontWeight: 600,
-                letterSpacing: '0.1em',
+                letterSpacing: '0.14em',
                 color: DS.tx1,
                 textTransform: 'uppercase',
                 fontFamily: DS.fontTitle,
               }}
             >
-              Hex<span style={{ color: DS.amber }}>Astra</span>
+              HexAstra
             </div>
             <div style={{ fontSize: 11, color: DS.tx3, fontFamily: DS.fontBody }}>
-              Console de lecture
+              Coach conversationnel premium
             </div>
           </div>
         </div>
 
-        <BtnPrimary
-          onClick={() => setView('chat')}
-          style={{ width: '100%', marginTop: 14, justifyContent: 'center' }}
-        >
-          Nouvelle lecture
+        <BtnPrimary onClick={() => setView('chat')} style={{ width: '100%', marginTop: 16 }}>
+          + Nouvelle lecture
         </BtnPrimary>
       </Card>
 
-      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
+      <Card hover={false} style={{ padding: 14, borderRadius: 24 }}>
         <Label>Navigation</Label>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[
@@ -1041,36 +1107,16 @@ function LeftSidebar({
               icon={item.sym}
               label={item.label}
               active={view === item.v && item.v !== 'search_action'}
-              onClick={() =>
-                item.v === 'search_action' ? onSearch() : setView(item.v as View)
-              }
+              onClick={() => (item.v === 'search_action' ? onSearch() : setView(item.v as View))}
             />
           ))}
         </nav>
       </Card>
 
-      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: 6,
-          }}
-        >
+      <Card hover={false} style={{ padding: 14, borderRadius: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <Label>Projets</Label>
-          <button
-            onClick={() => setNewInput(true)}
-            style={{
-              fontSize: 16,
-              color: DS.amber,
-              cursor: 'pointer',
-              background: 'none',
-              border: 'none',
-              lineHeight: 1,
-              padding: '0 2px',
-            }}
-          >
+          <button onClick={() => setNewInput(true)} style={{ color: DS.amber, background: 'none', border: 'none', cursor: 'pointer', fontSize: 18 }}>
             ＋
           </button>
         </div>
@@ -1089,42 +1135,18 @@ function LeftSidebar({
                 }
               }}
               placeholder="Nom du projet..."
-              style={{
-                flex: 1,
-                background: 'rgba(255,255,255,0.05)',
-                border: `1px solid ${DS.borderW}`,
-                borderRadius: 10,
-                padding: '7px 10px',
-                color: DS.tx1,
-                fontSize: 12,
-                fontFamily: DS.fontBody,
-                outline: 'none',
-              }}
+              style={{ ...fmInp, padding: '8px 10px', fontSize: 12 }}
             />
-            <button
-              onClick={createProject}
-              style={{
-                background: DS.amber,
-                color: '#0f0a07',
-                borderRadius: 10,
-                padding: '6px 10px',
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-                border: 'none',
-                fontFamily: DS.fontMono,
-              }}
-            >
+            <button onClick={createProject} style={{ background: DS.amber, color: '#120b08', border: 'none', borderRadius: 10, padding: '0 10px', fontWeight: 700, cursor: 'pointer' }}>
               OK
             </button>
           </div>
         )}
 
-        <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 190, overflowY: 'auto', paddingRight: 2 }}>
           {recentProj.map((p: Project) => {
             const pR = readings.filter((r: Reading) => r.projectId === p.id)
             const isDrop = dropTarget === p.id
-
             return (
               <div
                 key={p.id}
@@ -1139,29 +1161,18 @@ function LeftSidebar({
                   setDropTarget(null)
                 }}
                 style={{
-                  marginBottom: 6,
-                  borderRadius: 12,
-                  border: `1px solid ${isDrop ? DS.amber : 'rgba(255,255,255,0.04)'}`,
-                  background: isDrop
-                    ? 'rgba(212,165,116,0.06)'
-                    : 'rgba(255,255,255,0.02)',
-                  transition: 'all 0.18s',
-                  padding: '7px 8px',
+                  marginBottom: 7,
+                  borderRadius: 16,
+                  border: `1px solid ${isDrop ? 'rgba(212,165,116,0.28)' : 'rgba(255,255,255,0.05)'}`,
+                  background: isDrop ? 'rgba(212,165,116,0.08)' : 'rgba(255,255,255,0.02)',
+                  transition: 'all 0.18s ease',
+                  padding: '9px 10px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke={DS.tx3}
-                    strokeWidth="1.8"
-                    style={{ flexShrink: 0 }}
-                  >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={DS.tx3} strokeWidth="1.8" style={{ flexShrink: 0 }}>
                     <path d="M3 7c0-1.1.9-2 2-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                   </svg>
-
                   {editPId === p.id ? (
                     <input
                       autoFocus
@@ -1177,156 +1188,39 @@ function LeftSidebar({
                           setEditPId(null)
                         }
                       }}
-                      style={{
-                        flex: 1,
-                        background: 'transparent',
-                        border: 'none',
-                        borderBottom: `1px solid ${DS.amber}`,
-                        color: DS.amber,
-                        fontSize: 12,
-                        fontFamily: DS.fontBody,
-                        outline: 'none',
-                      }}
+                      style={{ flex: 1, background: 'transparent', border: 'none', borderBottom: `1px solid ${DS.amber}`, color: DS.amber, fontSize: 12, fontFamily: DS.fontBody, outline: 'none' }}
                     />
                   ) : (
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: 12,
-                        color: DS.tx2,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        fontFamily: DS.fontBody,
-                      }}
-                      onDoubleClick={() => {
-                        setEditPId(p.id)
-                        setEditName(p.name)
-                      }}
-                    >
+                    <span style={{ flex: 1, fontSize: 12, color: DS.tx2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: DS.fontBody }} onDoubleClick={() => { setEditPId(p.id); setEditName(p.name) }}>
                       {p.name}
                     </span>
                   )}
-
-                  <span
-                    style={{
-                      fontSize: 9,
-                      color: DS.tx3,
-                      fontFamily: DS.fontMono,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {pR.length}
-                  </span>
+                  <span style={{ fontSize: 9, color: DS.tx3, fontFamily: DS.fontMono }}>{pR.length}</span>
                 </div>
-
-                {isDrop && (
-                  <div
-                    style={{
-                      padding: '5px 18px 0',
-                      fontSize: 10,
-                      color: DS.amber,
-                      fontFamily: DS.fontMono,
-                    }}
-                  >
-                    ↓ Déposer
-                  </div>
-                )}
+                {isDrop && <div style={{ padding: '6px 20px 0', fontSize: 10, color: DS.amber, fontFamily: DS.fontMono }}>↓ Déposer ici</div>}
               </div>
             )
           })}
-
-          {projects.length === 0 && !newInput && (
-            <div
-              style={{
-                padding: '8px 6px',
-                fontSize: 11,
-                color: DS.tx3,
-                textAlign: 'center',
-                fontFamily: DS.fontBody,
-              }}
-            >
-              Aucun projet
-            </div>
-          )}
+          {projects.length === 0 && !newInput && <div style={{ padding: '10px 6px', fontSize: 11, color: DS.tx3, textAlign: 'center', fontFamily: DS.fontBody }}>Aucun projet</div>}
         </div>
       </Card>
 
-      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
+      <Card hover={false} style={{ padding: 14, borderRadius: 24 }}>
         <Label>Progression</Label>
         {stepLabels.map(({ step: n, label, desc }: any, i: number) => {
           const done = currentStep > n
           const active = currentStep === n
-
           return (
-            <div key={n} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <div key={n} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                <div
-                  style={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: '50%',
-                    border: `1.5px solid ${done || active ? DS.amber : DS.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s',
-                    marginTop: 1,
-                    background: done ? DS.amber : 'transparent',
-                    boxShadow: active ? `0 0 10px ${DS.glow}` : 'none',
-                  }}
-                >
-                  {done && <span style={{ fontSize: 7, color: '#0f0a07' }}>✓</span>}
-                  {active && (
-                    <div
-                      style={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: '50%',
-                        background: DS.amber,
-                      }}
-                    />
-                  )}
+                <div style={{ width: 16, height: 16, borderRadius: '50%', border: `1.5px solid ${done || active ? DS.amber : DS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: done ? DS.amber : active ? 'rgba(212,165,116,0.08)' : 'transparent', boxShadow: active ? `0 0 16px ${DS.glow}` : 'none' }}>
+                  {done ? <span style={{ fontSize: 7, color: '#0f0a07' }}>✓</span> : active ? <div style={{ width: 5, height: 5, borderRadius: '50%', background: DS.amber }} /> : null}
                 </div>
-                {i < 3 && (
-                  <div
-                    style={{
-                      width: 1.5,
-                      height: 18,
-                      borderRadius: 1,
-                      margin: '3px 0',
-                      background: done ? 'rgba(212,165,116,0.3)' : DS.border,
-                    }}
-                  />
-                )}
+                {i < stepLabels.length - 1 && <div style={{ width: 1.5, height: 20, borderRadius: 1, margin: '4px 0', background: done ? 'rgba(212,165,116,0.3)' : DS.border }} />}
               </div>
-
-              <div style={{ paddingBottom: 9, flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: done || active ? DS.tx1 : DS.tx3,
-                    transition: 'color 0.3s',
-                    fontFamily: DS.fontBody,
-                    fontWeight: done || active ? 500 : 400,
-                  }}
-                >
-                  {label}
-                </div>
-                {active && (
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: DS.tx3,
-                      lineHeight: 1.55,
-                      marginTop: 2,
-                      fontFamily: DS.fontBody,
-                    }}
-                  >
-                    {desc}
-                  </div>
-                )}
+              <div style={{ paddingBottom: 10, flex: 1 }}>
+                <div style={{ fontSize: 11, color: done || active ? DS.tx1 : DS.tx3, fontFamily: DS.fontBody, fontWeight: done || active ? 500 : 400 }}>{label}</div>
+                <div style={{ fontSize: 10, color: active ? DS.tx3 : 'rgba(203,185,164,0.26)', lineHeight: 1.55, marginTop: 2, fontFamily: DS.fontBody }}>{desc}</div>
               </div>
             </div>
           )
@@ -1334,83 +1228,27 @@ function LeftSidebar({
       </Card>
 
       <div style={{ marginTop: 'auto', position: 'relative' }}>
-        <Card hover={false} style={{ padding: 10, borderRadius: 20 }}>
-          <button
-            onClick={() => setShowMenu((o) => !o)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              width: '100%',
-              padding: '8px 9px',
-              borderRadius: 12,
-              background: showMenu ? 'rgba(212,165,116,0.07)' : 'rgba(255,255,255,0.03)',
-              border: `1px solid ${showMenu ? DS.borderW : DS.border}`,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                background: 'rgba(212,165,116,0.12)',
-                border: `1px solid ${DS.borderW}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 11,
-                color: DS.amber,
-                flexShrink: 0,
-                fontFamily: DS.fontMono,
-              }}
-            >
+        <Card hover={false} style={{ padding: 10, borderRadius: 22 }}>
+          <button onClick={() => setShowMenu((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 10px', borderRadius: 14, background: showMenu ? 'rgba(212,165,116,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${showMenu ? DS.borderW : DS.border}`, cursor: 'pointer' }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'rgba(212,165,116,0.12)', border: `1px solid ${DS.borderW}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: DS.amber, flexShrink: 0, fontFamily: DS.fontMono }}>
               {userEmail[0]?.toUpperCase() || 'U'}
             </div>
-
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: DS.tx2,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  fontFamily: DS.fontBody,
-                }}
-              >
-                {userEmail.split('@')[0]}
-              </div>
-              <div
-                style={{
-                  fontSize: 10,
-                  color: DS.amber,
-                  textTransform: 'capitalize',
-                  fontFamily: DS.fontMono,
-                }}
-              >
-                {mode}
-              </div>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <div style={{ fontSize: 12, color: DS.tx2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: DS.fontBody }}>{userEmail.split('@')[0]}</div>
+              <div style={{ fontSize: 10, color: DS.amber, textTransform: 'capitalize', fontFamily: DS.fontMono }}>{mode}</div>
             </div>
-
             <span style={{ fontSize: 9, color: DS.tx3 }}>{showMenu ? '▾' : '▴'}</span>
           </button>
         </Card>
-
-        {showMenu && (
-          <ProfileMenu
-            userEmail={userEmail}
-            mode={mode}
-            onLogout={onLogout}
-            onClose={() => setShowMenu(false)}
-          />
-        )}
+        {showMenu && <ProfileMenu userEmail={userEmail} mode={mode} onLogout={onLogout} onClose={() => setShowMenu(false)} />}
       </div>
     </aside>
   )
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   RIGHT SIDEBAR
+═══════════════════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════════════════
    RIGHT SIDEBAR
 ═══════════════════════════════════════════════════════════════ */
@@ -1422,12 +1260,25 @@ function CategoryButton({ item, onSend }: { item: { id: string; sym: string; lab
       onClick={() => onSend(`${item.label} — ${item.sub}`)}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '6px 8px', borderRadius: 8, textAlign: 'left', marginBottom: 2, cursor: 'pointer', background: hov ? 'rgba(212,165,116,0.06)' : 'transparent', border: `1px solid ${hov ? DS.borderW : 'transparent'}`, transition: 'all 0.15s' }}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        width: '100%',
+        padding: '10px 10px',
+        borderRadius: 14,
+        textAlign: 'left',
+        marginBottom: 6,
+        cursor: 'pointer',
+        background: hov ? 'rgba(212,165,116,0.08)' : 'rgba(255,255,255,0.02)',
+        border: `1px solid ${hov ? 'rgba(212,165,116,0.18)' : 'rgba(255,255,255,0.04)'}`,
+        transition: 'all 0.18s ease',
+      }}
     >
-      <span style={{ fontSize: 11, flexShrink: 0, color: DS.amber, opacity: hov ? 1 : 0.65 }}>{item.sym}</span>
+      <span style={{ fontSize: 12, flexShrink: 0, color: DS.amber, opacity: hov ? 1 : 0.7, paddingTop: 1 }}>{item.sym}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 11, color: hov ? DS.tx1 : DS.tx2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: DS.fontBody, fontWeight: hov ? 500 : 400, transition: 'color 0.15s' }}>{item.label}</div>
-        <div style={{ fontSize: 9, color: DS.tx3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: 1, fontFamily: DS.fontBody }}>{item.sub}</div>
+        <div style={{ fontSize: 12, color: hov ? DS.tx1 : DS.tx2, fontFamily: DS.fontBody, fontWeight: hov ? 500 : 400 }}>{item.label}</div>
+        <div style={{ fontSize: 10, color: DS.tx3, marginTop: 2, lineHeight: 1.45, fontFamily: DS.fontBody }}>{item.sub}</div>
       </div>
     </button>
   )
@@ -1443,106 +1294,42 @@ function RightSidebar({
 }: any) {
   const [lectOpen, setLectOpen] = useState(true)
 
-  const menu =
-    mode === 'praticien'
-      ? MENU_PRATICIEN
-      : mode === 'premium'
-        ? MENU_PREMIUM
-        : MENU_ESSENTIEL
-
+  const menu = mode === 'praticien' ? MENU_PRATICIEN : mode === 'premium' ? MENU_PREMIUM : MENU_ESSENTIEL
   const freeR = readings.filter((r: Reading) => !r.projectId)
-  const modeLabel =
-    mode === 'essentiel'
-      ? 'Mode Essentiel'
-      : mode === 'premium'
-        ? 'Mode Premium'
-        : 'Mode Praticien'
+  const modeLabel = mode === 'essentiel' ? 'Mode Essentiel' : mode === 'premium' ? 'Mode Premium' : 'Mode Praticien'
 
   return (
     <aside
       style={{
-        width: 232,
-        minWidth: 232,
+        width: 248,
+        minWidth: 248,
         height: '100vh',
-        padding: 14,
+        padding: 18,
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        zIndex: 10,
-        background: 'linear-gradient(180deg, rgba(9,6,4,0.82), rgba(12,8,5,0.92))',
-        borderLeft: `1px solid ${DS.border}`,
-        backdropFilter: 'blur(20px)',
+        gap: 14,
+        zIndex: 15,
+        background: 'linear-gradient(180deg, rgba(10,7,5,0.62), rgba(10,7,5,0.78))',
+        borderLeft: '1px solid rgba(255,255,255,0.05)',
+        backdropFilter: 'blur(28px)',
+        WebkitBackdropFilter: 'blur(28px)',
       }}
     >
-      <Card hover={false} style={{ padding: '14px 14px 12px', borderRadius: 20 }}>
+      <Card hover={false} style={{ padding: 16, borderRadius: 24 }}>
         <Label>{modeLabel}</Label>
-        <div
-          style={{
-            fontSize: 15,
-            color: DS.tx1,
-            fontFamily: DS.fontTitle,
-            fontWeight: 600,
-            lineHeight: 1.35,
-          }}
-        >
-          Accès rapide
-        </div>
-        <p
-          style={{
-            margin: '6px 0 0',
-            fontSize: 12,
-            color: DS.tx3,
-            lineHeight: 1.65,
-            fontFamily: DS.fontBody,
-          }}
-        >
-          Lance une lecture ou rouvre une exploration récente.
-        </p>
+        <div style={{ fontSize: 15, color: DS.tx1, fontFamily: DS.fontTitle, fontWeight: 600, lineHeight: 1.35 }}>Accès rapide</div>
+        <p style={{ margin: '7px 0 0', fontSize: 12, color: DS.tx3, lineHeight: 1.7, fontFamily: DS.fontBody }}>Lance une lecture ciblée ou rouvre une exploration récente.</p>
       </Card>
 
-      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
-        <button
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            padding: 0,
-            marginBottom: lectOpen ? 8 : 0,
-          }}
-          onClick={() => setLectOpen((o) => !o)}
-        >
-          <Label>Vos lectures</Label>
-          <span
-            style={{
-              fontSize: 10,
-              color: DS.tx3,
-              transition: 'transform 0.2s',
-              display: 'inline-block',
-              transform: lectOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
-            }}
-          >
-            ▾
-          </span>
+      <Card hover={false} style={{ padding: 14, borderRadius: 24 }}>
+        <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, marginBottom: lectOpen ? 8 : 0 }} onClick={() => setLectOpen((o) => !o)}>
+          <Label>Lectures récentes</Label>
+          <span style={{ fontSize: 10, color: DS.tx3, transform: lectOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s' }}>▾</span>
         </button>
-
         {lectOpen && (
-          <div style={{ maxHeight: 180, overflowY: 'auto' }}>
+          <div style={{ maxHeight: 190, overflowY: 'auto' }}>
             {freeR.length === 0 ? (
-              <div
-                style={{
-                  padding: '8px 4px',
-                  fontSize: 11,
-                  color: DS.tx3,
-                  textAlign: 'center',
-                  fontFamily: DS.fontBody,
-                }}
-              >
-                Aucune lecture
-              </div>
+              <div style={{ padding: '10px 4px', fontSize: 11, color: DS.tx3, textAlign: 'center', fontFamily: DS.fontBody }}>Aucune lecture</div>
             ) : (
               freeR.map((r: Reading) => (
                 <div
@@ -1551,46 +1338,12 @@ function RightSidebar({
                   onDragStart={() => setDragId(r.id)}
                   onDragEnd={() => setDragId(null)}
                   onClick={() => onOpenReading(r)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 9px',
-                    borderRadius: 12,
-                    marginBottom: 6,
-                    cursor: 'grab',
-                    background:
-                      dragId === r.id
-                        ? 'rgba(212,165,116,0.07)'
-                        : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${dragId === r.id ? DS.borderW : 'rgba(255,255,255,0.04)'}`,
-                    transition: 'all 0.15s',
-                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '10px 10px', borderRadius: 14, marginBottom: 7, cursor: 'grab', background: dragId === r.id ? 'rgba(212,165,116,0.07)' : 'rgba(255,255,255,0.02)', border: `1px solid ${dragId === r.id ? 'rgba(212,165,116,0.18)' : 'rgba(255,255,255,0.04)'}`, transition: 'all 0.15s ease' }}
                 >
                   <span style={{ fontSize: 10, color: DS.amber, flexShrink: 0 }}>◈</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: DS.tx2,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        fontFamily: DS.fontBody,
-                      }}
-                    >
-                      {r.title}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 9,
-                        color: DS.tx3,
-                        marginTop: 2,
-                        fontFamily: DS.fontMono,
-                      }}
-                    >
-                      {r.science}
-                    </div>
+                    <div style={{ fontSize: 12, color: DS.tx2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: DS.fontBody }}>{r.title}</div>
+                    <div style={{ fontSize: 9, color: DS.tx3, marginTop: 2, fontFamily: DS.fontMono }}>{r.science}</div>
                   </div>
                 </div>
               ))
@@ -1599,18 +1352,19 @@ function RightSidebar({
         )}
       </Card>
 
-      <Card hover={false} style={{ padding: 12, borderRadius: 20, flex: 1, overflow: 'hidden' }}>
-        <Label>Nos catégories</Label>
+      <Card hover={false} style={{ padding: 14, borderRadius: 24, flex: 1, overflow: 'hidden' }}>
+        <Label>Catégories</Label>
         <div style={{ overflowY: 'auto', height: '100%', paddingRight: 2 }}>
-          {menu.map((item: any) => (
-            <CategoryButton key={item.id} item={item} onSend={onSend} />
-          ))}
+          {menu.map((item: any) => <CategoryButton key={item.id} item={item} onSend={onSend} />)}
         </div>
       </Card>
     </aside>
   )
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CHAT PAGE
+═══════════════════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════════════════
    MAIN CHAT PAGE
 ═══════════════════════════════════════════════════════════════ */
@@ -1634,6 +1388,9 @@ export default function ChatPage() {
   const [dragId, setDragId] = useState<string | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [readings, setReadings] = useState<Reading[]>([])
+  const [viewportWidth, setViewportWidth] = useState(1600)
+  const [showMobileLeft, setShowMobileLeft] = useState(false)
+  const [showMobileRight, setShowMobileRight] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const replyCache = useRef(new Map<string, string>())
   const endRef = useRef<HTMLDivElement>(null)
@@ -1642,6 +1399,9 @@ export default function ChatPage() {
   const supabase = createClient()
 
   const isWelcome = messages.length === 1 && messages[0].id === '0'
+  const isDesktopLeft = viewportWidth >= 1180
+  const isDesktopRight = viewportWidth >= 1480
+  const modeLabel = mode === 'essentiel' ? 'Essentiel' : mode === 'premium' ? 'Premium' : 'Praticien'
 
   const stepLabels = [
     { step: 1 as Step, label: mode === 'essentiel' ? 'Mode Essentiel actif' : mode === 'premium' ? 'Mode Premium actif' : 'Mode Praticien actif', desc: 'Langue + mode configuré' },
@@ -1657,7 +1417,7 @@ export default function ChatPage() {
     const sp = localStorage.getItem('hx_profile')
     if (sp) {
       setProfile(JSON.parse(sp))
-      setStep((s) => s < 2 ? 2 : s)
+      setStep((s) => (s < 2 ? 2 : s))
     }
     const sr = localStorage.getItem('hx_readings')
     if (sr) setReadings(JSON.parse(sr))
@@ -1666,20 +1426,28 @@ export default function ChatPage() {
   }, [supabase])
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const onResize = () => setViewportWidth(window.innerWidth)
+    onResize()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isTyping])
 
   useEffect(() => {
     if (taRef.current) {
       taRef.current.style.height = 'auto'
-      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 96) + 'px'
+      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 110) + 'px'
     }
   }, [input])
 
   const bump = useCallback((len: number) => {
-    if (len >= 2) setStep((s) => s < 2 ? 2 : s)
-    if (len >= 5) setStep((s) => s < 3 ? 3 : s)
-    if (len >= 8) setStep((s) => s < 4 ? 4 : s)
+    if (len >= 2) setStep((s) => (s < 2 ? 2 : s))
+    if (len >= 5) setStep((s) => (s < 3 ? 3 : s))
+    if (len >= 8) setStep((s) => (s < 4 ? 4 : s))
   }, [])
 
   const saveReading = useCallback((msgs: Msg[]) => {
@@ -1705,7 +1473,7 @@ export default function ChatPage() {
   }, [projects])
 
   const renameProject = useCallback((id: string, name: string) => {
-    const np = projects.map((p) => p.id === id ? { ...p, name } : p)
+    const np = projects.map((p) => (p.id === id ? { ...p, name } : p))
     setProjects(np)
     localStorage.setItem('hx_projects', JSON.stringify(np))
   }, [projects])
@@ -1717,141 +1485,96 @@ export default function ChatPage() {
   }, [projects])
 
   const addToProject = useCallback((rId: string, pId: string) => {
-    const nr = readings.map((r) => r.id === rId ? { ...r, projectId: pId } : r)
+    const nr = readings.map((r) => (r.id === rId ? { ...r, projectId: pId } : r))
     setReadings(nr)
     localStorage.setItem('hx_readings', JSON.stringify(nr))
   }, [readings])
 
   const openReading = useCallback((r: Reading) => {
-    setMessages([{ id: '0', role: 'assistant', created_at: r.date, content: `📖 ${r.title}\n\n${r.preview}...` }])
+    setMessages([{ id: '0', role: 'assistant', created_at: r.date, content: `📖 ${r.title}
+
+${r.preview}...` }])
     setView('chat')
+    setShowMobileRight(false)
+    setShowMobileLeft(false)
   }, [])
 
-  const send = useCallback(
-    async (text?: string, birthData?: any) => {
-      const content = text || input.trim()
-      if (!content && !birthData) return
+  const send = useCallback(async (text?: string, birthData?: any) => {
+    const content = text || input.trim()
+    if (!content && !birthData) return
 
-      const userMsg: Msg = {
-        id: Date.now().toString(),
-        role: 'user',
-        created_at: new Date().toISOString(),
-        content: birthData
-          ? `Données de naissance : ${birthData.firstName} ${birthData.lastName || ''} · ${birthData.date} · ${birthData.time || 'inconnue'} · ${birthData.place}, ${birthData.country}`
-          : content,
-      }
+    const userMsg: Msg = {
+      id: Date.now().toString(),
+      role: 'user',
+      created_at: new Date().toISOString(),
+      content: birthData ? `Données de naissance : ${birthData.firstName} ${birthData.lastName || ''} · ${birthData.date} · ${birthData.time || 'inconnue'} · ${birthData.place}, ${birthData.country}` : content,
+    }
 
-      const baseMessages = isWelcome ? [] : messages
-      const newMsgs = [...baseMessages, userMsg]
+    const baseMessages = isWelcome ? [] : messages
+    const newMsgs = [...baseMessages, userMsg]
 
-      setMessages(newMsgs)
-      setInput('')
-      setIsTyping(true)
-      setMsgCount((c) => c + 1)
-      bump(newMsgs.length)
+    setMessages(newMsgs)
+    setInput('')
+    setIsTyping(true)
+    setMsgCount((c) => c + 1)
+    bump(newMsgs.length)
 
-      if (!birthData && replyCache.current.has(content)) {
-        const cachedReply = replyCache.current.get(content)!
-        setTimeout(() => {
-          setIsTyping(false)
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              role: 'assistant',
-              content: cachedReply,
-              created_at: new Date().toISOString(),
-              cached: true,
-            },
-          ])
-        }, 300)
-        return
-      }
-
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: newMsgs.map((m) => ({ role: m.role, content: m.content })),
-            mode,
-            birthData: birthData || null,
-            conversationId: convId,
-          }),
-        })
-
-        const data = await res.json()
-
-        if (data?.conversationId) {
-          setConvId(data.conversationId)
-        }
-
-        const reply = data?.reply || 'Une erreur est survenue.'
-
-        if (!birthData && content && content.length < 200) {
-          replyCache.current.set(content, reply)
-        }
-
-        const aiMsg: Msg = {
-          id: `${Date.now()}-ai`,
-          role: 'assistant',
-          content: reply,
-          created_at: new Date().toISOString(),
-        }
-
-        const finalMsgs = [...newMsgs, aiMsg]
-
-        setMessages(finalMsgs)
+    if (!birthData && replyCache.current.has(content)) {
+      const cachedReply = replyCache.current.get(content)!
+      setTimeout(() => {
         setIsTyping(false)
-        bump(finalMsgs.length)
-        saveReading(finalMsgs)
+        setMessages((prev) => [...prev, { id: Date.now().toString(), role: 'assistant', content: cachedReply, created_at: new Date().toISOString(), cached: true }])
+      }, 260)
+      return
+    }
 
-        if (birthData) {
-          setProfile(birthData)
-          localStorage.setItem('hx_profile', JSON.stringify(birthData))
-          setStep((s) => (s < 2 ? 2 : s))
-        }
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: newMsgs.map((m) => ({ role: m.role, content: m.content })),
+          mode,
+          birthData: birthData || null,
+          conversationId: convId,
+        }),
+      })
+      const data = await res.json()
+      if (data?.conversationId) setConvId(data.conversationId)
+      const reply = data?.reply || 'Une erreur est survenue.'
+      if (!birthData && content && content.length < 200) replyCache.current.set(content, reply)
 
-        if (data?.needsBirthData) {
-          setTimeout(() => setShowBirth(true), 600)
-        }
-      } catch (error) {
-        console.error('Chat send error:', error)
-        setIsTyping(false)
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `${Date.now()}-err`,
-            role: 'assistant',
-            content: 'Erreur de connexion. Réessaie.',
-            created_at: new Date().toISOString(),
-          },
-        ])
+      const aiMsg: Msg = { id: `${Date.now()}-ai`, role: 'assistant', content: reply, created_at: new Date().toISOString() }
+      const finalMsgs = [...newMsgs, aiMsg]
+      setMessages(finalMsgs)
+      setIsTyping(false)
+      bump(finalMsgs.length)
+      saveReading(finalMsgs)
+
+      if (birthData) {
+        setProfile(birthData)
+        localStorage.setItem('hx_profile', JSON.stringify(birthData))
+        setStep((s) => (s < 2 ? 2 : s))
       }
-    },
-    [input, messages, isWelcome, mode, convId, bump, saveReading],
-  )
+      if (data?.needsBirthData) setTimeout(() => setShowBirth(true), 600)
+    } catch (error) {
+      console.error('Chat send error:', error)
+      setIsTyping(false)
+      setMessages((prev) => [...prev, { id: `${Date.now()}-err`, role: 'assistant', content: 'Erreur de connexion. Réessaie.', created_at: new Date().toISOString() }])
+    }
+  }, [input, messages, isWelcome, mode, convId, bump, saveReading])
 
   const handleFile = useCallback((files: FileList | null) => {
     if (!files || !files[0]) return
-
     const file = files[0]
     const reader = new FileReader()
-
     reader.onload = () => {
-      const content =
-        file.type.startsWith('text') || file.type === 'application/json'
-          ? String(reader.result || '')
-          : '[Contenu binaire non affiché]'
-
-      send(`[Fichier joint : ${file.name}]\n${content}`)
+      const content = file.type.startsWith('text') || file.type === 'application/json' ? String(reader.result || '') : '[Contenu binaire non affiché]'
+      send(`[Fichier joint : ${file.name}]
+${content}`)
     }
-
-    if (file.type.startsWith('text') || file.type === 'application/json') {
-      reader.readAsText(file)
-    } else {
-      send(`[Fichier joint : ${file.name} — ${(file.size / 1024).toFixed(1)} Ko]`)
-    }
+    if (file.type.startsWith('text') || file.type === 'application/json') reader.readAsText(file)
+    else send(`[Fichier joint : ${file.name} — ${(file.size / 1024).toFixed(1)} Ko]`)
   }, [send])
 
   const toggleRec = useCallback(async () => {
@@ -1860,38 +1583,26 @@ export default function ChatPage() {
       setIsRec(false)
       return
     }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const rec = new MediaRecorder(stream)
       const chunks: BlobPart[] = []
-
       rec.ondataavailable = (e) => chunks.push(e.data)
-
       rec.onstop = async () => {
         try {
           const blob = new Blob(chunks, { type: 'audio/webm' })
           const form = new FormData()
           form.append('file', blob, 'audio.webm')
           form.append('language', 'fr')
-
-          const r = await fetch('/api/transcribe', {
-            method: 'POST',
-            body: form,
-          })
-
+          const r = await fetch('/api/transcribe', { method: 'POST', body: form })
           const d = await r.json()
-
-          if (d?.text) {
-            setInput(d.text)
-          }
+          if (d?.text) setInput(d.text)
         } catch (error) {
           console.error('Transcription error:', error)
         } finally {
           stream.getTracks().forEach((t) => t.stop())
         }
       }
-
       rec.start()
       setMediaRec(rec)
       setIsRec(true)
@@ -1913,847 +1624,193 @@ export default function ChatPage() {
   if (view === 'abonnements') return <AbonnementsPage onBack={() => setView('chat')} userEmail={userEmail} onSuccess={(m: Mode) => { setMode(m); setView('chat') }} />
   if (view === 'projets') return <ProjetsPage projects={projects} readings={readings} onBack={() => setView('chat')} onNewProject={newProject} onRenameProject={renameProject} onDeleteProject={deleteProject} onOpenReading={openReading} />
 
-    const modeLabel = mode === 'essentiel' ? 'Essentiel' : mode === 'premium' ? 'Premium' : 'Praticien'
+  const heroPrompts = ['Comprendre une période de vie', 'Clarifier une décision', 'Explorer une dynamique relationnelle', 'Mieux lire mon moment actuel']
+  const quickPrompts = ['Comprendre une situation que je traverse', 'Clarifier une décision importante', 'Explorer une période de ma vie', 'Énergie du moment']
+
+  const renderAssistantPreview = (
+    <Card style={{ padding: 0, overflow: 'hidden', minHeight: 480, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '18px 20px', borderBottom: `1px solid ${DS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <div style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.48)', fontFamily: DS.fontMono }}>Aperçu du dialogue</div>
+          <div style={{ fontSize: 14, color: DS.tx1, fontFamily: DS.fontTitle, fontWeight: 600, marginTop: 4 }}>Conversation en direct</div>
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: DS.tx2, fontFamily: DS.fontBody }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#57d27c', boxShadow: '0 0 0 5px rgba(87,210,124,0.10)' }} />
+          En ligne
+        </div>
+      </div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, padding: 22, justifyContent: 'center' }}>
+        <div style={{ display: 'flex' }}><div style={{ maxWidth: '84%', padding: '15px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.05)', color: DS.tx1, fontSize: 14, lineHeight: 1.72, fontFamily: DS.fontBody }}>Bienvenue. Dis-moi ce que tu veux éclaircir aujourd’hui.</div></div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}><div style={{ maxWidth: '78%', padding: '15px 16px', borderRadius: 20, background: 'rgba(212,165,116,0.12)', border: '1px solid rgba(212,165,116,0.18)', color: DS.tx1, fontSize: 14, lineHeight: 1.72, fontFamily: DS.fontBody }}>J’hésite entre continuer mon activité actuelle ou lancer autre chose.</div></div>
+        <div style={{ display: 'flex' }}><div style={{ maxWidth: '84%', padding: '15px 16px', borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.05)', color: DS.tx1, fontSize: 14, lineHeight: 1.72, fontFamily: DS.fontBody }}>On peut clarifier cela en 3 temps : ton état actuel, le vrai nœud de décision, puis le bon timing d’action.</div></div>
+      </div>
+    </Card>
+  )
+
+  const leftRail = (
+    <LeftSidebar
+      view={view}
+      setView={setView}
+      userEmail={userEmail}
+      mode={mode}
+      currentStep={step}
+      stepLabels={stepLabels}
+      projects={projects}
+      readings={readings}
+      onNewProject={newProject}
+      onRenameProject={renameProject}
+      onDeleteProject={deleteProject}
+      onOpenReading={openReading}
+      onAddToProject={addToProject}
+      onSearch={() => setShowSearch(true)}
+      onLogout={async () => {
+        await supabase.auth.signOut()
+        router.push('/login')
+      }}
+      dragId={dragId}
+    />
+  )
+
+  const rightRail = (
+    <RightSidebar mode={mode} readings={readings} onSend={(t: string) => send(t)} onOpenReading={openReading} dragId={dragId} setDragId={setDragId} />
+  )
 
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '248px minmax(0, 1fr) 232px',
-        height: '100vh',
-        overflow: 'hidden',
-        background:
-          'radial-gradient(circle at top, rgba(212,165,116,0.06), transparent 28%), linear-gradient(180deg, #0f0a07 0%, #120b08 100%)',
-        position: 'relative',
-      }}
-    >
+    <div style={{ minHeight: '100vh', overflow: 'hidden', position: 'relative', background: DS.bg0 }}>
       <CosmicBackground />
 
-      <LeftSidebar
-        view={view}
-        setView={setView}
-        userEmail={userEmail}
-        mode={mode}
-        currentStep={step}
-        stepLabels={stepLabels}
-        projects={projects}
-        readings={readings}
-        onNewProject={newProject}
-        onRenameProject={renameProject}
-        onDeleteProject={deleteProject}
-        onOpenReading={openReading}
-        onAddToProject={addToProject}
-        onSearch={() => setShowSearch(true)}
-        onLogout={async () => {
-          await supabase.auth.signOut()
-          router.push('/login')
-        }}
-        dragId={dragId}
-      />
+      {!isDesktopLeft && showMobileLeft && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }} onClick={() => setShowMobileLeft(false)}>
+          <div style={{ width: 272, maxWidth: '88vw' }} onClick={(e) => e.stopPropagation()}>{leftRail}</div>
+        </div>
+      )}
+      {!isDesktopRight && showMobileRight && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(8px)' }} onClick={() => setShowMobileRight(false)}>
+          <div style={{ marginLeft: 'auto', width: 248, maxWidth: '86vw' }} onClick={(e) => e.stopPropagation()}>{rightRail}</div>
+        </div>
+      )}
 
-      <main
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          zIndex: 10,
-          minWidth: 0,
-          position: 'relative',
-        }}
-      >
-        <div
-          style={{
-            padding: '18px 24px 14px',
-            borderBottom: '1px solid rgba(255,255,255,0.05)',
-            background:
-              'linear-gradient(180deg, rgba(11,7,5,0.78), rgba(11,7,5,0.42))',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            flexShrink: 0,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 18,
-              maxWidth: 1180,
-              margin: '0 auto',
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: 10,
-                  letterSpacing: '0.2em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(212,165,116,0.48)',
-                  fontFamily: DS.fontMono,
-                  marginBottom: 6,
-                }}
-              >
-                Conversation privée · Clarté assistée
-              </div>
-              <div
-                style={{
-                  fontSize: 22,
-                  color: DS.tx1,
-                  fontFamily: DS.fontTitle,
-                  fontWeight: 600,
-                  lineHeight: 1.12,
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                HexAstra <span style={{ color: DS.amber }}>Coach</span>
-              </div>
-            </div>
+      <div style={{ position: 'relative', zIndex: 10, display: 'grid', gridTemplateColumns: `${isDesktopLeft ? '272px ' : ''}minmax(0,1fr)${isDesktopRight ? ' 248px' : ''}`, minHeight: '100vh' }}>
+        {isDesktopLeft && leftRail}
 
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                flexWrap: 'wrap',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  background: 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${DS.border}`,
-                  borderRadius: 14,
-                  overflow: 'hidden',
-                }}
-              >
-                {(['essentiel', 'premium', 'praticien'] as Mode[]).map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => switchMode(m)}
-                    style={{
-                      padding: '8px 16px',
-                      fontSize: 12,
-                      fontWeight: mode === m ? 600 : 400,
-                      color: mode === m ? DS.tx1 : DS.tx3,
-                      background:
-                        mode === m ? 'rgba(212,165,116,0.10)' : 'transparent',
-                      cursor: 'pointer',
-                      border: 'none',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      fontFamily: DS.fontBody,
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {m}
-                    {(m === 'premium' || m === 'praticien') &&
-                      mode === 'essentiel' && (
-                        <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span>
-                      )}
-                  </button>
-                ))}
+        <main style={{ minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+          <div style={{ padding: viewportWidth >= 1024 ? '20px 28px 14px' : '16px 16px 12px', position: 'sticky', top: 0, zIndex: 22, background: 'linear-gradient(180deg, rgba(9,7,5,0.82), rgba(9,7,5,0.42))', backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ maxWidth: 1220, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                {!isDesktopLeft && <IconBtn tooltip="Navigation" onClick={() => setShowMobileLeft(true)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 7h16M4 12h16M4 17h16" /></svg></IconBtn>}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.52)', fontFamily: DS.fontMono, marginBottom: 4 }}>Conversation privée · clarté assistée</div>
+                  <div style={{ fontSize: viewportWidth >= 900 ? 24 : 20, color: DS.tx1, fontFamily: DS.fontTitle, fontWeight: 600, lineHeight: 1.1, letterSpacing: '-0.03em' }}>HexAstra <span style={{ color: DS.amber }}>Coach</span></div>
+                </div>
               </div>
 
-              <IconBtn tooltip="Partager une lecture" onClick={() => setShowShare(true)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                </svg>
-              </IconBtn>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                <div style={{ display: 'flex', padding: 4, background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, borderRadius: 16, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)' }}>
+                  {(['essentiel', 'premium', 'praticien'] as Mode[]).map((m) => (
+                    <button key={m} onClick={() => switchMode(m)} style={{ padding: viewportWidth >= 900 ? '9px 14px' : '8px 10px', fontSize: 12, fontWeight: mode === m ? 600 : 400, color: mode === m ? DS.tx1 : DS.tx3, background: mode === m ? 'linear-gradient(180deg, rgba(212,165,116,0.16), rgba(212,165,116,0.08))' : 'transparent', cursor: 'pointer', border: 'none', borderRadius: 12, transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', gap: 5, fontFamily: DS.fontBody, textTransform: 'capitalize' }}>
+                      {m}
+                      {(m === 'premium' || m === 'praticien') && mode === 'essentiel' ? <span style={{ fontSize: 9, opacity: 0.6 }}>🔒</span> : null}
+                    </button>
+                  ))}
+                </div>
+                <IconBtn tooltip="Partager une lecture" onClick={() => setShowShare(true)}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg></IconBtn>
+                {!isDesktopRight && <IconBtn tooltip="Catégories" onClick={() => setShowMobileRight(true)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 6h16M4 12h16M4 18h10" /></svg></IconBtn>}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            position: 'relative',
-          }}
-        >
-          {isWelcome ? (
-            <div
-              style={{
-                minHeight: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '32px 24px 24px',
-              }}
-            >
-              <div
-                style={{
-                  width: '100%',
-                  maxWidth: 1100,
-                  display: 'grid',
-                  gridTemplateColumns: '1.05fr 0.95fr',
-                  gap: 22,
-                  alignItems: 'stretch',
-                }}
-              >
-                <Card
-                  style={{
-                    padding: '38px 40px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    gap: 18,
-                    minHeight: 520,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: '0.22em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(212,165,116,0.48)',
-                      fontFamily: DS.fontMono,
-                    }}
-                  >
-                    Interface de clarté assistée par IA
-                  </div>
-
-                  <div
-                    style={{
-                      width: 54,
-                      height: 54,
-                      background: DS.gradBtn,
-                      clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-                      boxShadow: '0 0 34px rgba(212,165,116,0.22)',
-                    }}
-                  />
-
-                  <div style={{ maxWidth: 560 }}>
-                    <h1
-                      style={{
-                        fontSize: 'clamp(34px,4.2vw,56px)',
-                        lineHeight: 1.05,
-                        margin: 0,
-                        ...DS.gradTitle,
-                      }}
-                    >
-                      Une conversation premium pour lire votre moment.
-                    </h1>
-                  </div>
-
-                  <p
-                    style={{
-                      fontSize: 16,
-                      color: DS.tx2,
-                      lineHeight: 1.8,
-                      margin: 0,
-                      maxWidth: 580,
-                      fontFamily: DS.fontBody,
-                    }}
-                  >
-                    HexAstra commence par vous écouter, clarifie votre question,
-                    puis approfondit si nécessaire avec vos données de naissance.
-                  </p>
-
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    {[
-                      { label: 'Français', msg: 'Français' },
-                      { label: 'English', msg: 'English' },
-                    ].map((l) => (
-                      <BtnPrimary key={l.label} onClick={() => send(l.msg)} style={{ minWidth: 152 }}>
-                        {l.label}
-                      </BtnPrimary>
-                    ))}
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 4 }}>
-                    {[
-                      'Comprendre une période de vie',
-                      'Clarifier une décision',
-                      'Explorer une dynamique relationnelle',
-                      'Mieux lire mon moment actuel',
-                    ].map((q) => (
-                      <button
-                        key={q}
-                        onClick={() => send(q)}
-                        style={{
-                          padding: '9px 14px',
-                          borderRadius: 999,
-                          background: 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${DS.border}`,
-                          color: 'rgba(203,185,164,0.66)',
-                          fontSize: 12,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontFamily: DS.fontBody,
-                        }}
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-
-                  <p
-                    style={{
-                      fontSize: 11,
-                      color: 'rgba(255,255,255,0.22)',
-                      lineHeight: 1.75,
-                      fontStyle: 'italic',
-                      maxWidth: 500,
-                      fontFamily: DS.fontBody,
-                      marginTop: 2,
-                    }}
-                  >
-                    HexAstra Coach est un outil d’exploration et de réflexion personnelle.
-                    Il ne remplace pas un avis médical, juridique ou financier.
-                  </p>
-                </Card>
-
-                <Card
-                  style={{
-                    padding: 0,
-                    overflow: 'hidden',
-                    minHeight: 520,
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: '18px 20px',
-                      borderBottom: `1px solid ${DS.border}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                    }}
-                  >
-                    <div>
-                      <div
-                        style={{
-                          fontSize: 10,
-                          letterSpacing: '0.18em',
-                          textTransform: 'uppercase',
-                          color: 'rgba(212,165,116,0.48)',
-                          fontFamily: DS.fontMono,
-                        }}
-                      >
-                        Aperçu du chat
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: viewportWidth >= 1024 ? '24px 28px 22px' : '18px 14px 18px' }}>
+            <div style={{ maxWidth: isWelcome ? 1220 : 980, margin: '0 auto', minHeight: '100%' }}>
+              {isWelcome ? (
+                <div style={{ display: 'grid', gridTemplateColumns: viewportWidth >= 1100 ? 'minmax(0, 1.04fr) minmax(360px, 0.86fr)' : '1fr', gap: 20, alignItems: 'stretch' }}>
+                  <Card style={{ padding: viewportWidth >= 900 ? '42px 44px' : '28px 24px', borderRadius: 32, minHeight: viewportWidth >= 1100 ? 560 : undefined, display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(212,165,116,0.06), transparent 45%)', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: 10, letterSpacing: '0.24em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.50)', fontFamily: DS.fontMono }}>Interface de clarté assistée par IA</div>
+                      <div style={{ width: 60, height: 60, marginTop: 18, marginBottom: 22, background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', boxShadow: '0 0 46px rgba(212,165,116,0.20)' }} />
+                      <h1 style={{ margin: 0, maxWidth: 760, fontSize: viewportWidth >= 1280 ? 'clamp(56px, 5.2vw, 84px)' : viewportWidth >= 900 ? 'clamp(42px, 6vw, 62px)' : 'clamp(34px, 9vw, 48px)', lineHeight: 0.96, letterSpacing: '-0.05em', ...DS.gradTitle }}>Une conversation fine pour lire votre moment.</h1>
+                      <p style={{ margin: '20px 0 0', maxWidth: 640, fontSize: viewportWidth >= 900 ? 18 : 16, color: DS.tx2, lineHeight: 1.82, fontFamily: DS.fontBody }}>HexAstra commence par vous écouter, clarifie votre question, puis approfondit si nécessaire avec vos données de naissance. L’expérience reste simple côté utilisateur, profonde côté lecture.</p>
+                      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+                        {[{ label: 'Français', msg: 'Français' }, { label: 'English', msg: 'English' }].map((l) => <BtnPrimary key={l.label} onClick={() => send(l.msg)} style={{ minWidth: 154 }}>{l.label}</BtnPrimary>)}
                       </div>
-                      <div
-                        style={{
-                          fontSize: 14,
-                          color: DS.tx1,
-                          fontFamily: DS.fontTitle,
-                          fontWeight: 600,
-                          marginTop: 4,
-                        }}
-                      >
-                        Conversation en direct
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>{heroPrompts.map((q) => <button key={q} onClick={() => send(q)} style={{ padding: '10px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, color: 'rgba(203,185,164,0.74)', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: DS.fontBody }}>{q}</button>)}</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: viewportWidth >= 700 ? 'repeat(3, minmax(0, 1fr))' : '1fr', gap: 10, marginTop: 28 }}>
+                        {[
+                          ['Conversation d’abord', 'Vous posez votre question avant toute donnée technique.'],
+                          ['Lecture ensuite', 'Le système approfondit seulement si le contexte le demande.'],
+                          ['Rendu premium', 'Un chat lisible, rapide, élégant et prêt pour le téléchargement.'],
+                        ].map(([title, desc]) => (
+                          <div key={title} style={{ padding: '14px 14px', borderRadius: 18, background: 'rgba(255,255,255,0.02)', border: `1px solid ${DS.border}` }}>
+                            <div style={{ fontSize: 12, color: DS.tx1, fontWeight: 600, fontFamily: DS.fontBody }}>{title}</div>
+                            <div style={{ fontSize: 12, color: DS.tx3, lineHeight: 1.65, marginTop: 5, fontFamily: DS.fontBody }}>{desc}</div>
+                          </div>
+                        ))}
                       </div>
+                      <p style={{ margin: '18px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.22)', lineHeight: 1.75, fontStyle: 'italic', maxWidth: 620, fontFamily: DS.fontBody }}>HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.</p>
                     </div>
+                  </Card>
 
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        fontSize: 12,
-                        color: DS.tx2,
-                        fontFamily: DS.fontBody,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          background: '#57d27c',
-                          boxShadow: '0 0 0 5px rgba(87,210,124,0.10)',
-                        }}
-                      />
-                      En ligne
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 14,
-                      padding: 20,
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <div style={{ display: 'flex' }}>
-                      <div
-                        style={{
-                          maxWidth: '82%',
-                          padding: '14px 15px',
-                          borderRadius: 18,
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.05)',
-                          color: DS.tx1,
-                          fontSize: 14,
-                          lineHeight: 1.7,
-                          fontFamily: DS.fontBody,
-                        }}
-                      >
-                        Bienvenue. Dis-moi ce que tu veux éclaircir aujourd’hui.
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div
-                        style={{
-                          maxWidth: '78%',
-                          padding: '14px 15px',
-                          borderRadius: 18,
-                          background: 'rgba(212,165,116,0.12)',
-                          border: '1px solid rgba(212,165,116,0.18)',
-                          color: DS.tx1,
-                          fontSize: 14,
-                          lineHeight: 1.7,
-                          fontFamily: DS.fontBody,
-                        }}
-                      >
-                        J’hésite entre continuer mon activité actuelle ou lancer autre chose.
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex' }}>
-                      <div
-                        style={{
-                          maxWidth: '82%',
-                          padding: '14px 15px',
-                          borderRadius: 18,
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.05)',
-                          color: DS.tx1,
-                          fontSize: 14,
-                          lineHeight: 1.7,
-                          fontFamily: DS.fontBody,
-                        }}
-                      >
-                        On peut clarifier cela en 3 temps : ton état actuel, le vrai nœud de décision, puis le bon timing d’action.
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          ) : (
-            <div
-              style={{
-                width: '100%',
-                maxWidth: 1040,
-                margin: '0 auto',
-                padding: '38px 32px 28px',
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 20,
-              }}
-            >
-              <div
-                style={{
-                  textAlign: 'center',
-                  fontSize: 10,
-                  letterSpacing: '0.16em',
-                  textTransform: 'uppercase',
-                  color: 'rgba(212,165,116,0.24)',
-                  fontFamily: DS.fontMono,
-                }}
-              >
-                Conversation privée · Analyse personnelle
-              </div>
-
-              {messages.map((msg, i) => (
-                <div
-                  key={msg.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 14,
-                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    animation: 'fadeUp 0.4s ease both',
-                    animationDelay: `${Math.min(i, 4) * 0.05}s`,
-                  }}
-                >
-                  {msg.role === 'assistant' && (
-                    <div style={{ width: 28, height: 28, minWidth: 28, flexShrink: 0, marginTop: 4 }}>
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          background: DS.gradBtn,
-                          clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div
-                    style={{
-                      maxWidth: 'min(740px,84%)',
-                      ...(msg.role === 'user'
-                        ? {
-                            background: 'linear-gradient(180deg, rgba(212,165,116,0.12), rgba(212,165,116,0.08))',
-                            border: '1px solid rgba(212,165,116,0.18)',
-                            borderRadius: 22,
-                            borderBottomRightRadius: 8,
-                            padding: '15px 18px',
-                            boxShadow: '0 12px 34px rgba(0,0,0,0.16)',
-                          }
-                        : {
-                            background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))',
-                            backdropFilter: 'blur(18px)',
-                            WebkitBackdropFilter: 'blur(18px)',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            borderRadius: 24,
-                            padding: '20px 24px',
-                            boxShadow: '0 18px 42px rgba(0,0,0,0.18)',
-                          }),
-                    }}
-                  >
-                    <p
-                      style={{
-                        fontSize: 16,
-                        lineHeight: 1.82,
-                        letterSpacing: '0.01em',
-                        color:
-                          msg.role === 'user'
-                            ? 'rgba(245,241,234,0.92)'
-                            : 'rgba(245,241,234,0.88)',
-                        whiteSpace: 'pre-wrap',
-                        margin: 0,
-                        fontFamily: DS.fontBody,
-                        fontWeight: 400,
-                      }}
-                    >
-                      {msg.content}
-                    </p>
-
-                    {msg.cached && (
-                      <span
-                        style={{
-                          fontSize: 9,
-                          color: DS.tx3,
-                          marginTop: 6,
-                          display: 'block',
-                          fontFamily: DS.fontMono,
-                        }}
-                      >
-                        ⚡ cache
-                      </span>
-                    )}
-
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 9,
-                        color: DS.tx3,
-                        marginTop: 8,
-                        textAlign: msg.role === 'user' ? 'right' : 'left',
-                        fontFamily: DS.fontMono,
-                        letterSpacing: '0.06em',
-                      }}
-                    >
-                      {new Date(msg.created_at).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
+                  {renderAssistantPreview}
                 </div>
-              ))}
-
-              {isTyping && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 14,
-                    animation: 'fadeUp 0.3s ease both',
-                  }}
-                >
-                  <div style={{ width: 26, height: 26, minWidth: 26, flexShrink: 0, opacity: 0.6 }}>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        background: DS.gradBtn,
-                        clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-                      }}
-                    />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div style={{ padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.42)', fontFamily: DS.fontMono }}>Conversation privée · analyse personnelle</div>
                   </div>
-
-                  <div style={{ display: 'flex', gap: 5, padding: '8px 0', alignItems: 'center' }}>
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        style={{
-                          width: 4,
-                          height: 4,
-                          borderRadius: '50%',
-                          background: 'rgba(212,165,116,0.45)',
-                          display: 'inline-block',
-                          animation: 'blink 1.4s ease-in-out infinite',
-                          animationDelay: `${i * 0.2}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
+                  {messages.map((msg, i) => (
+                    <div key={msg.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start', animation: 'fadeUp 0.38s ease both', animationDelay: `${Math.min(i, 4) * 0.05}s` }}>
+                      {msg.role === 'assistant' && <div style={{ width: 30, height: 30, minWidth: 30, marginTop: 6, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(212,165,116,0.08)', border: '1px solid rgba(212,165,116,0.16)' }}><div style={{ width: 14, height: 14, background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)' }} /></div>}
+                      <div style={{ maxWidth: msg.role === 'user' ? 'min(760px, 86%)' : 'min(820px, 90%)', ...(msg.role === 'user' ? { background: 'linear-gradient(180deg, rgba(212,165,116,0.16), rgba(212,165,116,0.08))', border: '1px solid rgba(212,165,116,0.18)', borderRadius: 26, borderBottomRightRadius: 10, padding: '16px 18px', boxShadow: '0 12px 34px rgba(0,0,0,0.18)' } : { background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.022))', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 28, padding: viewportWidth >= 900 ? '20px 24px' : '18px 18px', boxShadow: '0 18px 48px rgba(0,0,0,0.18)' }) }}>
+                        <p style={{ fontSize: viewportWidth >= 900 ? 16 : 15, lineHeight: 1.9, letterSpacing: '0.005em', color: msg.role === 'user' ? 'rgba(245,241,234,0.95)' : 'rgba(245,241,234,0.90)', whiteSpace: 'pre-wrap', margin: 0, fontFamily: DS.fontBody }}>{msg.content}</p>
+                        {msg.cached && <span style={{ fontSize: 9, color: DS.tx3, marginTop: 8, display: 'block', fontFamily: DS.fontMono }}>cache</span>}
+                        <span style={{ display: 'block', fontSize: 9, color: DS.tx3, marginTop: 10, textAlign: msg.role === 'user' ? 'right' : 'left', fontFamily: DS.fontMono, letterSpacing: '0.08em' }}>{new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {isTyping && <div style={{ display: 'flex', alignItems: 'center', gap: 12, animation: 'fadeUp 0.3s ease both' }}><div style={{ width: 28, height: 28, borderRadius: '50%', display: 'grid', placeItems: 'center', background: 'rgba(212,165,116,0.08)', border: '1px solid rgba(212,165,116,0.16)' }}><div style={{ width: 13, height: 13, background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)' }} /></div><div style={{ display: 'flex', gap: 6, padding: '8px 0', alignItems: 'center' }}>{[0,1,2].map((i) => <span key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'rgba(212,165,116,0.50)', display: 'inline-block', animation: 'blink 1.4s ease-in-out infinite', animationDelay: `${i * 0.2}s` }} />)}</div></div>}
+                  <div ref={endRef} />
                 </div>
               )}
-
-              <div ref={endRef} />
             </div>
-          )}
-        </div>
-
-        <div
-          style={{
-            padding: '14px 24px 18px',
-            borderTop: `1px solid ${DS.border}`,
-            background: 'linear-gradient(180deg, rgba(8,5,2,0.42), rgba(8,5,2,0.80))',
-            backdropFilter: 'blur(24px)',
-            flexShrink: 0,
-          }}
-        >
-          {!isWelcome && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                flexWrap: 'wrap',
-                justifyContent: 'center',
-                marginBottom: 12,
-              }}
-            >
-              {[
-                'Comprendre une situation que je traverse',
-                'Clarifier une décision importante',
-                'Explorer une période de ma vie',
-                'Énergie du moment',
-              ].map((q) => (
-                <button
-                  key={q}
-                  onClick={() => send(q)}
-                  style={{
-                    padding: '8px 14px',
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${DS.border}`,
-                    color: 'rgba(203,185,164,0.56)',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    fontFamily: DS.fontBody,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <ComposerBox>
-            {(focused) => (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  gap: 10,
-                  background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.028))',
-                  border: `1px solid ${
-                    focused ? 'rgba(212,165,116,0.30)' : 'rgba(255,255,255,0.07)'
-                  }`,
-                  borderRadius: 24,
-                  padding: '14px 16px',
-                  maxWidth: 1040,
-                  margin: '0 auto',
-                  transition: 'border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease',
-                  boxShadow: focused
-                    ? '0 0 0 2px rgba(212,165,116,0.10), 0 18px 60px rgba(0,0,0,0.28), 0 0 36px rgba(212,165,116,0.08)'
-                    : '0 14px 40px rgba(0,0,0,0.22)',
-                }}
-              >
-                <IconBtn
-                  tooltip={mode === 'praticien' ? 'Profil client' : 'Données de naissance'}
-                  onClick={() => (mode === 'praticien' ? setShowClient(true) : setShowBirth(true))}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                  </svg>
-                </IconBtn>
-
-                <IconBtn tooltip="Ajouter des fichiers" onClick={() => fileRef.current?.click()}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                  </svg>
-                </IconBtn>
-
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*,.pdf,.txt,.doc,.docx"
-                  style={{ display: 'none' }}
-                  onChange={(e) => handleFile(e.target.files)}
-                />
-
-                <textarea
-                  ref={taRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      send()
-                    }
-                  }}
-                  placeholder="Parle-moi de ta situation ou pose ta question…"
-                  rows={1}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    color: DS.tx1,
-                    fontSize: 16,
-                    lineHeight: '1.72',
-                    letterSpacing: '0.01em',
-                    minHeight: 26,
-                    maxHeight: 120,
-                    overflowY: 'auto',
-                    padding: '7px 2px 6px',
-                    resize: 'none',
-                    fontFamily: DS.fontBody,
-                    outline: 'none',
-                  }}
-                />
-
-                <IconBtn tooltip="Message vocal" onClick={toggleRec} active={isRec}>
-                  <WaveformIcon active={isRec} />
-                </IconBtn>
-
-                <BtnPrimary
-                  onClick={() => send()}
-                  disabled={!input.trim() && !isRec}
-                  style={{
-                    minWidth: 56,
-                    padding: '11px 16px',
-                    borderRadius: 14,
-                    flexShrink: 0,
-                  }}
-                >
-                  →
-                </BtnPrimary>
-              </div>
-            )}
-          </ComposerBox>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 8,
-              maxWidth: 980,
-              margin: '10px auto 0',
-              padding: '0 4px',
-            }}
-          >
-            <div
-              style={{
-                fontSize: 9,
-                color: 'rgba(212,165,116,0.35)',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
-                flexShrink: 0,
-                border: '1px solid rgba(212,165,116,0.1)',
-                padding: '3px 10px',
-                borderRadius: 999,
-                fontFamily: DS.fontMono,
-              }}
-            >
-              {modeLabel}
-            </div>
-
-            <p
-              style={{
-                fontSize: 11,
-                color: 'rgba(255,255,255,0.22)',
-                textAlign: 'center',
-                flex: 1,
-                lineHeight: 1.65,
-                margin: 0,
-                fontStyle: 'italic',
-                fontFamily: DS.fontBody,
-              }}
-            >
-              HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
-            </p>
-
-            <div style={{ width: 60, flexShrink: 0 }} />
           </div>
-        </div>
-      </main>
 
-      <RightSidebar
-        mode={mode}
-        readings={readings}
-        onSend={(t: string) => send(t)}
-        onOpenReading={openReading}
-        dragId={dragId}
-        setDragId={setDragId}
-      />
+          <div style={{ position: 'sticky', bottom: 0, zIndex: 20, padding: viewportWidth >= 1024 ? '10px 28px 22px' : '10px 14px 16px', background: 'linear-gradient(180deg, rgba(10,7,5,0.00), rgba(10,7,5,0.70) 24%, rgba(10,7,5,0.94) 100%)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}>
+            <div style={{ maxWidth: 980, margin: '0 auto' }}>
+              {!isWelcome && <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 12 }}>{quickPrompts.map((q) => <button key={q} onClick={() => send(q)} style={{ padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.03)', border: `1px solid ${DS.border}`, color: 'rgba(203,185,164,0.58)', fontSize: 12, cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: DS.fontBody, whiteSpace: 'nowrap' }}>{q}</button>)}</div>}
+              <ComposerBox>
+                {(focused) => (
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, background: 'linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.03))', border: `1px solid ${focused ? 'rgba(212,165,116,0.34)' : 'rgba(255,255,255,0.08)'}`, borderRadius: 28, padding: viewportWidth >= 900 ? '14px 16px' : '12px 12px', transition: 'border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease', boxShadow: focused ? '0 0 0 2px rgba(212,165,116,0.08), 0 26px 80px rgba(0,0,0,0.34), 0 0 44px rgba(212,165,116,0.08)' : '0 18px 60px rgba(0,0,0,0.22)', backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)' }}>
+                    <IconBtn tooltip={mode === 'praticien' ? 'Profil client' : 'Données de naissance'} onClick={() => (mode === 'praticien' ? setShowClient(true) : setShowBirth(true))}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg></IconBtn>
+                    <IconBtn tooltip="Ajouter des fichiers" onClick={() => fileRef.current?.click()}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" /></svg></IconBtn>
+                    <input ref={fileRef} type="file" accept="image/*,.pdf,.txt,.doc,.docx" style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files)} />
+                    <textarea ref={taRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} placeholder="Parle-moi de ta situation ou pose ta question…" rows={1} style={{ flex: 1, background: 'transparent', border: 'none', color: DS.tx1, fontSize: viewportWidth >= 900 ? 16 : 15, lineHeight: '1.8', letterSpacing: '0.01em', minHeight: 28, maxHeight: 120, overflowY: 'auto', padding: '8px 2px 6px', resize: 'none', fontFamily: DS.fontBody, outline: 'none' }} />
+                    <IconBtn tooltip="Message vocal" onClick={toggleRec} active={isRec}><WaveformIcon active={isRec} /></IconBtn>
+                    <BtnPrimary onClick={() => send()} disabled={!input.trim() && !isRec} style={{ minWidth: 58, padding: '11px 16px', borderRadius: 16, flexShrink: 0 }}>→</BtnPrimary>
+                  </div>
+                )}
+              </ComposerBox>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, maxWidth: 920, margin: '10px auto 0', padding: '0 4px' }}>
+                <div style={{ fontSize: 9, color: 'rgba(212,165,116,0.35)', letterSpacing: '0.14em', textTransform: 'uppercase', flexShrink: 0, border: '1px solid rgba(212,165,116,0.1)', padding: '4px 10px', borderRadius: 999, fontFamily: DS.fontMono }}>{modeLabel}</div>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.24)', textAlign: 'center', flex: 1, lineHeight: 1.7, margin: 0, fontStyle: 'italic', fontFamily: DS.fontBody }}>HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.</p>
+                <div style={{ width: 60, flexShrink: 0 }} />
+              </div>
+            </div>
+          </div>
+        </main>
 
-      {showBirth && (
-        <BirthModal
-          existing={profile}
-          onClose={() => setShowBirth(false)}
-          onSubmit={(d) => {
-            setShowBirth(false)
-            send(undefined, d)
-          }}
-        />
-      )}
+        {isDesktopRight && rightRail}
+      </div>
 
-      {showClient && (
-        <ClientModal
-          onClose={() => setShowClient(false)}
-          onSubmit={(d) => {
-            setShowClient(false)
-            send(undefined, d)
-          }}
-        />
-      )}
-
-      {showSearch && (
-        <SearchModal
-          readings={readings}
-          onClose={() => setShowSearch(false)}
-          onSelect={(r) => {
-            openReading(r)
-            setShowSearch(false)
-          }}
-        />
-      )}
-
-      {showShare && (
-        <ShareModal
-          messages={messages.filter((m) => m.id !== '0')}
-          onClose={() => setShowShare(false)}
-        />
-      )}
+      {showBirth && <BirthModal existing={profile} onClose={() => setShowBirth(false)} onSubmit={(d) => { setShowBirth(false); send(undefined, d) }} />}
+      {showClient && <ClientModal onClose={() => setShowClient(false)} onSubmit={(d) => { setShowClient(false); send(undefined, d) }} />}
+      {showSearch && <SearchModal readings={readings} onClose={() => setShowSearch(false)} onSelect={(r) => { openReading(r); setShowSearch(false) }} />}
+      {showShare && <ShareModal messages={messages.filter((m) => m.id !== '0')} onClose={() => setShowShare(false)} />}
     </div>
   )
 }
+/* ═══════════════════════════════════════════════════════════════
+   FULL-PAGE VIEWS
+═══════════════════════════════════════════════════════════════ */
 /* ═══════════════════════════════════════════════════════════════
    FULL-PAGE VIEWS
 ═══════════════════════════════════════════════════════════════ */
