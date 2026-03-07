@@ -13,7 +13,7 @@ type View    = 'chat'|'profile'|'abonnements'|'projets'
 type Step    = 1|2|3|4
 type Project = { id:string; name:string; readingIds:string[]; collapsed:boolean }
 type Reading = { id:string; title:string; science:string; date:string; preview:string; projectId?:string }
-
+type VisualBrainState = 'IDLE'|'TYPING'|'ANALYZING'|'RESPONDING'
 /* ═══════════════════════════════════════════════════════════════
    DS TOKENS — single source of truth, mirrors globals.css
 ═══════════════════════════════════════════════════════════════ */
@@ -119,22 +119,69 @@ const MENU_PRATICIEN = [
 /* ═══════════════════════════════════════════════════════════════
    COSMIC BACKGROUND — 3-layer system
 ═══════════════════════════════════════════════════════════════ */
-function CosmicBackground() {
-  return (
-    <div style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none',overflow:'hidden'}} aria-hidden="true">
-      {/* L1 — star field */}
-      <div className="hx-stars" style={{position:'absolute',inset:0,opacity:0.55}}/>
-      {/* L2 — warm ambient radial */}
-      <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 32% 22%, rgba(212,165,116,0.07) 0%, transparent 55%), radial-gradient(ellipse at 72% 76%, rgba(140,98,57,0.04) 0%, transparent 45%)'}}/>
-      {/* L3 — sacred halo */}
-      <div className="hx-sacred-halo" style={{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)',width:'min(1100px,86vw)',height:'min(1100px,86vw)',borderRadius:'9999px',background:'radial-gradient(circle, rgba(212,165,116,0.13) 0%, rgba(212,165,116,0.05) 32%, transparent 68%)',filter:'blur(110px)',opacity:0.28}}/>
-      {/* L4 — sacred geometry */}
-      <div className="hx-sacred-geometry" style={{position:'absolute',left:'50%',top:'50%',width:'min(860px,78vw)',opacity:0.035,filter:'blur(0.9px)'}}>
-        <img src="/hexastra-sacred-geometry.png" alt="" aria-hidden="true" draggable={false} style={{width:'100%',height:'auto',display:'block'}}/>
-      </div>
-    </div>
-  )
-}
+ligne 123 | function CosmicBackground({ state, reducedMotion }: { state:VisualBrainState; reducedMotion:boolean }) {
+ligne 124 |   const geometryOpacity = state==='TYPING' ? 0.06 : 0.035
+ligne 125 |   const starsOpacity = state==='ANALYZING' ? 0.68 : state==='TYPING' ? 0.62 : 0.55
+ligne 126 |   const rotateDuration = state==='ANALYZING' ? 80 : 200
+ligne 127 |   const haloOpacity = state==='TYPING' ? 0.26 : 0.2
+ligne 128 | 
+ligne 129 |   return (
+ligne 130 |     <div style={{position:'fixed',inset:0,zIndex:0,pointerEvents:'none',overflow:'hidden'}} aria-hidden="true">
+ligne 131 |       {/* L1 — star field */}
+ligne 132 |       <div
+ligne 133 |         className="hx-stars"
+ligne 134 |         style={{
+ligne 135 |           position:'absolute',
+ligne 136 |           inset:0,
+ligne 137 |           opacity:starsOpacity,
+ligne 138 |           transition:'opacity 0.8s ease',
+ligne 139 |           animation:reducedMotion?'none':undefined,
+ligne 140 |           willChange:'opacity, transform'
+ligne 141 |         }}
+ligne 142 |       />
+ligne 143 |       {/* L2 — warm ambient radial */}
+ligne 144 |       <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at 32% 22%, rgba(212,165,116,0.07) 0%, transparent 55%), radial-gradient(ellipse at 72% 76%, rgba(140,98,57,0.04) 0%, transparent 45%)'}}/>
+ligne 145 |       {/* L3 — sacred halo */}
+ligne 146 |       <div
+ligne 147 |         className={`hx-sacred-halo ${state==='ANALYZING'?'hx-halo-analyzing':state==='RESPONDING'?'hx-halo-responding':''}`}
+ligne 148 |         style={{
+ligne 149 |           position:'absolute',
+ligne 150 |           left:'50%',
+ligne 151 |           top:'50%',
+ligne 152 |           transform:'translate(-50%,-50%)',
+ligne 153 |           width:'min(1100px,86vw)',
+ligne 154 |           height:'min(1100px,86vw)',
+ligne 155 |           borderRadius:'9999px',
+ligne 156 |           background:'radial-gradient(circle, rgba(212,165,116,0.13) 0%, rgba(212,165,116,0.05) 32%, transparent 68%)',
+ligne 157 |           filter:'blur(110px)',
+ligne 158 |           opacity:haloOpacity,
+ligne 159 |           transition:'opacity 0.8s ease',
+ligne 160 |           animation:reducedMotion?'none':undefined,
+ligne 161 |           willChange:'opacity, transform'
+ligne 162 |         }}
+ligne 163 |       />
+ligne 164 |       {/* L4 — sacred geometry */}
+ligne 165 |       <div style={{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%,-50%)'}}>
+ligne 166 |         <div
+ligne 167 |           className="hx-sacred-geometry"
+ligne 168 |           style={{
+ligne 169 |             position:'relative',
+ligne 170 |             left:0,
+ligne 171 |             top:0,
+ligne 172 |             width:'min(860px,78vw)',
+ligne 173 |             filter:'blur(0.9px)',
+ligne 174 |             opacity:geometryOpacity,
+ligne 175 |             transition:'opacity 0.8s ease',
+ligne 176 |             animation:reducedMotion?'none':`hxRotate ${rotateDuration}s linear infinite, hxBreath 20s ease-in-out infinite`,
+ligne 177 |             willChange:'transform, opacity'
+ligne 178 |           }}
+ligne 179 |         >
+ligne 180 |           <img src="/hexastra-sacred-geometry.png" alt="" aria-hidden="true" draggable={false} style={{width:'100%',height:'auto',display:'block'}}/>
+ligne 181 |         </div>
+ligne 182 |       </div>
+ligne 183 |     </div>
+ligne 184 |   )
+ligne 185 | }
 
 /* ═══════════════════════════════════════════════════════════════
    DESIGN SYSTEM PRIMITIVES
@@ -909,31 +956,41 @@ export default function ChatPage() {
     }catch{ alert('Micro non disponible') }
   },[isRec,mediaRec])
 
-  const send=useCallback(async(text?:string,birthData?:any)=>{
-    const content=text||input.trim(); if(!content&&!birthData)return
-    const userMsg:Msg={id:Date.now().toString(),role:'user',created_at:new Date().toISOString(),
+const send=useCallback(async(text?:string,birthData?:any)=>{
+   const content=text||input.trim(); if(!content&&!birthData)return
+   const userMsg:Msg={id:Date.now().toString(),role:'user',created_at:new Date().toISOString(),
       content:birthData?`Données de naissance : ${birthData.firstName} ${birthData.lastName||''} · ${birthData.date} · ${birthData.time||'inconnue'} · ${birthData.place}, ${birthData.country}`:content}
     const base = isWelcome ? [] : messages
     const newMsgs=[...base,userMsg]; setMessages(newMsgs); setInput(''); setIsTyping(true)
-    setMsgCount(c=>c+1); bump(newMsgs.length)
-    if(!birthData&&replyCache.current.has(content)){
-      setTimeout(()=>{setIsTyping(false);setMessages(p=>[...p,{id:Date.now().toString(),role:'assistant',content:replyCache.current.get(content)!,created_at:new Date().toISOString(),cached:true}])},300); return
-    }
-    try{
+   setMsgCount(c=>c+1); bump(newMsgs.length)
+
+   if(!birthData&&replyCache.current.has(content)){
+      setTimeout(()=>{
+         setIsTyping(false)
+         triggerResponding()
+         const cachedReply = replyCache.current.get(content)!
+         setMessages(p=>[...p,{id:Date.now().toString(),role:'assistant',content:cachedReply,created_at:new Date().toISOString(),cached:true}])
+      },300)
+      return
+   }
+
+   try{
       const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:newMsgs.map(m=>({role:m.role,content:m.content})),mode,birthData:birthData||null,conversationId:convId})})
       const data=await res.json(); if(data.conversationId)setConvId(data.conversationId)
       const reply=data.reply||'Une erreur est survenue.'
       if(!birthData&&content.length<200)replyCache.current.set(content,reply)
       setIsTyping(false)
+      triggerResponding()
       const aiMsg:Msg={id:Date.now().toString(),role:'assistant',content:reply,created_at:new Date().toISOString()}
       const finalMsgs=[...newMsgs,aiMsg]; setMessages(finalMsgs); bump(finalMsgs.length); saveReading(finalMsgs)
       if(birthData){setProfile(birthData);localStorage.setItem('hx_profile',JSON.stringify(birthData));setStep(s=>s<2?2:s)}
       if(data.needsBirthData)setTimeout(()=>setShowBirth(true),600)
-    }catch{
+   }catch{
       setIsTyping(false)
+      triggerResponding()
       setMessages(p=>[...p,{id:Date.now().toString(),role:'assistant',content:'Erreur de connexion. Réessaie.',created_at:new Date().toISOString()}])
-    }
-  },[input,messages,isWelcome,mode,convId,bump,saveReading])
+   }
+},[input,messages,isWelcome,mode,convId,bump,saveReading,triggerResponding])
 
   const switchMode=(m:Mode)=>{ if((m==='premium'||m==='praticien')&&mode==='essentiel'){setView('abonnements');return}; setMode(m) }
 
