@@ -565,3 +565,48 @@ optgroup       { color: var(--amber); font-style: normal; }
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   HEXASTRA LIGHT THEME (Home / Landing)
+═══════════════════════════════════════════════════════════════ */
+
+body.hex-light {
+  --bg-void: #f7faf8;
+  --bg-secondary: #eef5f1;
+  --bg-card: rgba(255,255,255,0.85);
+  --bg-input: rgba(0,0,0,0.04);
+  --bg-hover: rgba(16,163,127,0.08);
+
+  --tx-primary: #0f2a21;
+  --tx-secondary: #4b6a5f;
+  --tx-muted: rgba(75,106,95,0.55);
+  --tx-ghost: rgba(75,106,95,0.25);
+
+  --border: rgba(0,0,0,0.06);
+
+  --emerald: #10a37f;
+  --emerald-soft: rgba(16,163,127,0.12);
+
+  --shadow-card:
+    0 20px 60px rgba(0,0,0,0.06),
+    0 0 0 1px rgba(0,0,0,0.04);
+}
+
+/* boutons emerald */
+.hex-light .hx-btn-primary{
+  background: linear-gradient(135deg,#10a37f,#0e8a6c);
+  box-shadow:0 6px 24px rgba(16,163,127,0.22);
+}
+
+/* cartes */
+.hex-light .hx-card{
+  backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.75);
+}
+
+/* chips */
+.hex-light .hx-chip{
+  background: rgba(0,0,0,0.04);
+  border:1px solid rgba(0,0,0,0.06);
+  color:#33594e;
+}
