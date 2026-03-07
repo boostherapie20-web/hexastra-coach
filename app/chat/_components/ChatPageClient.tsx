@@ -386,19 +386,19 @@ export default function ChatPageClient() {
           </div>
         }
 
-      <style jsx global>{`
-        @media (max-width: 1100px) {
-          .hx-welcome-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-
-        @media (max-width: 860px) {
-          .hx-welcome-points {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
+          <style jsx global>{`
+            @media (max-width: 1100px) {
+              .hx-welcome-grid {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          
+            @media (max-width: 860px) {
+              .hx-welcome-points {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}</style>
     </>
   )
 }
