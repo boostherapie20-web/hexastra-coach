@@ -1141,31 +1141,115 @@ export default function ChatPage() {
     }
   }, [isRec, mediaRec])
 
-  const send=useCallback(async(text?:string,birthData?:any)=>{
-    const content=text||input.trim(); if(!content&&!birthData)return
-    const userMsg:Msg={id:Date.now().toString(),role:'user',created_at:new Date().toISOString(),
-      content:birthData?`Données de naissance : ${birthData.firstName} ${birthData.lastName||''} · ${birthData.date} · ${birthData.time||'inconnue'} · ${birthData.place}, ${birthData.country}`:content}
-    const base = isWelcome ? [] : messages
-    const newMsgs=[...base,userMsg]; setMessages(newMsgs); setInput(''); setIsTyping(true)
-    setMsgCount(c=>c+1); bump(newMsgs.length)
-    if(!birthData&&replyCache.current.has(content)){
-      setTimeout(()=>{setIsTyping(false);setMessages(p=>[...p,{id:Date.now().toString(),role:'assistant',content:replyCache.current.get(content)!,created_at:new Date().toISOString(),cached:true}])},300); return
-    }
-    try{
-      const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:newMsgs.map(m=>({role:m.role,content:m.content})),mode,birthData:birthData||null,conversationId:convId})})
-      const data=await res.json(); if(data.conversationId)setConvId(data.conversationId)
-      const reply=data.reply||'Une erreur est survenue.'
-      if(!birthData&&content.length<200)replyCache.current.set(content,reply)
-      setIsTyping(false)
-      const aiMsg:Msg={id:Date.now().toString(),role:'assistant',content:reply,created_at:new Date().toISOString()}
-      const finalMsgs=[...newMsgs,aiMsg]; setMessages(finalMsgs); bump(finalMsgs.length); saveReading(finalMsgs)
-      if(birthData){setProfile(birthData);localStorage.setItem('hx_profile',JSON.stringify(birthData));setStep(s=>s<2?2:s)}
-      if(data.needsBirthData)setTimeout(()=>setShowBirth(true),600)
-    }catch{
-      setIsTyping(false)
-      setMessages(p=>[...p,{id:Date.now().toString(),role:'assistant',content:'Erreur de connexion. Réessaie.',created_at:new Date().toISOString()}])
-    }
-  },[input,messages,isWelcome,mode,convId,bump,saveReading])
+    const send = useCallback(
+    async (text?: string, birthData?: any) => {
+      const content = text || input.trim()
+      if (!content && !birthData) return
+
+      const userMsg: Msg = {
+        id: Date.now().toString(),
+        role: 'user',
+        created_at: new Date().toISOString(),
+        content: birthData
+          ? `Données de naissance : ${birthData.firstName} ${birthData.lastName || ''} · ${birthData.date} · ${birthData.time || 'inconnue'} · ${birthData.place}, ${birthData.country}`
+          : content,
+      }
+
+      const baseMessages = isWelcome ? [] : messages
+      const newMsgs = [...baseMessages, userMsg]
+
+      setMessages(newMsgs)
+      setInput('')
+      setIsTyping(true)
+      setMsgCount((c) => c + 1)
+      bump(newMsgs.length)
+
+      if (!birthData && replyCache.current.has(content)) {
+        const cachedReply = replyCache.current.get(content)!
+
+        setTimeout(() => {
+          setIsTyping(false)
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Date.now().toString(),
+              role: 'assistant',
+              content: cachedReply,
+              created_at: new Date().toISOString(),
+              cached: true,
+            },
+          ])
+        }, 300)
+
+        return
+      }
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: newMsgs.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            mode,
+            birthData: birthData || null,
+            conversationId: convId,
+          }),
+        })
+
+        const data = await res.json()
+
+        if (data?.conversationId) {
+          setConvId(data.conversationId)
+        }
+
+        const reply = data?.reply || 'Une erreur est survenue.'
+
+        if (!birthData && content && content.length < 200) {
+          replyCache.current.set(content, reply)
+        }
+
+        const aiMsg: Msg = {
+          id: `${Date.now()}-ai`,
+          role: 'assistant',
+          content: reply,
+          created_at: new Date().toISOString(),
+        }
+
+        const finalMsgs = [...newMsgs, aiMsg]
+
+        setMessages(finalMsgs)
+        setIsTyping(false)
+        bump(finalMsgs.length)
+        saveReading(finalMsgs)
+
+        if (birthData) {
+          setProfile(birthData)
+          localStorage.setItem('hx_profile', JSON.stringify(birthData))
+          setStep((s) => (s < 2 ? 2 : s))
+        }
+
+        if (data?.needsBirthData) {
+          setTimeout(() => setShowBirth(true), 600)
+        }
+      } catch (error) {
+        console.error('Chat send error:', error)
+        setIsTyping(false)
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `${Date.now()}-err`,
+            role: 'assistant',
+            content: 'Erreur de connexion. Réessaie.',
+            created_at: new Date().toISOString(),
+          },
+        ])
+      }
+    },
+    [input, messages, isWelcome, mode, convId, bump, saveReading],
+  )
 
   const switchMode=(m:Mode)=>{ if((m==='premium'||m==='praticien')&&mode==='essentiel'){setView('abonnements');return}; setMode(m) }
 
@@ -1363,6 +1447,18 @@ export default function ChatPage() {
               </IconBtn>
             </div>
             )}
+              <BtnPrimary
+                onClick={() => send()}
+                disabled={!input.trim() && !isRec}
+                style={{
+                  padding: '10px 16px',
+                  minWidth: 54,
+                  borderRadius: 12,
+                  flexShrink: 0,
+                }}
+              >
+                →
+              </BtnPrimary>
           </ComposerBox>
 
           {/* Footer */}
