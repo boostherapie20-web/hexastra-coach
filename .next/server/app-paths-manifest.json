@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/astro/route": "app/api/astro/route.js",
+  "/api/chat/route": "app/api/chat/route.js",
+  "/api/enneagram/route": "app/api/enneagram/route.js",
+  "/api/fusion/route": "app/api/fusion/route.js",
+  "/api/hd/route": "app/api/hd/route.js",
+  "/api/hexagram/route": "app/api/hexagram/route.js",
+  "/api/kua/route": "app/api/kua/route.js",
+  "/api/numerology/route": "app/api/numerology/route.js",
+  "/api/route": "app/api/route.js",
+  "/api/state/route": "app/api/state/route.js",
+  "/api/stripe/checkout/route": "app/api/stripe/checkout/route.js",
+  "/api/stripe/webhook/route": "app/api/stripe/webhook/route.js",
+  "/api/transcribe/route": "app/api/transcribe/route.js",
+  "/chat/page": "app/chat/page.js",
+  "/library/page": "app/library/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/reading/[id]/page": "app/reading/[id]/page.js"
+}
