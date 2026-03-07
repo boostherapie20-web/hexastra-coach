@@ -269,7 +269,6 @@ export default function ChatPageClient() {
       onOpenReading={handleOpenReading}
     />
   )
-
   return (
     <>
       <CosmicBackground />
@@ -360,7 +359,6 @@ export default function ChatPageClient() {
             )}
           </div>
         }
-
         composer={
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Composer
@@ -370,7 +368,7 @@ export default function ChatPageClient() {
               onQuickPrompt={(value) => void handleSend(value)}
               showQuickPrompts={!isWelcome}
             />
-        
+
             <div
               style={{
                 textAlign: 'center',
@@ -385,20 +383,8 @@ export default function ChatPageClient() {
             </div>
           </div>
         }
-
-          <style jsx global>{`
-            @media (max-width: 1100px) {
-              .hx-welcome-grid {
-                grid-template-columns: 1fr !important;
-              }
-            }
-          
-            @media (max-width: 860px) {
-              .hx-welcome-points {
-                grid-template-columns: 1fr !important;
-              }
-            }
-          `}</style>
+      />
     </>
   )
 }
+  
