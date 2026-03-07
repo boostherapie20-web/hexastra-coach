@@ -930,7 +930,24 @@ function WaveformIcon({ active }: { active: boolean }) {
 /* ═══════════════════════════════════════════════════════════════
    LEFT SIDEBAR
 ═══════════════════════════════════════════════════════════════ */
-function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, projects, readings, onNewProject, onRenameProject, onDeleteProject, onOpenReading, onAddToProject, onSearch, onLogout, dragId }: any) {
+function LeftSidebar({
+  view,
+  setView,
+  userEmail,
+  mode,
+  currentStep,
+  stepLabels,
+  projects,
+  readings,
+  onNewProject,
+  onRenameProject,
+  onDeleteProject,
+  onOpenReading,
+  onAddToProject,
+  onSearch,
+  onLogout,
+  dragId,
+}: any) {
   const [showMenu, setShowMenu] = useState(false)
   const [editPId, setEditPId] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
@@ -948,28 +965,70 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
   }
 
   return (
-    <aside style={{ width: 214, minWidth: 214, height: '100vh', background: 'rgba(13,8,5,0.92)', backdropFilter: 'blur(20px)', borderRight: `1px solid ${DS.border}`, display: 'flex', flexDirection: 'column', zIndex: 10, overflow: 'hidden', position: 'relative' }}>
-      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'center', gap: 9, borderBottom: `1px solid ${DS.border}`, flexShrink: 0 }}>
-        <img src="/logo/hexastra-logo-transparent.png" alt="HexAstra" style={{ height: 24, objectFit: 'contain' }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
-        <div style={{ width: 18, height: 18, background: DS.gradBtn, clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)', flexShrink: 0, animation: 'amberPop 5s ease-in-out infinite' }} />
-        <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: '0.1em', color: DS.tx1, textTransform: 'uppercase', fontFamily: DS.fontTitle }}>Hex<span style={{ color: DS.amber }}>Astra</span></span>
-      </div>
+    <aside
+      style={{
+        width: 248,
+        minWidth: 248,
+        height: '100vh',
+        padding: 14,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+        zIndex: 10,
+        background: 'linear-gradient(180deg, rgba(9,6,4,0.92), rgba(12,8,5,0.82))',
+        borderRight: `1px solid ${DS.border}`,
+        backdropFilter: 'blur(20px)',
+      }}
+    >
+      <Card hover={false} style={{ padding: '14px 14px 12px', borderRadius: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img
+            src="/logo/hexastra-logo-transparent.png"
+            alt="HexAstra"
+            style={{ height: 26, objectFit: 'contain' }}
+            onError={(e) => {
+              ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+            }}
+          />
+          <div
+            style={{
+              width: 18,
+              height: 18,
+              background: DS.gradBtn,
+              clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                color: DS.tx1,
+                textTransform: 'uppercase',
+                fontFamily: DS.fontTitle,
+              }}
+            >
+              Hex<span style={{ color: DS.amber }}>Astra</span>
+            </div>
+            <div style={{ fontSize: 11, color: DS.tx3, fontFamily: DS.fontBody }}>
+              Console de lecture
+            </div>
+          </div>
+        </div>
 
-      <div style={{ padding: '10px 12px 6px', flexShrink: 0 }}>
-        <button
+        <BtnPrimary
           onClick={() => setView('chat')}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '8px 14px', borderRadius: 10, background: 'rgba(212,165,116,0.07)', border: `1px solid ${DS.borderW}`, color: DS.amber, fontSize: 12, fontWeight: 500, cursor: 'pointer', transition: 'all 0.2s ease', fontFamily: DS.fontBody }}
+          style={{ width: '100%', marginTop: 14, justifyContent: 'center' }}
         >
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14" /></svg>
           Nouvelle lecture
-        </button>
-      </div>
+        </BtnPrimary>
+      </Card>
 
-      <Divider />
-
-      <div style={{ padding: '8px 10px 4px', flexShrink: 0 }}>
+      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
         <Label>Navigation</Label>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {[
             { v: 'chat', sym: '◈', label: 'Coach IA' },
             { v: 'search_action', sym: '⊕', label: 'Recherche' },
@@ -982,114 +1041,371 @@ function LeftSidebar({ view, setView, userEmail, mode, currentStep, stepLabels, 
               icon={item.sym}
               label={item.label}
               active={view === item.v && item.v !== 'search_action'}
-              onClick={() => item.v === 'search_action' ? onSearch() : setView(item.v as View)}
+              onClick={() =>
+                item.v === 'search_action' ? onSearch() : setView(item.v as View)
+              }
             />
           ))}
         </nav>
-      </div>
+      </Card>
 
-      <Divider style={{ marginTop: 4 }} />
-
-      <div style={{ padding: '8px 12px 4px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: 6,
+          }}
+        >
           <Label>Projets</Label>
-          <button onClick={() => setNewInput(true)} style={{ fontSize: 16, color: DS.amber, cursor: 'pointer', background: 'none', border: 'none', lineHeight: 1, padding: '0 2px' }}>＋</button>
+          <button
+            onClick={() => setNewInput(true)}
+            style={{
+              fontSize: 16,
+              color: DS.amber,
+              cursor: 'pointer',
+              background: 'none',
+              border: 'none',
+              lineHeight: 1,
+              padding: '0 2px',
+            }}
+          >
+            ＋
+          </button>
         </div>
 
         {newInput && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
             <input
               autoFocus
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') createProject()
-                if (e.key === 'Escape') { setNewInput(false); setNewName('') }
+                if (e.key === 'Escape') {
+                  setNewInput(false)
+                  setNewName('')
+                }
               }}
               placeholder="Nom du projet..."
-              style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: `1px solid ${DS.borderW}`, borderRadius: 8, padding: '6px 10px', color: DS.tx1, fontSize: 12, fontFamily: DS.fontBody, outline: 'none' }}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.05)',
+                border: `1px solid ${DS.borderW}`,
+                borderRadius: 10,
+                padding: '7px 10px',
+                color: DS.tx1,
+                fontSize: 12,
+                fontFamily: DS.fontBody,
+                outline: 'none',
+              }}
             />
-            <button onClick={createProject} style={{ background: DS.amber, color: '#0f0a07', borderRadius: 7, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer', border: 'none', fontFamily: DS.fontMono }}>OK</button>
+            <button
+              onClick={createProject}
+              style={{
+                background: DS.amber,
+                color: '#0f0a07',
+                borderRadius: 10,
+                padding: '6px 10px',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: 'none',
+                fontFamily: DS.fontMono,
+              }}
+            >
+              OK
+            </button>
           </div>
         )}
 
-        <div style={{ maxHeight: 150, overflowY: 'auto', marginBottom: 2 }}>
+        <div style={{ maxHeight: 180, overflowY: 'auto' }}>
           {recentProj.map((p: Project) => {
             const pR = readings.filter((r: Reading) => r.projectId === p.id)
             const isDrop = dropTarget === p.id
+
             return (
               <div
                 key={p.id}
-                onDragOver={(e) => { e.preventDefault(); setDropTarget(p.id) }}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  setDropTarget(p.id)
+                }}
                 onDragLeave={() => setDropTarget(null)}
-                onDrop={(e) => { e.preventDefault(); if (dragId) onAddToProject(dragId, p.id); setDropTarget(null) }}
-                style={{ marginBottom: 2, borderRadius: 8, border: `1px solid ${isDrop ? DS.amber : 'transparent'}`, background: isDrop ? 'rgba(212,165,116,0.06)' : 'transparent', transition: 'all 0.18s' }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  if (dragId) onAddToProject(dragId, p.id)
+                  setDropTarget(null)
+                }}
+                style={{
+                  marginBottom: 6,
+                  borderRadius: 12,
+                  border: `1px solid ${isDrop ? DS.amber : 'rgba(255,255,255,0.04)'}`,
+                  background: isDrop
+                    ? 'rgba(212,165,116,0.06)'
+                    : 'rgba(255,255,255,0.02)',
+                  transition: 'all 0.18s',
+                  padding: '7px 8px',
+                }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 6px' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={DS.tx3} strokeWidth="1.8" style={{ flexShrink: 0 }}><path d="M3 7c0-1.1.9-2 2-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z" /></svg>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={DS.tx3}
+                    strokeWidth="1.8"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <path d="M3 7c0-1.1.9-2 2-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                  </svg>
+
                   {editPId === p.id ? (
                     <input
                       autoFocus
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      onBlur={() => { onRenameProject(p.id, editName); setEditPId(null) }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { onRenameProject(p.id, editName); setEditPId(null) } }}
-                      style={{ flex: 1, background: 'transparent', border: 'none', borderBottom: `1px solid ${DS.amber}`, color: DS.amber, fontSize: 12, fontFamily: DS.fontBody, outline: 'none' }}
+                      onBlur={() => {
+                        onRenameProject(p.id, editName)
+                        setEditPId(null)
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          onRenameProject(p.id, editName)
+                          setEditPId(null)
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        background: 'transparent',
+                        border: 'none',
+                        borderBottom: `1px solid ${DS.amber}`,
+                        color: DS.amber,
+                        fontSize: 12,
+                        fontFamily: DS.fontBody,
+                        outline: 'none',
+                      }}
                     />
                   ) : (
-                    <span style={{ flex: 1, fontSize: 12, color: DS.tx2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer', fontFamily: DS.fontBody }} onDoubleClick={() => { setEditPId(p.id); setEditName(p.name) }}>{p.name}</span>
+                    <span
+                      style={{
+                        flex: 1,
+                        fontSize: 12,
+                        color: DS.tx2,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        fontFamily: DS.fontBody,
+                      }}
+                      onDoubleClick={() => {
+                        setEditPId(p.id)
+                        setEditName(p.name)
+                      }}
+                    >
+                      {p.name}
+                    </span>
                   )}
-                  <span style={{ fontSize: 9, color: DS.tx3, fontFamily: DS.fontMono, flexShrink: 0 }}>{pR.length}</span>
+
+                  <span
+                    style={{
+                      fontSize: 9,
+                      color: DS.tx3,
+                      fontFamily: DS.fontMono,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {pR.length}
+                  </span>
                 </div>
-                {isDrop && <div style={{ padding: '3px 22px 4px', fontSize: 10, color: DS.amber, fontFamily: DS.fontMono }}>↓ Déposer</div>}
+
+                {isDrop && (
+                  <div
+                    style={{
+                      padding: '5px 18px 0',
+                      fontSize: 10,
+                      color: DS.amber,
+                      fontFamily: DS.fontMono,
+                    }}
+                  >
+                    ↓ Déposer
+                  </div>
+                )}
               </div>
             )
           })}
-          {projects.length === 0 && !newInput && <div style={{ padding: '6px 6px', fontSize: 11, color: DS.tx3, textAlign: 'center', fontFamily: DS.fontBody }}>Aucun projet</div>}
+
+          {projects.length === 0 && !newInput && (
+            <div
+              style={{
+                padding: '8px 6px',
+                fontSize: 11,
+                color: DS.tx3,
+                textAlign: 'center',
+                fontFamily: DS.fontBody,
+              }}
+            >
+              Aucun projet
+            </div>
+          )}
         </div>
-      </div>
+      </Card>
 
-      <div style={{ flex: 1 }} />
-      <Divider />
-
-      <div style={{ padding: '8px 12px', flexShrink: 0 }}>
-        <Label>// Progression</Label>
+      <Card hover={false} style={{ padding: 12, borderRadius: 20 }}>
+        <Label>Progression</Label>
         {stepLabels.map(({ step: n, label, desc }: any, i: number) => {
           const done = currentStep > n
           const active = currentStep === n
+
           return (
-            <div key={n} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <div key={n} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                <div style={{ width: 12, height: 12, borderRadius: '50%', border: `1.5px solid ${done || active ? DS.amber : DS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s', marginTop: 1, background: done ? DS.amber : 'transparent', boxShadow: active ? `0 0 8px ${DS.glow}` : 'none' }}>
-                  {done && <span style={{ fontSize: 6.5, color: '#0f0a07' }}>✓</span>}
-                  {active && <div style={{ width: 4, height: 4, borderRadius: '50%', background: DS.amber }} />}
+                <div
+                  style={{
+                    width: 14,
+                    height: 14,
+                    borderRadius: '50%',
+                    border: `1.5px solid ${done || active ? DS.amber : DS.border}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s',
+                    marginTop: 1,
+                    background: done ? DS.amber : 'transparent',
+                    boxShadow: active ? `0 0 10px ${DS.glow}` : 'none',
+                  }}
+                >
+                  {done && <span style={{ fontSize: 7, color: '#0f0a07' }}>✓</span>}
+                  {active && (
+                    <div
+                      style={{
+                        width: 4,
+                        height: 4,
+                        borderRadius: '50%',
+                        background: DS.amber,
+                      }}
+                    />
+                  )}
                 </div>
-                {i < 3 && <div style={{ width: 1.5, height: 14, borderRadius: 1, margin: '2px 0', background: done ? 'rgba(212,165,116,0.3)' : DS.border }} />}
+                {i < 3 && (
+                  <div
+                    style={{
+                      width: 1.5,
+                      height: 18,
+                      borderRadius: 1,
+                      margin: '3px 0',
+                      background: done ? 'rgba(212,165,116,0.3)' : DS.border,
+                    }}
+                  />
+                )}
               </div>
-              <div style={{ paddingBottom: 8, flex: 1 }}>
-                <div style={{ fontSize: 10, color: done || active ? DS.tx1 : DS.tx3, transition: 'color 0.3s', fontFamily: DS.fontBody, fontWeight: done || active ? 500 : 400 }}>{label}</div>
-                {active && <div style={{ fontSize: 10, color: DS.tx3, lineHeight: 1.5, marginTop: 1, fontFamily: DS.fontBody }}>{desc}</div>}
+
+              <div style={{ paddingBottom: 9, flex: 1 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: done || active ? DS.tx1 : DS.tx3,
+                    transition: 'color 0.3s',
+                    fontFamily: DS.fontBody,
+                    fontWeight: done || active ? 500 : 400,
+                  }}
+                >
+                  {label}
+                </div>
+                {active && (
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: DS.tx3,
+                      lineHeight: 1.55,
+                      marginTop: 2,
+                      fontFamily: DS.fontBody,
+                    }}
+                  >
+                    {desc}
+                  </div>
+                )}
               </div>
             </div>
           )
         })}
-      </div>
+      </Card>
 
-      <Divider />
+      <div style={{ marginTop: 'auto', position: 'relative' }}>
+        <Card hover={false} style={{ padding: 10, borderRadius: 20 }}>
+          <button
+            onClick={() => setShowMenu((o) => !o)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              padding: '8px 9px',
+              borderRadius: 12,
+              background: showMenu ? 'rgba(212,165,116,0.07)' : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${showMenu ? DS.borderW : DS.border}`,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                background: 'rgba(212,165,116,0.12)',
+                border: `1px solid ${DS.borderW}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 11,
+                color: DS.amber,
+                flexShrink: 0,
+                fontFamily: DS.fontMono,
+              }}
+            >
+              {userEmail[0]?.toUpperCase() || 'U'}
+            </div>
 
-      <div style={{ padding: '8px 10px', position: 'relative', flexShrink: 0 }}>
-        <button
-          onClick={() => setShowMenu((o) => !o)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '7px 9px', borderRadius: 10, background: showMenu ? 'rgba(212,165,116,0.07)' : 'rgba(255,255,255,0.03)', border: `1px solid ${showMenu ? DS.borderW : DS.border}`, cursor: 'pointer', transition: 'all 0.2s ease' }}
-        >
-          <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(212,165,116,0.12)', border: `1px solid ${DS.borderW}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: DS.amber, flexShrink: 0, fontFamily: DS.fontMono }}>{userEmail[0]?.toUpperCase() || 'U'}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: DS.tx2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: DS.fontBody }}>{userEmail.split('@')[0]}</div>
-            <div style={{ fontSize: 10, color: DS.amber, textTransform: 'capitalize', fontFamily: DS.fontMono }}>{mode}</div>
-          </div>
-          <span style={{ fontSize: 9, color: DS.tx3 }}>{showMenu ? '▾' : '▴'}</span>
-        </button>
-        {showMenu && <ProfileMenu userEmail={userEmail} mode={mode} onLogout={onLogout} onClose={() => setShowMenu(false)} />}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  color: DS.tx2,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  fontFamily: DS.fontBody,
+                }}
+              >
+                {userEmail.split('@')[0]}
+              </div>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: DS.amber,
+                  textTransform: 'capitalize',
+                  fontFamily: DS.fontMono,
+                }}
+              >
+                {mode}
+              </div>
+            </div>
+
+            <span style={{ fontSize: 9, color: DS.tx3 }}>{showMenu ? '▾' : '▴'}</span>
+          </button>
+        </Card>
+
+        {showMenu && (
+          <ProfileMenu
+            userEmail={userEmail}
+            mode={mode}
+            onLogout={onLogout}
+            onClose={() => setShowMenu(false)}
+          />
+        )}
       </div>
     </aside>
   )
