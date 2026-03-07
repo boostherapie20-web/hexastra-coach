@@ -2,12 +2,22 @@
 
 import { DS, cardStyle, type Project, type Reading } from '../_lib/chat'
 
-type Props = {
+type LeftSidebarProps = {
   projects: Project[]
   readings: Reading[]
   onNewChat: () => void
   onCreateProject: () => void
   onOpenReading: (reading: Reading) => void
+}
+
+function progressItemStyle(active = false): React.CSSProperties {
+  return {
+    display: 'grid',
+    gridTemplateColumns: '18px 1fr',
+    gap: 12,
+    alignItems: 'start',
+    opacity: active ? 1 : 0.55,
+  }
 }
 
 export default function LeftSidebar({
@@ -16,222 +26,251 @@ export default function LeftSidebar({
   onNewChat,
   onCreateProject,
   onOpenReading,
-}: Props) {
-  const groupedProjects = [...projects].reverse().slice(0, 5)
-  const recentReadings = readings.slice(0, 6)
+}: LeftSidebarProps) {
+  const latestReading = readings[0]
 
   return (
     <aside
       style={{
-        width: 278,
-        minWidth: 278,
-        height: '100vh',
-        padding: 18,
+        width: '100%',
+        minWidth: 0,
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        background: 'linear-gradient(180deg, rgba(10,7,5,0.78), rgba(10,7,5,0.60))',
-        borderRight: `1px solid ${DS.line}`,
-        backdropFilter: 'blur(28px)',
-        WebkitBackdropFilter: 'blur(28px)',
       }}
     >
-      <div style={cardStyle({ padding: 18 })}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div
-            style={{
-              width: 24,
-              height: 24,
-              background: DS.gradient,
-              clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-              boxShadow: '0 0 28px rgba(212,165,116,0.18)',
-              flexShrink: 0,
-            }}
-          />
-          <div>
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                fontFamily: DS.titleFont,
-              }}
-            >
-              HexAstra
-            </div>
-            <div style={{ fontSize: 11, color: DS.textMute }}>Cockpit conversationnel</div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={onNewChat}
+      <section
+        style={cardStyle({
+          padding: 18,
+          borderRadius: 28,
+          minHeight: 236,
+        })}
+      >
+        <div
           style={{
-            marginTop: 16,
-            width: '100%',
-            minHeight: 44,
-            borderRadius: 14,
-            border: 'none',
-            background: DS.gradient,
-            color: '#fff',
-            fontWeight: 700,
-            boxShadow: '0 14px 34px rgba(212,165,116,0.22)',
+            fontSize: 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: DS.textMuted,
+            marginBottom: 16,
+            fontFamily: DS.monoFont,
           }}
         >
-          + Nouvelle lecture
-        </button>
-      </div>
+          Progression
+        </div>
 
-      <div style={cardStyle({ padding: 14 })}>
-        <SectionLabel>Navigation</SectionLabel>
-        <NavButton label="Coach IA" active />
-        <NavButton label="Historique" />
-        <NavButton label="Vos projets" />
-        <NavButton label="Abonnements" />
-      </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={progressItemStyle(true)}>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 999,
+                border: '1px solid rgba(212,165,116,0.72)',
+                boxShadow: '0 0 0 3px rgba(212,165,116,0.10)',
+                display: 'grid',
+                placeItems: 'center',
+                marginTop: 2,
+              }}
+            >
+              <div
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 999,
+                  background: DS.gold,
+                }}
+              />
+            </div>
 
-      <div style={cardStyle({ padding: 14 })}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <SectionLabel>Projets</SectionLabel>
+            <div>
+              <div style={{ color: DS.text, fontSize: 15, fontWeight: 600 }}>
+                Mode Essentiel actif
+              </div>
+              <div style={{ color: DS.textMuted, fontSize: 13, marginTop: 4 }}>
+                Langue + mode configuré
+              </div>
+            </div>
+          </div>
+
+          <div style={progressItemStyle()}>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.14)',
+                marginTop: 2,
+              }}
+            />
+            <div>
+              <div style={{ color: DS.textSoft, fontSize: 15, fontWeight: 500 }}>
+                Données naissance
+              </div>
+              <div style={{ color: DS.textFaint, fontSize: 13, marginTop: 4 }}>
+                Date · Heure · Lieu · Pays
+              </div>
+            </div>
+          </div>
+
+          <div style={progressItemStyle()}>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.14)',
+                marginTop: 2,
+              }}
+            />
+            <div>
+              <div style={{ color: DS.textSoft, fontSize: 15, fontWeight: 500 }}>
+                Microlectures
+              </div>
+              <div style={{ color: DS.textFaint, fontSize: 13, marginTop: 4 }}>
+                Profil · Année · Mois générés
+              </div>
+            </div>
+          </div>
+
+          <div style={progressItemStyle()}>
+            <div
+              style={{
+                width: 18,
+                height: 18,
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,0.14)',
+                marginTop: 2,
+              }}
+            />
+            <div>
+              <div style={{ color: DS.textSoft, fontSize: 15, fontWeight: 500 }}>
+                Exploration active
+              </div>
+              <div style={{ color: DS.textFaint, fontSize: 13, marginTop: 4 }}>
+                {readings.length} lecture{readings.length > 1 ? 's' : ''} disponible
+                {readings.length ? 's' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section
+        style={cardStyle({
+          padding: 14,
+          borderRadius: 24,
+        })}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button
-            type="button"
-            onClick={onCreateProject}
-            style={{ color: DS.amber, fontSize: 20, lineHeight: 1 }}
+            onClick={onNewChat}
+            style={{
+              border: '1px solid rgba(212,165,116,0.16)',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
+              color: DS.text,
+              borderRadius: 18,
+              padding: '13px 14px',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
           >
-            ＋
+            Nouveau chat
+          </button>
+
+          <button
+            onClick={onCreateProject}
+            style={{
+              border: '1px solid rgba(255,255,255,0.10)',
+              background: 'rgba(255,255,255,0.02)',
+              color: DS.textSoft,
+              borderRadius: 18,
+              padding: '13px 14px',
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            Nouveau projet
           </button>
         </div>
+      </section>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {groupedProjects.length > 0 ? (
-            groupedProjects.map((project) => {
-              const count = readings.filter((reading) => reading.projectId === project.id).length
-              return (
-                <div
-                  key={project.id}
-                  style={{
-                    padding: '10px 11px',
-                    borderRadius: 16,
-                    border: `1px solid ${DS.line}`,
-                    background: 'rgba(255,255,255,0.02)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: DS.amber }}>◈</span>
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: 12,
-                        color: DS.textSoft,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {project.name}
-                    </span>
-                    <span style={{ fontSize: 10, color: DS.textFaint, fontFamily: DS.monoFont }}>{count}</span>
-                  </div>
-                </div>
-              )
-            })
-          ) : (
-            <EmptyText>Aucun projet pour le moment</EmptyText>
-          )}
+      <section
+        style={cardStyle({
+          padding: 18,
+          borderRadius: 28,
+          flex: 1,
+        })}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: DS.textMuted,
+            marginBottom: 14,
+            fontFamily: DS.monoFont,
+          }}
+        >
+          Projets / Lectures
         </div>
-      </div>
 
-      <div style={cardStyle({ padding: 14, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' })}>
-        <SectionLabel>Lectures récentes</SectionLabel>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', paddingRight: 2 }}>
-          {recentReadings.length > 0 ? (
-            recentReadings.map((reading) => (
-              <button
-                key={reading.id}
-                type="button"
-                onClick={() => onOpenReading(reading)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {projects.length > 0 ? (
+            projects.map((project) => (
+              <div
+                key={project.id}
                 style={{
-                  textAlign: 'left',
-                  padding: '11px 12px',
-                  borderRadius: 16,
-                  border: `1px solid ${DS.line}`,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 18,
+                  padding: '12px 14px',
+                  color: DS.textSoft,
                   background: 'rgba(255,255,255,0.02)',
+                  fontSize: 14,
                 }}
               >
-                <div style={{ fontSize: 12, color: DS.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {reading.title}
-                </div>
-                <div
-                  style={{
-                    marginTop: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 8,
-                  }}
-                >
-                  <span style={{ fontSize: 10, color: DS.amber, fontFamily: DS.monoFont }}>
-                    {reading.science}
-                  </span>
-                  <span style={{ fontSize: 10, color: DS.textFaint, fontFamily: DS.monoFont }}>
-                    {new Date(reading.date).toLocaleDateString('fr-FR')}
-                  </span>
-                </div>
-              </button>
+                {project.name}
+              </div>
             ))
           ) : (
-            <EmptyText>Les réponses sauvegardées apparaîtront ici</EmptyText>
+            <div
+              style={{
+                color: DS.textFaint,
+                fontSize: 14,
+                lineHeight: 1.7,
+                padding: '8px 2px 4px',
+              }}
+            >
+              Aucun projet créé pour le moment.
+            </div>
+          )}
+
+          {latestReading && (
+            <button
+              onClick={() => onOpenReading(latestReading)}
+              style={{
+                marginTop: 6,
+                border: '1px solid rgba(212,165,116,0.14)',
+                background: 'rgba(212,165,116,0.05)',
+                color: DS.text,
+                borderRadius: 18,
+                padding: '14px 14px',
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ fontSize: 13, color: DS.textMuted, marginBottom: 4 }}>
+                Dernière lecture
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{latestReading.title}</div>
+            </button>
           )}
         </div>
-      </div>
+      </section>
     </aside>
   )
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        marginBottom: 10,
-        fontSize: 10,
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
-        color: DS.textFaint,
-        fontFamily: DS.monoFont,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function NavButton({ label, active = false }: { label: string; active?: boolean }) {
-  return (
-    <button
-      type="button"
-      style={{
-        width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '10px 12px',
-        borderRadius: 14,
-        background: active
-          ? 'linear-gradient(180deg, rgba(212,165,116,0.14), rgba(212,165,116,0.07))'
-          : 'transparent',
-        border: active ? `1px solid ${DS.lineWarm}` : '1px solid transparent',
-        color: active ? DS.text : DS.textMute,
-        fontSize: 13,
-      }}
-    >
-      <span style={{ color: active ? DS.amber : DS.textFaint }}>◈</span>
-      {label}
-    </button>
-  )
-}
-
-function EmptyText({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: '10px 4px', fontSize: 12, color: DS.textFaint }}>{children}</div>
 }
