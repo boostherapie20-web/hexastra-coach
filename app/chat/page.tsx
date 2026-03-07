@@ -134,20 +134,35 @@ function CosmicBackground() {
 /* ═══════════════════════════════════════════════════════════════
    PRIMITIVES
 ═══════════════════════════════════════════════════════════════ */
-function Card({ children, style, hover = true }: { children: React.ReactNode; style?: CSSProperties; hover?: boolean }) {
+function Card({
+  children,
+  style,
+  hover = true,
+}: {
+  children: React.ReactNode
+  style?: CSSProperties
+  hover?: boolean
+}) {
   const [hovered, setHovered] = useState(false)
+
   return (
     <div
       onMouseEnter={() => hover && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: DS.bgCard,
-        backdropFilter: 'blur(14px)',
-        WebkitBackdropFilter: 'blur(14px)',
-        borderRadius: 24,
-        border: `1px solid ${hovered ? 'rgba(212,165,116,0.1)' : DS.border}`,
-        boxShadow: hovered ? `${DS.shadowCard}, 0 0 60px rgba(212,165,116,0.06)` : DS.shadowCard,
-        transition: 'border-color 0.35s ease, box-shadow 0.35s ease',
+        background: hovered
+          ? 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))'
+          : 'linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018))',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
+        borderRadius: 26,
+        border: `1px solid ${hovered ? 'rgba(212,165,116,0.16)' : DS.border}`,
+        boxShadow: hovered
+          ? '0 30px 120px rgba(0,0,0,0.56), 0 0 80px rgba(212,165,116,0.08)'
+          : '0 26px 100px rgba(0,0,0,0.46)',
+        transition:
+          'border-color 0.28s ease, box-shadow 0.28s ease, transform 0.28s ease, background 0.28s ease',
+        transform: hovered ? 'translateY(-1px)' : 'translateY(0)',
         ...style,
       }}
     >
@@ -156,8 +171,19 @@ function Card({ children, style, hover = true }: { children: React.ReactNode; st
   )
 }
 
-function BtnPrimary({ children, onClick, disabled, style }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean; style?: CSSProperties }) {
+function BtnPrimary({
+  children,
+  onClick,
+  disabled,
+  style,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  disabled?: boolean
+  style?: CSSProperties
+}) {
   const [hov, setHov] = useState(false)
+
   return (
     <button
       onClick={onClick}
@@ -169,18 +195,21 @@ function BtnPrimary({ children, onClick, disabled, style }: { children: React.Re
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        padding: '13px 28px',
-        borderRadius: 12,
-        background: disabled ? 'rgba(255,255,255,0.06)' : DS.gradBtn,
+        minHeight: 44,
+        padding: '12px 20px',
+        borderRadius: 14,
+        background: disabled
+          ? 'rgba(255,255,255,0.06)'
+          : 'linear-gradient(135deg,#e3bc8e 0%, #c7925f 38%, #8c6239 100%)',
         color: disabled ? DS.tx3 : '#fff',
         fontSize: 14,
-        fontWeight: 500,
+        fontWeight: 600,
         letterSpacing: '0.01em',
-        border: 'none',
+        border: '1px solid rgba(255,255,255,0.06)',
         cursor: disabled ? 'not-allowed' : 'pointer',
-        transition: 'all 0.25s ease',
-        transform: hov && !disabled ? 'translateY(-2px)' : 'none',
-        boxShadow: hov && !disabled ? DS.shadowBtn : 'none',
+        transition: 'all 0.24s ease',
+        transform: hov && !disabled ? 'translateY(-1px)' : 'none',
+        boxShadow: hov && !disabled ? '0 14px 34px rgba(212,165,116,0.28)' : '0 8px 20px rgba(0,0,0,0.18)',
         fontFamily: DS.fontBody,
         ...style,
       }}
@@ -190,8 +219,19 @@ function BtnPrimary({ children, onClick, disabled, style }: { children: React.Re
   )
 }
 
-function BtnGhost({ children, onClick, active, style }: { children: React.ReactNode; onClick?: () => void; active?: boolean; style?: CSSProperties }) {
+function BtnGhost({
+  children,
+  onClick,
+  active,
+  style,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  active?: boolean
+  style?: CSSProperties
+}) {
   const [hov, setHov] = useState(false)
+
   return (
     <button
       onClick={onClick}
@@ -202,13 +242,18 @@ function BtnGhost({ children, onClick, active, style }: { children: React.ReactN
         alignItems: 'center',
         justifyContent: 'center',
         gap: 7,
-        padding: '10px 20px',
-        borderRadius: 10,
-        background: active ? 'rgba(212,165,116,0.1)' : hov ? 'rgba(212,165,116,0.06)' : 'rgba(255,255,255,0.03)',
-        color: active ? DS.amber : hov ? DS.tx2 : DS.tx3,
-        border: `1px solid ${active ? DS.borderW : hov ? DS.borderW : DS.border}`,
+        minHeight: 40,
+        padding: '10px 16px',
+        borderRadius: 12,
+        background: active
+          ? 'rgba(212,165,116,0.12)'
+          : hov
+            ? 'rgba(255,255,255,0.05)'
+            : 'rgba(255,255,255,0.03)',
+        color: active ? DS.tx1 : hov ? DS.tx2 : DS.tx3,
+        border: `1px solid ${active ? 'rgba(212,165,116,0.20)' : hov ? 'rgba(255,255,255,0.08)' : DS.border}`,
         fontSize: 13,
-        fontWeight: 400,
+        fontWeight: active ? 500 : 400,
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         fontFamily: DS.fontBody,
@@ -220,8 +265,19 @@ function BtnGhost({ children, onClick, active, style }: { children: React.ReactN
   )
 }
 
-function NavItem({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
+function NavItem({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: string
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
   const [hov, setHov] = useState(false)
+
   return (
     <button
       onClick={onClick}
@@ -230,63 +286,136 @@ function NavItem({ icon, label, active, onClick }: { icon: string; label: string
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 9,
-        padding: '8px 10px',
+        gap: 10,
+        padding: '10px 12px',
         width: '100%',
         textAlign: 'left',
-        borderRadius: 8,
+        borderRadius: 12,
         fontSize: 13,
-        fontWeight: 400,
-        color: active ? DS.amber : hov ? DS.tx2 : DS.tx3,
-        background: active ? 'rgba(212,165,116,0.07)' : hov ? 'rgba(255,255,255,0.03)' : 'transparent',
-        borderLeft: `2px solid ${active ? DS.amber : 'transparent'}`,
-        borderRight: 'none',
-        borderTop: 'none',
-        borderBottom: 'none',
+        fontWeight: active ? 500 : 400,
+        color: active ? DS.tx1 : hov ? DS.tx2 : DS.tx3,
+        background: active
+          ? 'linear-gradient(180deg, rgba(212,165,116,0.13), rgba(212,165,116,0.07))'
+          : hov
+            ? 'rgba(255,255,255,0.04)'
+            : 'transparent',
+        border: `1px solid ${active ? 'rgba(212,165,116,0.20)' : 'transparent'}`,
         cursor: 'pointer',
         transition: 'all 0.18s ease',
         fontFamily: DS.fontBody,
       }}
     >
-      <span style={{ width: 16, textAlign: 'center', fontSize: 13, flexShrink: 0, opacity: active ? 1 : 0.6 }}>{icon}</span>
+      <span
+        style={{
+          width: 18,
+          textAlign: 'center',
+          fontSize: 13,
+          flexShrink: 0,
+          opacity: active ? 1 : 0.72,
+          color: active ? DS.amber : undefined,
+        }}
+      >
+        {icon}
+      </span>
       {label}
     </button>
   )
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: DS.tx3, fontFamily: DS.fontMono, marginBottom: 6 }}>{children}</div>
+  return (
+    <div
+      style={{
+        fontSize: 10,
+        letterSpacing: '0.18em',
+        textTransform: 'uppercase',
+        color: 'rgba(203,185,164,0.42)',
+        fontFamily: DS.fontMono,
+        marginBottom: 8,
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 function Divider({ style }: { style?: CSSProperties }) {
-  return <div style={{ height: 1, background: DS.border, ...style }} />
+  return (
+    <div
+      style={{
+        height: 1,
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+        ...style,
+      }}
+    />
+  )
 }
 
-function IconBtn({ children, onClick, tooltip, active }: { children: React.ReactNode; onClick?: () => void; tooltip?: string; active?: boolean }) {
+function IconBtn({
+  children,
+  onClick,
+  tooltip,
+  active,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  tooltip?: string
+  active?: boolean
+}) {
   const [hov, setHov] = useState(false)
+
   return (
-    <div style={{ position: 'relative', display: 'inline-flex' }} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+    <div
+      style={{ position: 'relative', display: 'inline-flex' }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+    >
       <button
         onClick={onClick}
         style={{
-          width: 32,
-          height: 32,
-          borderRadius: 8,
+          width: 38,
+          height: 38,
+          borderRadius: 12,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: `1px solid ${active || hov ? DS.borderW : DS.border}`,
-          background: active ? 'rgba(212,165,116,0.15)' : hov ? 'rgba(212,165,116,0.08)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${active || hov ? 'rgba(212,165,116,0.20)' : DS.border}`,
+          background: active
+            ? 'rgba(212,165,116,0.14)'
+            : hov
+              ? 'rgba(255,255,255,0.05)'
+              : 'rgba(255,255,255,0.025)',
           color: active || hov ? DS.amber : DS.tx3,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
+          boxShadow: active ? '0 0 0 4px rgba(212,165,116,0.08)' : 'none',
           animation: active ? 'recPulse 1s ease-in-out infinite' : 'none',
         }}
       >
         {children}
       </button>
+
       {hov && tooltip && (
-        <div style={{ position: 'absolute', bottom: 'calc(100% + 7px)', left: '50%', transform: 'translateX(-50%)', background: 'rgba(20,14,10,0.97)', border: `1px solid ${DS.borderW}`, borderRadius: 6, padding: '4px 10px', fontSize: 11, color: DS.tx2, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 200, boxShadow: '0 8px 24px rgba(0,0,0,0.5)', fontFamily: DS.fontMono, letterSpacing: '0.04em' }}>
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 'calc(100% + 7px)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(20,14,10,0.97)',
+            border: `1px solid ${DS.borderW}`,
+            borderRadius: 8,
+            padding: '5px 10px',
+            fontSize: 11,
+            color: DS.tx2,
+            whiteSpace: 'nowrap',
+            pointerEvents: 'none',
+            zIndex: 200,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            fontFamily: DS.fontMono,
+            letterSpacing: '0.04em',
+          }}
+        >
           {tooltip}
         </div>
       )}
