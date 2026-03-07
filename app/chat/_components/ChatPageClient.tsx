@@ -360,16 +360,31 @@ export default function ChatPageClient() {
             )}
           </div>
         }
+
         composer={
-          <Composer
-            value={input}
-            onChange={setInput}
-            onSend={() => void handleSend()}
-            onQuickPrompt={(value) => void handleSend(value)}
-            showQuickPrompts={!isWelcome}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Composer
+              value={input}
+              onChange={setInput}
+              onSend={() => void handleSend()}
+              onQuickPrompt={(value) => void handleSend(value)}
+              showQuickPrompts={!isWelcome}
+            />
+        
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: 12,
+                lineHeight: 1.7,
+                color: 'rgba(255,255,255,0.26)',
+                fontStyle: 'italic',
+                paddingBottom: 2,
+              }}
+            >
+              HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
+            </div>
+          </div>
         }
-      />
 
       <style jsx global>{`
         @media (max-width: 1100px) {
