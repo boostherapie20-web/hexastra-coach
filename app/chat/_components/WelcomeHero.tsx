@@ -1,49 +1,62 @@
 'use client'
 
-import { DS, HERO_PROMPTS, cardStyle } from '../_lib/chat'
+import { DS, cardStyle } from '../_lib/chat'
 
-type Props = {
+type WelcomeHeroProps = {
   onPrompt: (value: string) => void
 }
 
-export default function WelcomeHero({ onPrompt }: Props) {
+const quickPrompts = [
+  'Je me sens bloqué en ce moment',
+  'Est-ce le bon timing pour agir ?',
+  'Pourquoi cette relation me travaille autant ?',
+  'Quelle direction devient plus naturelle ?',
+]
+
+const entryCards = [
+  {
+    title: 'Clarté immédiate',
+    text: 'Tu poses ton ressenti, ton dilemme ou ta question. HexAstra commence par l’essentiel, sans jargon inutile.',
+  },
+  {
+    title: 'Lecture guidée',
+    text: 'Le système approfondit seulement quand c’est pertinent, avec une progression plus propre et plus lisible.',
+  },
+  {
+    title: 'Expérience premium',
+    text: 'Une interface calme, un vrai espace de réflexion, et une sensation produit plus haut de gamme.',
+  },
+]
+
+export default function WelcomeHero({ onPrompt }: WelcomeHeroProps) {
   return (
-    <div
+    <section
+      className="hx-welcome-grid"
       style={{
         display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.06fr) minmax(360px, 0.9fr)',
-        gap: 20,
+        gridTemplateColumns: 'minmax(0, 1.15fr) minmax(380px, 0.85fr)',
+        gap: 16,
         alignItems: 'stretch',
       }}
-      className="hx-welcome-grid"
     >
       <div
         style={cardStyle({
-          padding: '42px 44px',
+          padding: '32px 30px 26px',
+          borderRadius: 32,
           minHeight: 560,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
+          justifyContent: 'space-between',
         })}
       >
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'linear-gradient(90deg, rgba(212,165,116,0.06), transparent 45%)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <div style={{ position: 'relative', zIndex: 1 }}>
+        <div>
           <div
             style={{
               fontSize: 10,
               letterSpacing: '0.24em',
               textTransform: 'uppercase',
-              color: 'rgba(212,165,116,0.50)',
+              color: DS.textMuted,
+              marginBottom: 18,
               fontFamily: DS.monoFont,
             }}
           >
@@ -52,189 +65,251 @@ export default function WelcomeHero({ onPrompt }: Props) {
 
           <div
             style={{
-              width: 60,
-              height: 60,
-              marginTop: 18,
-              marginBottom: 22,
-              background: DS.gradient,
-              clipPath: 'polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)',
-              boxShadow: '0 0 46px rgba(212,165,116,0.20)',
+              width: 40,
+              height: 40,
+              borderRadius: 14,
+              background:
+                'linear-gradient(135deg, rgba(228,182,124,0.96), rgba(171,116,54,0.96))',
+              clipPath: 'polygon(25% 6%, 75% 6%, 94% 50%, 75% 94%, 25% 94%, 6% 50%)',
+              marginBottom: 18,
+              boxShadow: '0 12px 28px rgba(228,182,124,0.22)',
             }}
           />
 
           <h1
             style={{
               margin: 0,
-              maxWidth: 760,
-              fontSize: 'clamp(40px, 5vw, 78px)',
-              lineHeight: 0.96,
-              letterSpacing: '-0.05em',
-              fontFamily: DS.titleFont,
-              fontWeight: 600,
-              background: DS.titleGradient,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 18px rgba(212,165,116,0.18))',
+              color: DS.text,
+              fontSize: 'clamp(3.2rem, 7vw, 5.5rem)',
+              lineHeight: 0.92,
+              letterSpacing: '-0.06em',
+              maxWidth: 700,
+              fontWeight: 700,
             }}
           >
-            Un chat plus fin pour lire ton moment avec précision.
+            Un espace plus fin
+            <br />
+            pour lire ton moment
+            <br />
+            avec précision.
           </h1>
 
           <p
             style={{
-              margin: '20px 0 0',
-              maxWidth: 640,
-              fontSize: 18,
+              margin: '24px 0 0',
               color: DS.textSoft,
-              lineHeight: 1.82,
+              fontSize: 18,
+              lineHeight: 1.85,
+              maxWidth: 700,
             }}
           >
-            HexAstra commence par écouter la question, clarifie le vrai nœud, puis approfondit seulement si nécessaire.
-            Le résultat : une expérience premium, simple côté usage, propre côté produit.
+            HexAstra commence par écouter la question, clarifie le vrai nœud,
+            puis approfondit seulement si nécessaire. Le résultat : une
+            expérience premium, simple côté usage, propre côté produit.
           </p>
 
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
-            {['Français', 'English'].map((label) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => onPrompt(label)}
-                style={{
-                  minWidth: 154,
-                  minHeight: 44,
-                  padding: '12px 20px',
-                  borderRadius: 14,
-                  border: 'none',
-                  background: DS.gradient,
-                  color: '#fff',
-                  fontWeight: 700,
-                  boxShadow: '0 14px 34px rgba(212,165,116,0.22)',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 10,
+              flexWrap: 'wrap',
+              marginTop: 24,
+            }}
+          >
+            <button
+              onClick={() => onPrompt('Je veux une lecture claire de ma situation actuelle.')}
+              style={{
+                border: 'none',
+                cursor: 'pointer',
+                padding: '14px 22px',
+                borderRadius: 18,
+                background:
+                  'linear-gradient(135deg, rgba(228,182,124,0.96), rgba(171,116,54,0.96))',
+                color: '#1b120c',
+                fontWeight: 700,
+                fontSize: 14,
+                boxShadow: '0 12px 30px rgba(228,182,124,0.18)',
+              }}
+            >
+              Commencer maintenant
+            </button>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 18 }}>
-            {HERO_PROMPTS.map((prompt) => (
-              <button key={prompt} type="button" className="hx-chip" onClick={() => onPrompt(prompt)}>
-                {prompt}
-              </button>
-            ))}
+            <button
+              onClick={() => onPrompt('Explique-moi comment fonctionne HexAstra Coach.')}
+              style={{
+                border: '1px solid rgba(255,255,255,0.10)',
+                cursor: 'pointer',
+                padding: '14px 22px',
+                borderRadius: 18,
+                background: 'rgba(255,255,255,0.03)',
+                color: DS.text,
+                fontWeight: 600,
+                fontSize: 14,
+              }}
+            >
+              Comprendre le fonctionnement
+            </button>
           </div>
 
           <div
             style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              display: 'flex',
               gap: 10,
-              marginTop: 28,
+              flexWrap: 'wrap',
+              marginTop: 18,
             }}
-            className="hx-welcome-points"
           >
-            {[
-              ['Conversation d’abord', 'Tu poses la question avant toute donnée technique.'],
-              ['Profondeur progressive', 'Le système va plus loin seulement quand c’est utile.'],
-              ['Rendu premium', 'Hiérarchie claire, souffle visuel, vraie sensation produit.'],
-            ].map(([title, body]) => (
-              <div
-                key={title}
+            {quickPrompts.map((item) => (
+              <button
+                key={item}
+                onClick={() => onPrompt(item)}
                 style={{
-                  padding: '14px 14px',
-                  borderRadius: 18,
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 999,
                   background: 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${DS.line}`,
+                  color: DS.textMuted,
+                  fontSize: 13,
+                  padding: '10px 14px',
+                  cursor: 'pointer',
                 }}
               >
-                <div style={{ fontSize: 12, color: DS.text, fontWeight: 600 }}>{title}</div>
-                <div style={{ fontSize: 12, color: DS.textMute, lineHeight: 1.65, marginTop: 5 }}>{body}</div>
-              </div>
+                {item}
+              </button>
             ))}
           </div>
+        </div>
 
-          <p
-            style={{
-              margin: '18px 0 0',
-              fontSize: 11,
-              color: 'rgba(255,255,255,0.24)',
-              lineHeight: 1.75,
-              fontStyle: 'italic',
-              maxWidth: 620,
-            }}
-          >
-            HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas un avis médical, juridique ou financier.
-          </p>
+        <div
+          className="hx-welcome-points"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+            gap: 12,
+            marginTop: 28,
+          }}
+        >
+          {entryCards.map((item) => (
+            <div
+              key={item.title}
+              style={{
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 22,
+                padding: '18px 16px',
+                background: 'rgba(255,255,255,0.02)',
+              }}
+            >
+              <div style={{ color: DS.text, fontWeight: 600, fontSize: 15 }}>{item.title}</div>
+              <div
+                style={{
+                  color: DS.textMuted,
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                  marginTop: 8,
+                }}
+              >
+                {item.text}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div style={cardStyle({ padding: 0, overflow: 'hidden', minHeight: 480, display: 'flex', flexDirection: 'column' })}>
+      <div
+        style={cardStyle({
+          padding: 0,
+          borderRadius: 32,
+          minHeight: 560,
+          overflow: 'hidden',
+        })}
+      >
         <div
           style={{
-            padding: '18px 20px',
-            borderBottom: `1px solid ${DS.line}`,
+            padding: '16px 18px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
             display: 'flex',
-            alignItems: 'center',
             justifyContent: 'space-between',
-            gap: 12,
+            alignItems: 'center',
           }}
         >
           <div>
-            <div style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(212,165,116,0.48)', fontFamily: DS.monoFont }}>
+            <div
+              style={{
+                fontSize: 10,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                color: DS.textMuted,
+                fontFamily: DS.monoFont,
+              }}
+            >
               Aperçu du chat
             </div>
-            <div style={{ fontSize: 14, color: DS.text, fontFamily: DS.titleFont, fontWeight: 600, marginTop: 4 }}>
+            <div style={{ color: DS.text, fontSize: 16, fontWeight: 600, marginTop: 4 }}>
               Conversation en direct
             </div>
           </div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 12, color: DS.textSoft }}>
-            <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: '#57d27c',
-                boxShadow: '0 0 0 5px rgba(87,210,124,0.10)',
-              }}
-            />
-            En ligne
+
+          <div style={{ color: '#8dd39d', fontSize: 13 }}>En ligne</div>
+        </div>
+
+        <div
+          style={{
+            padding: 18,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            minHeight: 470,
+            justifyContent: 'center',
+          }}
+        >
+          <div
+            style={{
+              alignSelf: 'flex-start',
+              maxWidth: '78%',
+              borderRadius: 20,
+              padding: '14px 16px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: DS.text,
+              lineHeight: 1.7,
+              fontSize: 14,
+            }}
+          >
+            Bienvenue. Dis-moi ce que tu veux comprendre, trancher ou mieux sentir aujourd’hui.
+          </div>
+
+          <div
+            style={{
+              alignSelf: 'flex-end',
+              maxWidth: '72%',
+              borderRadius: 20,
+              padding: '14px 16px',
+              background: 'rgba(212,165,116,0.10)',
+              border: '1px solid rgba(212,165,116,0.12)',
+              color: DS.text,
+              lineHeight: 1.7,
+              fontSize: 14,
+            }}
+          >
+            J’hésite entre continuer mon activité actuelle ou lancer autre chose.
+          </div>
+
+          <div
+            style={{
+              alignSelf: 'flex-start',
+              maxWidth: '78%',
+              borderRadius: 20,
+              padding: '14px 16px',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              color: DS.text,
+              lineHeight: 1.7,
+              fontSize: 14,
+            }}
+          >
+            On peut clarifier cela en 3 temps : ton état actuel, le vrai nœud de décision, puis le bon timing d’action.
           </div>
         </div>
-
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, padding: 22, justifyContent: 'center' }}>
-          <PreviewBubble>
-            Bienvenue. Dis-moi ce que tu veux comprendre, trancher ou mieux sentir aujourd’hui.
-          </PreviewBubble>
-          <PreviewBubble user>
-            J’hésite entre continuer mon activité actuelle ou lancer autre chose.
-          </PreviewBubble>
-          <PreviewBubble>
-            On peut clarifier cela en 3 temps : ton état actuel, le vrai nœud de décision, puis le bon timing d’action.
-          </PreviewBubble>
-        </div>
       </div>
-    </div>
-  )
-}
-
-function PreviewBubble({ children, user = false }: { children: React.ReactNode; user?: boolean }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: user ? 'flex-end' : 'flex-start' }}>
-      <div
-        style={{
-          maxWidth: user ? '78%' : '84%',
-          padding: '15px 16px',
-          borderRadius: user ? '20px 20px 10px 20px' : '20px 20px 20px 12px',
-          background: user ? 'rgba(212,165,116,0.12)' : 'rgba(255,255,255,0.04)',
-          border: user ? '1px solid rgba(212,165,116,0.18)' : '1px solid rgba(255,255,255,0.05)',
-          color: DS.text,
-          fontSize: 14,
-          lineHeight: 1.72,
-        }}
-      >
-        {children}
-      </div>
-    </div>
+    </section>
   )
 }
