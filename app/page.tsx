@@ -10,8 +10,6 @@ import { createClient } from '@/lib/supabase/client'
 import { useTranslation } from '@/lib/i18n/useTranslation'
 import { usePlansUI } from '@/lib/usePlansUI'
 
-// Plans définis dans lib/plans.ts — source unique de vérité
-
 export default function HomePage() {
   const router = useRouter()
   const haloRef = useRef<HTMLDivElement>(null)
@@ -27,12 +25,27 @@ export default function HomePage() {
     { title: 'SpiritLex', text: t('home.module5Text'), cases: t('home.module5Cases'), dimension: t('home.module5Dim') },
     { title: 'Présence',  text: t('home.module6Text'), cases: t('home.module6Cases'), dimension: t('home.module6Dim') },
   ], [t])
+
   const [user, setUser] = useState<any>(null)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user)
     })
   }, [supabase])
+
+  /* Escape key + scroll lock for mobile nav */
+  useEffect(() => {
+    if (!mobileNavOpen) return
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileNavOpen(false) }
+    document.addEventListener('keydown', handleKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = ''
+    }
+  }, [mobileNavOpen])
 
   const [heroInput, setHeroInput] = useState('')
   const [isFocused, setIsFocused] = useState(false)
@@ -80,12 +93,55 @@ export default function HomePage() {
     goToChat()
   }
 
+  const closeMobileNav = () => setMobileNavOpen(false)
+
   return (
     <main className="hx-home">
       <section className="hx-home-hero">
         <PremiumBackground hero />
         <div className="hx-home-hero-overlay" />
 
+        {/* ── Mobile nav overlay (backdrop) ── */}
+        <div
+          className={`hx-mobile-nav-overlay${mobileNavOpen ? ' is-open' : ''}`}
+          onClick={closeMobileNav}
+          aria-hidden="true"
+        />
+
+        {/* ── Mobile nav sheet ── */}
+        <div
+          className={`hx-mobile-nav-sheet${mobileNavOpen ? ' is-open' : ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation"
+        >
+          <div className="hx-mobile-nav-close">
+            <button type="button" onClick={closeMobileNav} aria-label="Fermer le menu">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+          <nav className="hx-mobile-nav-links">
+            <a href="#modules" onClick={closeMobileNav}>{t('nav.howItWorks')}</a>
+            <a href="#difference" onClick={closeMobileNav}>{t('nav.whyHexAstra')}</a>
+            <a href="#offres" onClick={closeMobileNav}>{t('nav.pricing')}</a>
+            {user ? (
+              <Link href="/chat" className="hx-mobile-nav-cta" onClick={closeMobileNav}>
+                {t('nav.myAccount')}
+              </Link>
+            ) : (
+              <Link href="/auth" className="hx-mobile-nav-cta" onClick={closeMobileNav}>
+                {t('nav.signIn')}
+              </Link>
+            )}
+          </nav>
+          <div className="hx-mobile-nav-lang">
+            <LanguageSwitcher variant="flag" />
+          </div>
+        </div>
+
+        {/* ── Header / Navbar ── */}
         <header className="hx-home-header">
           <div ref={haloRef} className="hx-header-halo" />
           <div className="hx-header-stars" />
@@ -106,6 +162,7 @@ export default function HomePage() {
             </div>
           </Link>
 
+          {/* Desktop nav — hidden on mobile via CSS */}
           <nav className="hx-home-nav" aria-label="Navigation principale">
             <a href="#modules">{t('nav.howItWorks')}</a>
             <a href="#difference">{t('nav.whyHexAstra')}</a>
@@ -118,11 +175,27 @@ export default function HomePage() {
             <LanguageSwitcher variant="flag" />
           </nav>
 
+          {/* Mobile burger — hidden on desktop via CSS */}
+          <button
+            type="button"
+            className="hx-mobile-nav-toggle"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Ouvrir le menu"
+            aria-expanded={mobileNavOpen}
+            aria-controls="mobile-nav"
+          >
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true">
+              <rect x="0" y="0" width="18" height="2" rx="1" fill="currentColor" />
+              <rect x="0" y="6" width="13" height="2" rx="1" fill="currentColor" opacity="0.75" />
+              <rect x="0" y="12" width="15" height="2" rx="1" fill="currentColor" opacity="0.88" />
+            </svg>
+          </button>
         </header>
 
+        {/* ── Hero content ── */}
         <div className="hx-home-hero-inner">
           <div className="hx-home-hero-grid">
-            <div>
+            <div className="hx-home-hero-left">
               <div className="hx-home-kicker">{t('home.heroKicker')}</div>
               <h1 className="hx-home-hero-title">{t('home.heroTitle')}</h1>
               <p className="hx-home-hero-text">{t('home.heroText')}</p>
@@ -170,6 +243,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Modules ── */}
       <section id="modules" className="hx-home-section hx-home-section-darkfusion">
         <div className="hx-home-section-wrap">
           <div className="hx-home-kicker">{t('home.modulesKicker')}</div>
@@ -198,6 +272,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Use cases ── */}
       <section className="hx-home-section hx-home-section-cream">
         <div className="hx-home-section-wrap">
           <div className="hx-home-kicker">{t('home.useCasesKicker')}</div>
@@ -239,6 +314,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Différences ── */}
       <section id="difference" className="hx-home-section hx-home-section-light">
         <div className="hx-home-section-wrap">
           <div className="hx-home-kicker">{t('home.diffKicker')}</div>
@@ -270,6 +346,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Pricing ── */}
       <section id="offres" className="hx-home-section hx-home-section-cream">
         <div className="hx-home-section-wrap">
           <div className="hx-home-kicker">{t('home.pricingKicker')}</div>
@@ -306,13 +383,14 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Final CTA ── */}
       <section className="hx-home-section hx-home-section-finalcta">
         <div className="hx-home-section-wrap">
           <div className="hx-home-finalcta">
             <div className="hx-home-kicker">{t('home.ctaKicker')}</div>
             <h2>{t('home.ctaTitle')}</h2>
             <p className="hx-home-copy">{t('home.ctaCopy')}</p>
-            <div className="hx-home-hero-actions" style={{ justifyContent: 'center' }}>
+            <div className="hx-home-hero-actions is-centered">
               <Link href="/chat" className="hx-home-hero-secondary is-prominent">{t('home.ctaOpen')}</Link>
               <Link href="/auth" className="hx-home-hero-secondary">{t('home.ctaAuth')}</Link>
             </div>
@@ -320,6 +398,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Footer ── */}
       <footer className="hx-home-footer">
         <div className="hx-footer-inner">
           <div className="hx-footer-left">{t('home.footerCopyright')}</div>

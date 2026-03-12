@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PremiumStarfield from './PremiumStarfield'
 
 type Props = {
@@ -13,13 +13,22 @@ export default function PremiumBackground({
   className = '',
 }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const [showVideo, setShowVideo] = useState(false)
 
   useEffect(() => {
+    /* Video only on desktop — saves bandwidth + GPU on mobile */
+    if (hero) {
+      setShowVideo(window.innerWidth >= 768)
+    }
+
     const root = rootRef.current
     if (!root) return
 
     const media = window.matchMedia('(prefers-reduced-motion: reduce)')
     if (media.matches) return
+
+    /* Parallax only on pointer-capable devices */
+    if (!window.matchMedia('(pointer: fine)').matches) return
 
     const handleMove = (event: MouseEvent) => {
       const x = (event.clientX / window.innerWidth - 0.5) * 8
@@ -29,7 +38,7 @@ export default function PremiumBackground({
 
     window.addEventListener('mousemove', handleMove, { passive: true })
     return () => window.removeEventListener('mousemove', handleMove)
-  }, [])
+  }, [hero])
 
   return (
     <div
@@ -37,14 +46,14 @@ export default function PremiumBackground({
       className={`hx-bg-root hx-parallax-root ${hero ? 'is-hero' : 'is-chat'} ${className}`.trim()}
       aria-hidden="true"
     >
-      {hero ? (
+      {showVideo ? (
         <video
           className="hx-bg-video"
           autoPlay
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
         >
           <source src="/nebula/hexastra-nebula.mp4" type="video/mp4" />
         </video>

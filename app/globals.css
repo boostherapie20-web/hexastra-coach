@@ -1178,6 +1178,10 @@ transition: all 0.35s ease;
   gap: 14px;
 }
 
+.hx-home-hero-actions.is-centered {
+  justify-content: center;
+}
+
 .hx-home-hero-primary {
   padding: 13px 20px;
   background: var(--hx-gradient-primary);
@@ -4868,217 +4872,637 @@ transition: all 0.35s ease;
 }
 
 /* ============================================================
-   RESPONSIVE GLOBAL — TOUS ÉCRANS
-   Breakpoints : 1180 / 920 / 768 / 600 / 480 / 380
+   RESPONSIVE SYSTEM — HexAstra Coach 2026
+   Strategy : mobile-first, breakpoints unifiés
+   xs <480  sm 480–767  md 768–1023  lg 1024–1279  xl 1280+
    ============================================================ */
 
-/* ── Bases mobiles ── */
+/* ══════════════════════════════════════════════════════════════
+   1. GLOBAL BASES
+   ══════════════════════════════════════════════════════════════ */
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
-button, a, [role="button"] {
+body {
+  overflow-x: hidden;
+}
+
+/* Touch tap highlight + manipulation */
+button,
+a,
+[role="button"],
+label {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-/* Inputs : min 16px pour éviter le zoom iOS */
-input, textarea, select {
+/* iOS zoom prevention — all inputs minimum 16px */
+input,
+textarea,
+select {
   font-size: max(16px, 1em);
 }
 
-/* Safe area iOS (notch, home indicator) */
+/* Safe area iOS (notch / home indicator) */
 .hx-chat-page,
+.hx-app-bottom,
+.hx-welcome-screen,
 .hx-account-page,
-.hx-static-page,
-.hx-app-bottom {
+.hx-static-page {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.hx-welcome-screen {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Touch targets min 44px */
+/* Touch targets minimum 44px (Apple HIG) */
 .hx-icon-btn,
 .hx-leftbar-avatar,
 .hx-mode-btn,
-.hx-account-btn,
-.hx-contact-submit,
 .hx-paywall-cta,
 .hx-leftbar-new-btn,
 .hx-leftbar-section-toggle,
-.hx-leftbar-add-btn {
+.hx-leftbar-add-btn,
+.hx-home-search-button,
+.hx-home-hero-secondary,
+.hx-home-login,
+.hx-home-pricing-cta,
+.hx-account-btn,
+.hx-contact-submit,
+.hx-mobile-nav-toggle {
   min-height: 44px;
 }
 
-/* ── Home page — 768px ── */
-@media (max-width: 768px) {
-  .hx-home-header-inner {
-    flex-wrap: wrap;
-    gap: 14px;
-    padding: 14px 20px;
-  }
+/* DVH — vrai 100% hauteur écran sur mobile */
+.hexastra-body { min-height: 100dvh; }
+.hx-chat-page { min-height: 100dvh; }
+.hx-welcome-screen { min-height: 100dvh; }
+.hx-app-layout { height: 100dvh; }
+.hx-app-sidebar { height: 100dvh; }
+.hx-app-main { height: 100dvh; }
+.hx-leftbar { height: 100dvh; }
+.hx-chat-mobile-sheet-left { height: 100dvh; }
+.hx-account-page,
+.hx-static-page,
+.hx-pricing-page,
+.hx-auth-page {
+  min-height: 100dvh;
+}
 
-  .hx-home-nav {
-    order: 3;
-    width: 100%;
-    justify-content: flex-start;
-    gap: 18px;
-    flex-wrap: wrap;
-  }
+/* ══════════════════════════════════════════════════════════════
+   2. REDUCED MOTION — accessibilité + performances mobile
+   ══════════════════════════════════════════════════════════════ */
 
-  .hx-home-hero-title {
-    font-size: clamp(2rem, 9vw, 3.2rem);
+@media (prefers-reduced-motion: reduce) {
+  .hx-bg-aurora-a,
+  .hx-bg-aurora-b,
+  .hx-bg-aurora-c,
+  .hx-bg-nebula-a,
+  .hx-bg-nebula-b,
+  .hx-bg-nebula-c,
+  .hx-bg-stars-1,
+  .hx-bg-stars-2,
+  .hx-bg-stars-3,
+  .hx-header-stars,
+  .hx-chat-hero-dot,
+  .hx-home-brand-badge,
+  .hx-home-brand-halo,
+  .hx-parallax-root {
+    animation: none !important;
+    transition: none !important;
   }
+  .hx-bg-video { display: none; }
+}
 
-  .hx-home-hero-lead {
-    font-size: 1rem;
+/* ══════════════════════════════════════════════════════════════
+   3. MOBILE NAV — burger + sheet + overlay
+   ══════════════════════════════════════════════════════════════ */
+
+/* Burger button — caché sur desktop */
+.hx-mobile-nav-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(220, 232, 244, 0.1);
+  color: rgba(240, 248, 255, 0.9);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.hx-mobile-nav-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(220, 232, 244, 0.18);
+}
+
+/* Overlay backdrop */
+.hx-mobile-nav-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(4, 10, 18, 0.65);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+
+.hx-mobile-nav-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Drawer latéral */
+.hx-mobile-nav-sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 201;
+  width: min(320px, 88vw);
+  background: linear-gradient(
+    180deg,
+    rgba(7, 14, 24, 0.98) 0%,
+    rgba(5, 11, 19, 0.99) 100%
+  );
+  border-left: 1px solid rgba(216, 232, 247, 0.08);
+  padding: 0 0 max(24px, env(safe-area-inset-bottom, 24px));
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 300ms cubic-bezier(0.32, 0, 0.2, 1);
+  box-shadow: -24px 0 64px rgba(0, 0, 0, 0.45);
+  overflow-y: auto;
+}
+
+.hx-mobile-nav-sheet.is-open {
+  transform: translateX(0);
+}
+
+.hx-mobile-nav-close {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px 16px 12px;
+}
+
+.hx-mobile-nav-close button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(220, 232, 244, 0.08);
+  color: rgba(210, 228, 244, 0.7);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.hx-mobile-nav-close button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(240, 250, 255, 0.95);
+}
+
+.hx-mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 16px;
+  gap: 2px;
+  flex: 1;
+}
+
+.hx-mobile-nav-links a {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(230, 242, 255, 0.82);
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.hx-mobile-nav-links a:hover,
+.hx-mobile-nav-links a:active {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.hx-mobile-nav-cta {
+  margin-top: 8px;
+  background: rgba(88, 226, 194, 0.1) !important;
+  border: 1px solid rgba(88, 226, 194, 0.22) !important;
+  color: var(--hx-emerald) !important;
+  font-weight: 700 !important;
+  justify-content: center !important;
+}
+
+.hx-mobile-nav-lang {
+  padding: 16px 20px 0;
+  border-top: 1px solid rgba(216, 232, 247, 0.06);
+  margin-top: 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   4. HEADER — breakpoints
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  .hx-home-header {
+    width: calc(100% - 32px);
+    margin: 10px auto 0;
+    padding: 0 16px;
+    height: 66px;
   }
+  .hx-home-brand { gap: 12px; }
+  .hx-home-brand-badge { width: 52px; height: 52px; }
+  .hx-home-brand-badge .hx-logo-wrap { --hx-logo-size: 30px; }
+  .hx-home-brand-title { font-size: 1.15rem; }
+  .hx-home-brand-subtitle { font-size: 0.82rem; }
+  .hx-home-nav a { font-size: 0.88rem; }
+  .hx-home-nav { gap: 20px; }
+}
 
-  .hx-home-module-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 767px) {
+  .hx-home-header {
+    width: calc(100% - 20px);
+    margin: 8px auto 0;
+    padding: 0 14px;
+    height: 60px;
+    border-radius: 16px;
   }
+  /* Desktop nav masquée */
+  .hx-home-nav { display: none; }
+  /* Burger visible */
+  .hx-mobile-nav-toggle { display: flex; }
+  .hx-home-brand-badge { width: 44px; height: 44px; }
+  .hx-home-brand-title { font-size: 1.05rem; }
+  .hx-home-brand-subtitle { display: none; }
+}
 
-  .hx-home-section {
-    padding: 60px 20px;
+@media (max-width: 479px) {
+  .hx-home-header {
+    width: calc(100% - 16px);
+    padding: 0 12px;
+    height: 56px;
+    border-radius: 14px;
+  }
+  .hx-home-brand-badge { width: 40px; height: 40px; }
+  .hx-home-brand-title { font-size: 0.98rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   5. HERO — hauteur + grid + typographie
+   ══════════════════════════════════════════════════════════════ */
+
+/* Hauteur hero adaptive */
+@media (max-width: 767px) {
+  .hx-home-hero { min-height: 100dvh; }
+}
+
+/* Video : masquée sur mobile (performance + lisibilité) */
+@media (max-width: 767px) {
+  .hx-bg-video { display: none; }
+  /* Compense avec gradient plus intense */
+  .hx-bg-space.is-hero {
+    background:
+      radial-gradient(circle at 18% 28%, rgba(64, 196, 170, 0.2), transparent 34%),
+      radial-gradient(circle at 72% 18%, rgba(71, 171, 212, 0.15), transparent 32%),
+      radial-gradient(circle at 52% 80%, rgba(54, 201, 170, 0.13), transparent 38%),
+      linear-gradient(180deg, rgba(4, 12, 22, 0.72) 0%, rgba(5, 14, 24, 0.64) 42%, rgba(7, 19, 28, 0.78) 100%);
+  }
+  /* Aurores et nébuleuses allégées */
+  .hx-bg-aurora { opacity: 0.11; filter: blur(80px); }
+  .hx-bg-nebula { opacity: 0.09; filter: blur(70px); }
+}
+
+@media (max-width: 479px) {
+  .hx-bg-aurora { opacity: 0.07; }
+  .hx-bg-nebula { opacity: 0.06; }
+  .hx-bg-stars-1,
+  .hx-bg-stars-2,
+  .hx-bg-stars-3 { opacity: 0.28; }
+}
+
+/* Hero grid — stacking */
+@media (max-width: 1023px) {
+  .hx-home-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    width: calc(100% - 40px);
+    gap: 36px;
+    padding: 28px 0 64px;
   }
 }
 
-/* ── Pricing grid — 1 colonne sur mobile ── */
-@media (max-width: 640px) {
-  .hx-home-pricing-grid {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-    margin: 0 auto;
+@media (max-width: 767px) {
+  .hx-home-hero-grid {
+    display: flex;
+    flex-direction: column;
+    width: calc(100% - 28px);
+    gap: 28px;
+    padding: 20px 0 52px;
+    align-items: stretch;
   }
-
-  .hx-home-dimension-grid {
-    grid-template-columns: 1fr;
+  .hx-home-hero-left { width: 100%; }
+  .hx-home-preview-card {
+    width: 100%;
+    max-width: 480px;
+    align-self: center;
   }
+}
 
-  .hx-home-pricing-card {
+@media (max-width: 639px) {
+  /* Preview card masquée sur petits téléphones — focus CTA */
+  .hx-home-preview-card { display: none; }
+}
+
+/* Hero typography */
+@media (max-width: 1023px) {
+  .hx-home-hero-title {
+    font-size: clamp(2rem, 4.2vw, 3.2rem);
+  }
+}
+
+@media (max-width: 767px) {
+  .hx-home-hero-title {
+    font-size: clamp(1.95rem, 8.5vw, 2.8rem);
+    max-width: 100%;
+    line-height: 1.07;
+  }
+  .hx-home-hero-text,
+  .hx-home-copy {
+    font-size: 0.95rem;
+    line-height: 1.74;
+    max-width: 100%;
+    margin-top: 14px;
+  }
+  .hx-home-search-shell {
+    width: 100%;
+    margin-top: 20px;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    padding: 7px 7px 7px 14px;
+    border-radius: 14px;
+  }
+  .hx-home-search-input { font-size: 16px; }
+  .hx-home-search-button {
+    min-width: 80px;
+    font-size: 0.86rem;
+    padding: 9px 14px;
+  }
+  .hx-home-hero-actions { margin-top: 18px; gap: 10px; }
+  .hx-home-microcopy { display: none; }
+}
+
+@media (max-width: 479px) {
+  .hx-home-hero-grid {
+    width: calc(100% - 20px);
+    padding: 14px 0 44px;
+  }
+  .hx-home-hero-title { font-size: clamp(1.75rem, 9.5vw, 2.2rem); }
+  .hx-home-hero-text { font-size: 0.9rem; }
+  .hx-home-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hx-home-hero-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+  .hx-home-search-shell { padding: 7px 7px 7px 12px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   6. HOME — SECTIONS
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  .hx-home-section { padding: 88px 24px; }
+}
+
+@media (max-width: 767px) {
+  .hx-home-section { padding: 64px 20px; }
+  .hx-home-title {
+    font-size: clamp(1.7rem, 6.5vw, 2.4rem);
     max-width: 100%;
   }
+  .hx-home-copy {
+    font-size: 0.95rem;
+    max-width: 100%;
+  }
+  .hx-home-kicker { font-size: 0.64rem; }
 }
 
-/* ── Chat — topbar + layout mobile ── */
-@media (max-width: 600px) {
-  .hx-app-topbar {
-    padding: 10px 14px;
-    min-height: 52px;
-  }
+@media (max-width: 479px) {
+  .hx-home-section { padding: 52px 16px; }
+  .hx-home-title { font-size: clamp(1.55rem, 8.5vw, 2rem); }
+  .hx-home-section-wrap { width: 100%; }
+}
 
-  .hx-app-feed {
-    padding: 12px 10px 6px;
+/* Grids — 3 col → 2 → 1 */
+@media (max-width: 1023px) {
+  .hx-home-dimension-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .hx-app-bottom {
-    padding: 6px 10px 12px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
-  }
-
-  .hx-app-composer-wrap {
-    gap: 6px;
-  }
-
-  .hx-app-disclaimer {
-    font-size: 0.7rem;
-  }
-
-  .hx-welcome-nav {
-    padding: 10px 14px;
-  }
-
-  .hx-welcome-body {
-    padding: 0 14px 32px;
-  }
-
-  .hx-welcome-center {
+@media (max-width: 639px) {
+  .hx-home-dimension-grid {
+    grid-template-columns: 1fr;
     gap: 14px;
   }
+  .hx-home-dimension-card { padding: 22px 18px; }
 }
 
-/* ── Messages — bulles ── */
-@media (max-width: 600px) {
+/* Pricing — force 1 colonne sur mobile */
+@media (max-width: 639px) {
+  .hx-home-pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hx-home-pricing-card { min-height: unset; }
+}
+
+/* Final CTA */
+@media (max-width: 767px) {
+  .hx-home-finalcta h2 {
+    font-size: clamp(1.7rem, 7vw, 2.4rem);
+  }
+  .hx-home-finalcta .hx-home-hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  .hx-home-finalcta .hx-home-hero-secondary { width: 100%; max-width: 340px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   7. HOME — FOOTER
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+  .hx-home-footer { margin-top: 0; }
+  .hx-footer-inner {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+    padding: 20px 16px;
+  }
+  .hx-footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 16px;
+  }
+}
+
+@media (max-width: 479px) {
+  .hx-footer-links a { font-size: 0.82rem; }
+  .hx-footer-left { font-size: 0.82rem; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   8. CHAT PAGE — layout, topbar, feed, composer
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1099px) {
+  .hx-app-layout { height: 100dvh; }
+  .hx-app-main { height: 100dvh; width: 100%; }
+  .hx-app-feed { flex: 1; min-height: 0; }
+  .hx-app-bottom { flex-shrink: 0; }
+}
+
+@media (max-width: 767px) {
+  .hx-app-topbar {
+    height: 52px;
+    padding: 0 14px;
+    gap: 10px;
+  }
+  .hx-app-feed { padding: 10px 10px 4px; }
+  .hx-app-feed-inner { max-width: 100%; padding: 0; }
+  .hx-app-bottom {
+    padding: 6px 10px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 8px));
+  }
+  .hx-app-composer-wrap { gap: 4px; }
+  .hx-app-disclaimer { font-size: 0.7rem; }
+}
+
+@media (max-width: 479px) {
+  .hx-app-topbar { height: 48px; padding: 0 10px; }
+  .hx-app-feed { padding: 8px 8px 4px; }
+  .hx-app-topbar .hx-mode-switch { display: none; }
+}
+
+/* ── Sidebar overlay ── */
+@media (max-width: 1099px) {
+  .hx-chat-mobile-sheet-left { width: 260px; max-width: 80vw; }
+  .hx-leftbar { height: 100%; width: 100%; }
+  .hx-chat-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.55);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+  }
+  .hx-chat-mobile-sheet {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 101;
+  }
+  .hx-chat-mobile-sheet-left { left: 0; }
+}
+
+@media (max-width: 479px) {
+  .hx-leftbar { width: 100%; max-width: 280px; }
+  .hx-leftbar-new-btn { font-size: 0.85rem; padding: 10px 14px; }
+  .hx-leftbar-item { padding: 10px 10px 10px 9px; font-size: 0.85rem; }
+  .hx-leftbar-footer { padding: 10px 14px; }
+}
+
+/* ── Composer ── */
+@media (max-width: 767px) {
+  .hx-composer { padding: 10px 12px; gap: 8px; }
+  .hx-composer-box { border-radius: 18px; padding: 10px 10px 10px 14px; }
+  .hx-composer-textarea { font-size: 16px; min-height: 24px; max-height: 120px; }
+  .hx-composer-send { width: 40px; height: 40px; border-radius: 12px; min-height: 40px; }
+  .hx-composer-actions { gap: 6px; }
+}
+
+/* ── Messages ── */
+@media (max-width: 767px) {
+  .hx-message-list { gap: 12px; }
+  .hx-message-row { gap: 8px; }
+  .hx-message-avatar { width: 28px; height: 28px; flex-shrink: 0; }
   .hx-message-bubble {
     max-width: 92%;
     font-size: 0.9rem;
-  }
-
-  .hx-message-bubble.is-user {
-    max-width: 88%;
-  }
-
-  .hx-message-content {
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-}
-
-/* ── Composer mobile ── */
-@media (max-width: 600px) {
-  .hx-composer {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .hx-composer-textarea {
-    font-size: 16px; /* évite zoom iOS */
-    min-height: 40px;
-  }
-
-  .hx-composer-send {
-    width: 40px;
-    height: 40px;
-    min-height: 40px;
-  }
-
-  .hx-composer-actions {
-    gap: 6px;
-  }
-}
-
-/* ── Leftbar mobile ── */
-@media (max-width: 1099px) {
-  .hx-leftbar {
-    width: 280px;
-  }
-
-  .hx-leftbar-scroll {
-    padding: 10px 10px;
-  }
-}
-
-@media (max-width: 600px) {
-  .hx-leftbar {
-    width: 100%;
-    max-width: 320px;
-  }
-
-  .hx-leftbar-new-btn {
-    font-size: 0.85rem;
     padding: 10px 14px;
+    line-height: 1.55;
   }
+  .hx-message-bubble.is-user { max-width: 88%; }
+  .hx-message-content { word-break: break-word; overflow-wrap: break-word; }
+}
 
-  .hx-leftbar-item {
-    padding: 10px 10px 10px 9px;
-    font-size: 0.85rem;
+@media (max-width: 479px) {
+  .hx-message-bubble { max-width: 96%; font-size: 0.87rem; padding: 9px 12px; }
+}
+
+/* ── Welcome screen ── */
+@media (max-width: 767px) {
+  .hx-welcome-nav { padding: 10px 14px; min-height: 52px; }
+  .hx-welcome-body {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px 24px;
   }
-
-  .hx-leftbar-footer {
-    padding: 10px 14px;
+  .hx-welcome-center { max-width: 100%; padding: 0; gap: 14px; }
+  .hx-welcome-title {
+    font-size: clamp(1.7rem, 8vw, 2.4rem);
+    margin-bottom: 10px;
+  }
+  .hx-welcome-subtitle { font-size: 0.9rem; margin-bottom: 18px; }
+  .hx-welcome-footer { padding: 10px 14px 16px; font-size: 0.68rem; }
+  .hx-welcome-input .hx-composer-box {
+    border-radius: 18px;
+    padding: 10px 10px 10px 14px;
   }
 }
 
-/* ── Modal birth form mobile ── */
-@media (max-width: 560px) {
+@media (max-width: 479px) {
+  .hx-welcome-title { font-size: clamp(1.5rem, 9.5vw, 1.9rem); }
+  .hx-welcome-nav .hx-mode-switch { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   9. MODE SWITCH compact
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 479px) {
+  .hx-mode-switch { gap: 4px; }
+  .hx-mode-btn { font-size: 0.75rem; padding: 6px 10px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   10. MODAL BIRTH FORM — bottom sheet sur mobile
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 559px) {
   .hx-modal-panel {
     width: 100%;
     max-width: 100%;
     border-radius: 20px 20px 0 0;
-    max-height: 92vh;
+    max-height: 92svh;
     overflow-y: auto;
     position: fixed;
     bottom: 0;
@@ -5087,169 +5511,286 @@ input, textarea, select {
     margin: 0;
     padding-bottom: env(safe-area-inset-bottom, 16px);
   }
-
-  .hx-modal-backdrop {
-    align-items: flex-end;
-  }
-
-  .hx-modal-form {
-    gap: 14px;
-  }
-
-  .hx-modal-row {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .hx-modal-gender {
-    gap: 10px;
-  }
-
-  .hx-modal-gender-btn {
-    flex: 1;
-    min-height: 44px;
-  }
+  .hx-modal-backdrop { align-items: flex-end; }
+  .hx-modal-form { gap: 14px; }
+  .hx-modal-row { grid-template-columns: 1fr; gap: 14px; }
+  .hx-modal-gender-btn { flex: 1; min-height: 44px; }
 }
 
-/* ── Auth / Login pages mobile ── */
-@media (max-width: 560px) {
+/* ══════════════════════════════════════════════════════════════
+   11. AUTH / LOGIN PAGE
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 559px) {
   .hx-auth-card,
   .hx-login-card {
     padding: 28px 20px;
     border-radius: 16px;
     margin: 0 16px;
   }
-
   .hx-auth-header,
-  .hx-login-header {
-    padding: 14px 18px;
-  }
+  .hx-login-header { padding: 14px 18px; }
 }
 
-/* ── Account page mobile ── */
-@media (max-width: 420px) {
+/* ══════════════════════════════════════════════════════════════
+   12. ACCOUNT PAGE
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 559px) {
+  .hx-account-card { padding: 32px 22px 28px; }
+  .hx-account-header { padding: 14px 18px; }
+}
+
+@media (max-width: 419px) {
   .hx-account-card {
     padding: 24px 16px 20px;
     border-radius: 14px;
     margin: 0;
   }
-
-  .hx-account-main {
-    padding: 24px 12px 60px;
-  }
-
-  .hx-account-header {
-    padding: 12px 16px;
-  }
-
-  .hx-account-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .hx-account-row-value {
-    text-align: left;
-  }
-
-  .hx-account-btn {
-    width: 100%;
-  }
+  .hx-account-main { padding: 24px 12px 60px; }
+  .hx-account-header { padding: 12px 16px; }
+  .hx-account-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .hx-account-row-value { text-align: left; }
+  .hx-account-btn { width: 100%; }
 }
 
-/* ── Pricing page mobile ── */
-@media (max-width: 480px) {
-  .hx-pricing-wrap {
-    padding: 28px 18px;
+/* ══════════════════════════════════════════════════════════════
+   13. PAYWALL BANNER
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 479px) {
+  .hx-paywall-banner { border-radius: 12px; }
+  .hx-paywall-inner { padding: 18px 16px; gap: 8px; }
+  .hx-paywall-cta { width: 100%; text-align: center; padding: 12px 20px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   14. STATIC PAGES (Contact, CGU…)
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 479px) {
+  .hx-static-header { padding: 14px 16px; }
+  .hx-static-main { padding: 40px 16px 60px; }
+  .hx-static-hero { margin-bottom: 32px; }
+  .hx-contact-form { gap: 16px; }
+  .hx-contact-label { font-size: 0.82rem; }
+  .hx-prose-section { gap: 20px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   15. PRICING PAGE
+   ══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 479px) {
+  .hx-pricing-wrap { padding: 28px 18px; border-radius: 16px; }
+  .hx-pricing-header { padding: 14px 18px; }
+  .hx-pricing-feature-list { gap: 10px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   POLISH VISUEL — IDENTITÉ NATIVE PAR FORMAT
+   Objectif : chaque breakpoint a sa propre identité,
+   pas juste un desktop rétréci.
+   ══════════════════════════════════════════════════════════════ */
+
+/* text-wrap balance globalement sur les titres */
+.hx-home-hero-title,
+.hx-home-title,
+.hx-home-finalcta h2,
+.hx-home-dimension-card h3,
+.hx-welcome-title {
+  text-wrap: balance;
+}
+
+/* ── 1. MOBILE PHONE < 640px — app-native, centré ─────────────── */
+@media (max-width: 639px) {
+
+  /* Contenu hero centré — sensation app native */
+  .hx-home-hero-left {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hx-home-kicker { justify-content: center; }
+
+  .hx-home-hero-title {
+    letter-spacing: -0.03em;
+    line-height: 1.06;
+  }
+
+  .hx-home-hero-text {
+    text-align: center;
+    max-width: 38ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Search bar — pill immersif */
+  .hx-home-search-shell {
+    border-radius: var(--hx-radius-pill);
+    padding: 8px 8px 8px 18px;
+  }
+
+  /* Actions — pleine largeur, plus hautes */
+  .hx-home-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+  }
+
+  .hx-home-hero-secondary {
+    width: 100%;
+    justify-content: center;
+    min-height: 52px;
+    font-size: 0.97rem;
+    font-weight: 700;
     border-radius: 16px;
   }
 
-  .hx-pricing-header {
-    padding: 14px 18px;
+  /* Background mobile — glow central dramatique */
+  .hx-bg-space.is-hero {
+    background:
+      radial-gradient(ellipse 92% 56% at 50% 16%, rgba(64, 196, 170, 0.3), transparent 58%),
+      radial-gradient(ellipse 60% 40% at 50% 78%, rgba(71, 171, 212, 0.16), transparent 54%),
+      linear-gradient(180deg, #040c16 0%, #060e19 50%, #07121b 100%);
   }
 
-  .hx-pricing-feature-list {
-    gap: 10px;
+  /* Aurores mobiles — repositionnées au centre */
+  .hx-bg-aurora-a {
+    left: 10%;
+    width: 80vw;
+    height: 40vw;
+    top: 10%;
+    opacity: 0.13;
+  }
+  .hx-bg-aurora-b {
+    right: auto;
+    left: 10%;
+    width: 80vw;
+    top: 50%;
+    opacity: 0.09;
+  }
+
+  /* Section cards — padding confort + rayon cohérent */
+  .hx-home-dimension-card {
+    padding: 22px 20px;
+    border-radius: 18px;
+  }
+
+  /* Pricing card */
+  .hx-home-pricing-card {
+    border-radius: 18px;
+    padding: 28px 22px;
+  }
+
+  /* Final CTA centré */
+  .hx-home-finalcta .hx-home-hero-actions {
+    align-items: stretch;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
-/* ── Static pages (Contact, CGU…) mobile ── */
-@media (max-width: 480px) {
-  .hx-static-header {
-    padding: 14px 16px;
+/* ── 2. TABLET PORTRAIT 640–767px — vertical premium ─────────── */
+@media (min-width: 640px) and (max-width: 767px) {
+  .hx-home-hero-grid {
+    gap: 32px;
+    padding: 32px 0 60px;
+    align-items: center;
   }
 
-  .hx-static-main {
-    padding: 40px 16px 60px;
+  .hx-home-hero-title {
+    font-size: clamp(2rem, 6.5vw, 2.6rem);
   }
 
-  .hx-static-hero {
-    margin-bottom: 32px;
+  /* Preview card — visible, condensée */
+  .hx-home-preview-card {
+    display: block;
+    max-width: 480px;
+    align-self: center;
+    padding: 20px;
+    border-radius: 18px;
+    font-size: 0.92rem;
   }
 
-  .hx-contact-form {
-    gap: 16px;
-  }
-
-  .hx-contact-label {
-    font-size: 0.82rem;
-  }
-
-  .hx-prose-section {
-    gap: 20px;
-  }
-}
-
-/* ── Paywall banner mobile ── */
-@media (max-width: 480px) {
-  .hx-paywall-banner {
+  .hx-home-preview-bubble {
+    padding: 10px 14px;
+    font-size: 0.88rem;
     border-radius: 12px;
-  }
-
-  .hx-paywall-inner {
-    padding: 18px 16px;
-    gap: 8px;
-  }
-
-  .hx-paywall-cta {
-    width: 100%;
-    text-align: center;
-    padding: 12px 20px;
+    margin-bottom: 7px;
   }
 }
 
-/* ── Mode switch mobile (compact) ── */
-@media (max-width: 480px) {
-  .hx-mode-switch {
-    gap: 4px;
+/* ── 3. TABLET LANDSCAPE 768–1023px — 2 colonnes équilibré ────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hx-home-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.68fr);
+    align-items: center;
+    gap: 36px;
+    padding: 36px 0 76px;
   }
 
-  .hx-mode-btn {
-    font-size: 0.75rem;
-    padding: 6px 10px;
+  .hx-home-preview-card {
+    padding: 20px;
+    border-radius: 18px;
+    font-size: 0.9rem;
   }
+
+  .hx-home-preview-bubble {
+    padding: 9px 13px;
+    font-size: 0.87rem;
+    border-radius: 12px;
+    margin-bottom: 7px;
+  }
+
+  .hx-home-hero-title {
+    font-size: clamp(2.1rem, 4.5vw, 3rem);
+  }
+
+  .hx-home-section { padding: 80px 32px; }
+  .hx-home-dimension-grid { gap: 16px; }
 }
 
-/* ── Très petits écrans (< 380px, ex: iPhone SE) ── */
-@media (max-width: 380px) {
-  .hx-welcome-title {
-    font-size: clamp(1.6rem, 10vw, 2rem);
+/* ── 4. LAPTOP 1024–1279px — densité équilibrée ──────────────── */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .hx-home-hero-grid {
+    gap: 48px;
+    padding: 36px 0 80px;
   }
-
-  .hx-welcome-subtitle {
-    font-size: 0.85rem;
-  }
-
-  .hx-app-topbar .hx-mode-switch {
-    display: none;
-  }
-
-  .hx-welcome-nav .hx-mode-switch {
-    display: none;
-  }
-
-  .hx-message-bubble {
-    max-width: 96%;
-    font-size: 0.85rem;
-  }
+  .hx-home-section { padding: 96px 24px; }
 }
+
+/* ── 5. LARGE DESKTOP ≥ 1280px — amplitude et respiration ─────── */
+@media (min-width: 1280px) {
+  .hx-home-hero-grid {
+    gap: 64px;
+    padding: 48px 0 96px;
+  }
+  .hx-home-hero-title {
+    font-size: clamp(3.2rem, 3.6vw, 4.4rem);
+    letter-spacing: -0.047em;
+  }
+  .hx-home-section { padding: 120px 24px; }
+  .hx-home-dimension-grid { gap: 24px; }
+  .hx-home-pricing-grid { gap: 32px; }
+}
+
+/* ── 6. ULTRA WIDE ≥ 1536px — respiration maximale ────────────── */
+@media (min-width: 1536px) {
+  .hx-home-hero-grid {
+    gap: 88px;
+    padding: 60px 0 112px;
+  }
+  .hx-home-hero-title {
+    font-size: clamp(3.8rem, 3.4vw, 5rem);
+    letter-spacing: -0.05em;
+  }
+  .hx-home-section { padding: 140px 24px; }
+}
+
