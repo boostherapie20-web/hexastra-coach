@@ -4866,3 +4866,390 @@ transition: all 0.35s ease;
     padding: 14px 18px;
   }
 }
+
+/* ============================================================
+   RESPONSIVE GLOBAL — TOUS ÉCRANS
+   Breakpoints : 1180 / 920 / 768 / 600 / 480 / 380
+   ============================================================ */
+
+/* ── Bases mobiles ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Inputs : min 16px pour éviter le zoom iOS */
+input, textarea, select {
+  font-size: max(16px, 1em);
+}
+
+/* Safe area iOS (notch, home indicator) */
+.hx-chat-page,
+.hx-account-page,
+.hx-static-page,
+.hx-app-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.hx-welcome-screen {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Touch targets min 44px */
+.hx-icon-btn,
+.hx-leftbar-avatar,
+.hx-mode-btn,
+.hx-account-btn,
+.hx-contact-submit,
+.hx-paywall-cta,
+.hx-leftbar-new-btn,
+.hx-leftbar-section-toggle,
+.hx-leftbar-add-btn {
+  min-height: 44px;
+}
+
+/* ── Home page — 768px ── */
+@media (max-width: 768px) {
+  .hx-home-header-inner {
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 14px 20px;
+  }
+
+  .hx-home-nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .hx-home-hero-title {
+    font-size: clamp(2rem, 9vw, 3.2rem);
+  }
+
+  .hx-home-hero-lead {
+    font-size: 1rem;
+  }
+
+  .hx-home-module-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hx-home-section {
+    padding: 60px 20px;
+  }
+}
+
+/* ── Pricing grid — 1 colonne sur mobile ── */
+@media (max-width: 640px) {
+  .hx-home-pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+
+  .hx-home-dimension-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hx-home-pricing-card {
+    max-width: 100%;
+  }
+}
+
+/* ── Chat — topbar + layout mobile ── */
+@media (max-width: 600px) {
+  .hx-app-topbar {
+    padding: 10px 14px;
+    min-height: 52px;
+  }
+
+  .hx-app-feed {
+    padding: 12px 10px 6px;
+  }
+
+  .hx-app-bottom {
+    padding: 6px 10px 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  }
+
+  .hx-app-composer-wrap {
+    gap: 6px;
+  }
+
+  .hx-app-disclaimer {
+    font-size: 0.7rem;
+  }
+
+  .hx-welcome-nav {
+    padding: 10px 14px;
+  }
+
+  .hx-welcome-body {
+    padding: 0 14px 32px;
+  }
+
+  .hx-welcome-center {
+    gap: 14px;
+  }
+}
+
+/* ── Messages — bulles ── */
+@media (max-width: 600px) {
+  .hx-message-bubble {
+    max-width: 92%;
+    font-size: 0.9rem;
+  }
+
+  .hx-message-bubble.is-user {
+    max-width: 88%;
+  }
+
+  .hx-message-content {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* ── Composer mobile ── */
+@media (max-width: 600px) {
+  .hx-composer {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .hx-composer-textarea {
+    font-size: 16px; /* évite zoom iOS */
+    min-height: 40px;
+  }
+
+  .hx-composer-send {
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+  }
+
+  .hx-composer-actions {
+    gap: 6px;
+  }
+}
+
+/* ── Leftbar mobile ── */
+@media (max-width: 1099px) {
+  .hx-leftbar {
+    width: 280px;
+  }
+
+  .hx-leftbar-scroll {
+    padding: 10px 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hx-leftbar {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .hx-leftbar-new-btn {
+    font-size: 0.85rem;
+    padding: 10px 14px;
+  }
+
+  .hx-leftbar-item {
+    padding: 10px 10px 10px 9px;
+    font-size: 0.85rem;
+  }
+
+  .hx-leftbar-footer {
+    padding: 10px 14px;
+  }
+}
+
+/* ── Modal birth form mobile ── */
+@media (max-width: 560px) {
+  .hx-modal-panel {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    overflow-y: auto;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  .hx-modal-backdrop {
+    align-items: flex-end;
+  }
+
+  .hx-modal-form {
+    gap: 14px;
+  }
+
+  .hx-modal-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .hx-modal-gender {
+    gap: 10px;
+  }
+
+  .hx-modal-gender-btn {
+    flex: 1;
+    min-height: 44px;
+  }
+}
+
+/* ── Auth / Login pages mobile ── */
+@media (max-width: 560px) {
+  .hx-auth-card,
+  .hx-login-card {
+    padding: 28px 20px;
+    border-radius: 16px;
+    margin: 0 16px;
+  }
+
+  .hx-auth-header,
+  .hx-login-header {
+    padding: 14px 18px;
+  }
+}
+
+/* ── Account page mobile ── */
+@media (max-width: 420px) {
+  .hx-account-card {
+    padding: 24px 16px 20px;
+    border-radius: 14px;
+    margin: 0;
+  }
+
+  .hx-account-main {
+    padding: 24px 12px 60px;
+  }
+
+  .hx-account-header {
+    padding: 12px 16px;
+  }
+
+  .hx-account-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .hx-account-row-value {
+    text-align: left;
+  }
+
+  .hx-account-btn {
+    width: 100%;
+  }
+}
+
+/* ── Pricing page mobile ── */
+@media (max-width: 480px) {
+  .hx-pricing-wrap {
+    padding: 28px 18px;
+    border-radius: 16px;
+  }
+
+  .hx-pricing-header {
+    padding: 14px 18px;
+  }
+
+  .hx-pricing-feature-list {
+    gap: 10px;
+  }
+}
+
+/* ── Static pages (Contact, CGU…) mobile ── */
+@media (max-width: 480px) {
+  .hx-static-header {
+    padding: 14px 16px;
+  }
+
+  .hx-static-main {
+    padding: 40px 16px 60px;
+  }
+
+  .hx-static-hero {
+    margin-bottom: 32px;
+  }
+
+  .hx-contact-form {
+    gap: 16px;
+  }
+
+  .hx-contact-label {
+    font-size: 0.82rem;
+  }
+
+  .hx-prose-section {
+    gap: 20px;
+  }
+}
+
+/* ── Paywall banner mobile ── */
+@media (max-width: 480px) {
+  .hx-paywall-banner {
+    border-radius: 12px;
+  }
+
+  .hx-paywall-inner {
+    padding: 18px 16px;
+    gap: 8px;
+  }
+
+  .hx-paywall-cta {
+    width: 100%;
+    text-align: center;
+    padding: 12px 20px;
+  }
+}
+
+/* ── Mode switch mobile (compact) ── */
+@media (max-width: 480px) {
+  .hx-mode-switch {
+    gap: 4px;
+  }
+
+  .hx-mode-btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+  }
+}
+
+/* ── Très petits écrans (< 380px, ex: iPhone SE) ── */
+@media (max-width: 380px) {
+  .hx-welcome-title {
+    font-size: clamp(1.6rem, 10vw, 2rem);
+  }
+
+  .hx-welcome-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .hx-app-topbar .hx-mode-switch {
+    display: none;
+  }
+
+  .hx-welcome-nav .hx-mode-switch {
+    display: none;
+  }
+
+  .hx-message-bubble {
+    max-width: 96%;
+    font-size: 0.85rem;
+  }
+}
