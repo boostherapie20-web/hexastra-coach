@@ -436,7 +436,6 @@ export default function ChatPageClient() {
     />
   )
 
-  const availableModes = getAvailableModes(userPlan)
   const isLimitReached = isFreePlan(userPlan) && !canContinueChat(userPlan, freeMessagesUsed)
 
   const modeSwitch = isFreePlan(userPlan) ? null : (
