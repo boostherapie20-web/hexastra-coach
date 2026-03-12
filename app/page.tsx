@@ -1,219 +1,336 @@
+'use client'
+
 import Link from 'next/link'
-import HexastraLogo from '@/app/components/HexastraLogo'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import HexastraLogo from './components/HexastraLogo'
+import PremiumBackground from './components/PremiumBackground'
+import LanguageSwitcher from './components/LanguageSwitcher'
+import { createClient } from '@/lib/supabase/client'
+import { useTranslation } from '@/lib/i18n/useTranslation'
+import { usePlansUI } from '@/lib/usePlansUI'
 
-const features = [
-  {
-    title: 'Clarifier une décision',
-    text: 'Quand tout semble mélangé, HexAstra remet de l’ordre entre intuition, contexte et action.',
-  },
-  {
-    title: 'Retrouver le bon timing',
-    text: 'Avancer, ralentir, consolider, pivoter : la lecture aide à sentir le rythme juste.',
-  },
-  {
-    title: 'Respirer mentalement',
-    text: 'Une interface calme pour alléger la surcharge et retrouver une vision plus nette.',
-  },
-]
-
-const useCases = [
-  'Amour et relations',
-  'Travail et argent',
-  'Énergie du moment',
-  'Direction de vie',
-  'Blocage intérieur',
-  'Lecture générale',
-]
-
-const pricing = [
-  {
-    name: 'Découverte',
-    price: '0€',
-    desc: 'Pour tester la qualité de l’expérience et découvrir l’univers HexAstra.',
-    cta: 'Découvrir',
-    featured: false,
-  },
-  {
-    name: 'Essentiel',
-    price: '9€/mois',
-    desc: 'Pour une pratique personnelle régulière, simple, claire et utile au quotidien.',
-    cta: 'Choisir Essentiel',
-    featured: true,
-  },
-  {
-    name: 'Premium',
-    price: '19€/mois',
-    desc: 'Pour aller plus loin avec davantage de profondeur, de continuité et de confort.',
-    cta: 'Choisir Premium',
-    featured: false,
-  },
-  {
-    name: 'Praticien',
-    price: '49€/mois',
-    desc: 'Pensé pour les accompagnants, coachs et praticiens qui veulent un usage avancé.',
-    cta: 'Espace praticien',
-    featured: false,
-  },
-]
+// Plans définis dans lib/plans.ts — source unique de vérité
 
 export default function HomePage() {
+  const router = useRouter()
+  const haloRef = useRef<HTMLDivElement>(null)
+  const supabase = createClient()
+  const { t } = useTranslation()
+  const plansUI = usePlansUI()
+
+  const MODULES_DATA = useMemo(() => [
+    { title: 'Astrolex',  text: t('home.module1Text'), cases: t('home.module1Cases'), dimension: t('home.module1Dim') },
+    { title: 'Porteum',   text: t('home.module2Text'), cases: t('home.module2Cases'), dimension: t('home.module2Dim') },
+    { title: 'NeuroSoma', text: t('home.module3Text'), cases: t('home.module3Cases'), dimension: t('home.module3Dim') },
+    { title: 'Fusion',    text: t('home.module4Text'), cases: t('home.module4Cases'), dimension: t('home.module4Dim') },
+    { title: 'SpiritLex', text: t('home.module5Text'), cases: t('home.module5Cases'), dimension: t('home.module5Dim') },
+    { title: 'Présence',  text: t('home.module6Text'), cases: t('home.module6Cases'), dimension: t('home.module6Dim') },
+  ], [t])
+  const [user, setUser] = useState<any>(null)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user)
+    })
+  }, [supabase])
+
+  const [heroInput, setHeroInput] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+
+  const rotatingQuestions = [
+    t('home.rotatingQ1'),
+    t('home.rotatingQ2'),
+    t('home.rotatingQ3'),
+    t('home.rotatingQ4'),
+    t('home.rotatingQ5'),
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((i) => (i + 1) % 5)
+    }, 4200)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const move = (e: MouseEvent) => {
+      if (!haloRef.current) return
+      haloRef.current.style.left = `${e.clientX}px`
+      haloRef.current.style.top = `${e.clientY}px`
+    }
+    window.addEventListener('mousemove', move)
+    return () => window.removeEventListener('mousemove', move)
+  }, [])
+
+  const heroQuery = useMemo(() => heroInput.trim(), [heroInput])
+  const isTyping = heroQuery.length > 0
+  const isLogoLive = isFocused || isTyping
+
+  const goToChat = () => {
+    if (!heroQuery) {
+      router.push('/chat')
+      return
+    }
+    router.push(`/chat?q=${encodeURIComponent(heroQuery)}`)
+  }
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    goToChat()
+  }
+
   return (
-    <main className="hex-light">
-      <header className="hx-site-header">
-        <div className="hx-site-shell hx-site-header-inner">
-          <Link href="/" className="hx-brand">
-            <HexastraLogo size={42} animated={false} />
-            <div>
-              <div className="hx-brand-title">HexAstra Coach</div>
-              <div className="hx-brand-subtitle">Clarté · Timing · Respiration mentale</div>
+    <main className="hx-home">
+      <section className="hx-home-hero">
+        <PremiumBackground hero />
+        <div className="hx-home-hero-overlay" />
+
+        <header className="hx-home-header">
+          <div ref={haloRef} className="hx-header-halo" />
+          <div className="hx-header-stars" />
+
+          <Link href="/" className="hx-home-brand" aria-label="HexAstra Coach">
+            <div className={`hx-home-brand-badge ${isLogoLive ? 'is-live' : ''}`}>
+              <span className="hx-home-brand-halo" />
+              <HexastraLogo
+                size={25}
+                variant="navbar"
+                priority
+                className={isLogoLive ? 'is-luminous' : ''}
+              />
+            </div>
+            <div className="hx-home-brand-text">
+              <div className="hx-home-brand-title">HexAstra Coach</div>
+              <div className="hx-home-brand-subtitle">{t('home.brandSub')}</div>
             </div>
           </Link>
 
-          <nav className="hx-main-nav">
-            <a href="#fonctionnement">Comment ça marche</a>
-            <a href="#usages">Usages</a>
-            <a href="#tarifs">Tarifs</a>
+          <nav className="hx-home-nav" aria-label="Navigation principale">
+            <a href="#modules">{t('nav.howItWorks')}</a>
+            <a href="#difference">{t('nav.whyHexAstra')}</a>
+            <a href="#offres">{t('nav.pricing')}</a>
+            {user ? (
+              <Link href="/chat" className="hx-home-login">{t('nav.myAccount')}</Link>
+            ) : (
+              <Link href="/auth" className="hx-home-login">{t('nav.signIn')}</Link>
+            )}
+            <LanguageSwitcher variant="flag" />
           </nav>
 
-          <div className="hx-header-actions">
-            <Link href="/chat" className="hx-btn hx-btn-primary">
-              Accéder au chat
-            </Link>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      <section className="hx-site-shell hx-home-hero">
-        <div className="hx-home-hero-copy">
-          <div className="hx-hero-logo-row">
-            <HexastraLogo size={148} priority animated />
-          </div>
-
-          <div className="hx-eyebrow">Clarté personnelle assistée par IA</div>
-
-          <h1 className="hx-home-title">
-            HexAstra t’aide à voir plus clair,
-            <br />
-            sans te noyer dans la complexité.
-          </h1>
-
-          <p className="hx-home-subtitle">
-            Une interface légère et premium pour comprendre ton moment, retrouver du calme intérieur
-            et poser de meilleures décisions.
-          </p>
-
-          <div className="hx-home-hero-actions">
-            <Link href="/chat" className="hx-btn hx-btn-primary">
-              Ouvrir le chat
-            </Link>
-            <a href="#fonctionnement" className="hx-btn hx-btn-ghost">
-              Découvrir le fonctionnement
-            </a>
-          </div>
-
-          <div className="hx-home-chips">
-            <Link href="/chat?q=Je me sens bloqué en ce moment" className="hx-chip">
-              Je me sens bloqué en ce moment
-            </Link>
-            <Link href="/chat?q=Est-ce le bon timing pour agir ?" className="hx-chip">
-              Est-ce le bon timing pour agir ?
-            </Link>
-            <Link href="/chat?q=Pourquoi cette relation me travaille autant ?" className="hx-chip">
-              Pourquoi cette relation me travaille autant ?
-            </Link>
-            <Link href="/chat?q=Quelle direction devient plus naturelle ?" className="hx-chip">
-              Quelle direction devient plus naturelle ?
-            </Link>
-          </div>
-        </div>
-
-        <div className="hx-home-preview hx-card">
-          <div className="hx-preview-top">
+        <div className="hx-home-hero-inner">
+          <div className="hx-home-hero-grid">
             <div>
-              <div className="hx-label">Aperçu du chat</div>
-              <div className="hx-preview-title">Conversation en direct</div>
+              <div className="hx-home-kicker">{t('home.heroKicker')}</div>
+              <h1 className="hx-home-hero-title">{t('home.heroTitle')}</h1>
+              <p className="hx-home-hero-text">{t('home.heroText')}</p>
+              <div className="hx-home-microcopy">
+                <p>{t('home.heroMicrocopy')}</p>
+              </div>
+
+              <form
+                className={`hx-home-search-shell ${isLogoLive ? 'is-live' : ''}`}
+                onSubmit={handleSubmit}
+              >
+                <div className="hx-home-search-glyph">✦</div>
+                <input
+                  type="text"
+                  value={heroInput}
+                  onChange={(e) => setHeroInput(e.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  className="hx-home-search-input"
+                  placeholder={rotatingQuestions[placeholderIndex]}
+                  aria-label={t('home.heroInputLabel')}
+                />
+                <button
+                  type="submit"
+                  className={`hx-home-search-button ${heroQuery ? 'is-ready' : ''}`}
+                >
+                  {t('home.heroAnalyze')}
+                </button>
+              </form>
+
+              <div className="hx-home-hero-actions">
+                <Link href="/chat" className="hx-home-hero-secondary">{t('home.heroFree')}</Link>
+              </div>
             </div>
-            <div className="hx-online-dot">En ligne</div>
+
+            <div className="hx-home-preview-card">
+              <div className="hx-home-kicker">{t('home.previewKicker')}</div>
+              <div className="hx-home-preview-bubble is-user">{t('home.previewUser1')}</div>
+              <div className="hx-home-preview-bubble is-assistant">{t('home.previewAI1')}</div>
+              <div className="hx-home-preview-bubble is-assistant">{t('home.previewAI2')}</div>
+              <div className="hx-home-preview-bubble is-user">{t('home.previewUser2')}</div>
+              <div className="hx-home-preview-bubble is-assistant">{t('home.previewAI3')}</div>
+            </div>
           </div>
+        </div>
+      </section>
 
-          <div className="hx-preview-thread">
-            <div className="hx-preview-bubble hx-preview-bubble-ai">
-              Bienvenue. Dis-moi ce que tu veux éclaircir aujourd’hui.
-            </div>
+      <section id="modules" className="hx-home-section hx-home-section-darkfusion">
+        <div className="hx-home-section-wrap">
+          <div className="hx-home-kicker">{t('home.modulesKicker')}</div>
+          <h2 className="hx-home-title hx-home-title-light">{t('home.modulesTitle')}</h2>
+          <p className="hx-home-copy">{t('home.modulesCopy')}</p>
 
-            <div className="hx-preview-bubble hx-preview-bubble-user">
-              J’hésite entre rester dans mon activité actuelle ou lancer quelque chose de nouveau.
-            </div>
+          <div className="hx-home-dimension-grid">
+            {MODULES_DATA.map((item) => (
+              <article className="hx-home-dimension-card" key={item.title}>
+                <div className="hx-home-dimension-dot" />
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+                <p className="hx-home-module-meta">
+                  <strong>{t('home.modulesCasesLabel')}</strong>
+                  <br />
+                  {item.cases}
+                </p>
+                <p className="hx-home-module-meta">
+                  <strong>{t('home.modulesDimLabel')}</strong>
+                  <br />
+                  {item.dimension}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <div className="hx-preview-bubble hx-preview-bubble-ai">
-              On peut clarifier ça en 3 temps : ton état actuel, le vrai nœud de décision, puis le
-              bon timing d’action.
+      <section className="hx-home-section hx-home-section-cream">
+        <div className="hx-home-section-wrap">
+          <div className="hx-home-kicker">{t('home.useCasesKicker')}</div>
+          <h2 className="hx-home-title">{t('home.useCasesTitle')}</h2>
+          <p className="hx-home-copy hx-home-copy-dark">{t('home.useCasesCopy')}</p>
+
+          <div className="hx-home-dimension-grid hx-home-grid-compact">
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.useCase1Title')}</h3>
+              <p>{t('home.useCase1Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.useCase2Title')}</h3>
+              <p>{t('home.useCase2Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.useCase3Title')}</h3>
+              <p>{t('home.useCase3Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.useCase4Title')}</h3>
+              <p>{t('home.useCase4Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.useCase5Title')}</h3>
+              <p>{t('home.useCase5Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.useCase6Title')}</h3>
+              <p>{t('home.useCase6Text')}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="difference" className="hx-home-section hx-home-section-light">
+        <div className="hx-home-section-wrap">
+          <div className="hx-home-kicker">{t('home.diffKicker')}</div>
+          <h2 className="hx-home-title">{t('home.diffTitle')}</h2>
+          <p className="hx-home-copy hx-home-copy-dark">{t('home.diffCopy')}</p>
+
+          <div className="hx-home-dimension-grid hx-home-grid-compact">
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.diff1Title')}</h3>
+              <p>{t('home.diff1Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.diff2Title')}</h3>
+              <p>{t('home.diff2Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.diff3Title')}</h3>
+              <p>{t('home.diff3Text')}</p>
+            </article>
+            <article className="hx-home-dimension-card hx-home-card-light">
+              <div className="hx-home-dimension-dot" />
+              <h3>{t('home.diff4Title')}</h3>
+              <p>{t('home.diff4Text')}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="offres" className="hx-home-section hx-home-section-cream">
+        <div className="hx-home-section-wrap">
+          <div className="hx-home-kicker">{t('home.pricingKicker')}</div>
+          <h2 className="hx-home-title">{t('home.pricingTitle')}</h2>
+          <p className="hx-home-copy hx-home-copy-dark">{t('home.pricingCopy')}</p>
+
+          <div className="hx-home-pricing-grid">
+            {plansUI.map((plan) => (
+              <article
+                key={plan.key}
+                className={`hx-home-pricing-card${plan.highlighted ? ' is-highlighted' : ''}`}
+              >
+                {plan.badge && (
+                  <div className="hx-home-pricing-badge">{plan.badge}</div>
+                )}
+                <div className="hx-home-kicker">{plan.label}</div>
+                <div className="hx-home-pricing-price">
+                  {plan.price}
+                  <span className="hx-home-pricing-unit">{plan.period}</span>
+                </div>
+                <p className="hx-home-pricing-desc">{plan.desc}</p>
+                <div className="hx-home-pricing-list">
+                  {plan.features.map((item) => (
+                    <p className="hx-home-pricing-item" key={item}>
+                      <span className="hx-home-pricing-check" aria-hidden="true">✦</span>
+                      {item}
+                    </p>
+                  ))}
+                </div>
+                <Link href={plan.href} className="hx-home-pricing-cta">{plan.cta}</Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="hx-home-section hx-home-section-finalcta">
+        <div className="hx-home-section-wrap">
+          <div className="hx-home-finalcta">
+            <div className="hx-home-kicker">{t('home.ctaKicker')}</div>
+            <h2>{t('home.ctaTitle')}</h2>
+            <p className="hx-home-copy">{t('home.ctaCopy')}</p>
+            <div className="hx-home-hero-actions" style={{ justifyContent: 'center' }}>
+              <Link href="/chat" className="hx-home-hero-secondary is-prominent">{t('home.ctaOpen')}</Link>
+              <Link href="/auth" className="hx-home-hero-secondary">{t('home.ctaAuth')}</Link>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="fonctionnement" className="hx-site-shell hx-home-section">
-        <div className="hx-section-head">
-          <div className="hx-label">Comment ça marche</div>
-          <h2 className="hx-section-title">Simple côté usage. Solide côté profondeur.</h2>
+      <footer className="hx-home-footer">
+        <div className="hx-footer-inner">
+          <div className="hx-footer-left">{t('home.footerCopyright')}</div>
+          <div className="hx-footer-links">
+            <Link href="/support">Support</Link>
+            <Link href="/contact">Contact</Link>
+            <Link href="/politique-confidentialite">{t('home.footerPrivacy')}</Link>
+            <Link href="/conditions-utilisation">{t('home.footerTerms')}</Link>
+          </div>
         </div>
-
-        <div className="hx-home-feature-grid">
-          {features.map((item, index) => (
-            <article key={item.title} className="hx-card hx-info-card">
-              <div className="hx-step-badge">{String(index + 1).padStart(2, '0')}</div>
-              <h3>{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="usages" className="hx-site-shell hx-home-section">
-        <div className="hx-section-head">
-          <div className="hx-label">Usages</div>
-          <h2 className="hx-section-title">Pensé pour les moments où il faut retrouver une lecture intérieure.</h2>
-        </div>
-
-        <div className="hx-home-use-grid">
-          {useCases.map((item) => (
-            <div key={item} className="hx-card hx-use-card">
-              {item}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="tarifs" className="hx-site-shell hx-home-section">
-        <div className="hx-section-head">
-          <div className="hx-label">Tarifs</div>
-          <h2 className="hx-section-title">Découvrir gratuitement, approfondir ensuite.</h2>
-        </div>
-
-        <div className="hx-home-pricing-grid">
-          {pricing.map((plan) => (
-            <article
-              key={plan.name}
-              className={`hx-card hx-pricing-card ${plan.featured ? 'hx-pricing-card-featured' : ''}`}
-            >
-              <div className="hx-label">{plan.name}</div>
-              <div className="hx-price">{plan.price}</div>
-              <p>{plan.desc}</p>
-              <Link href="/chat" className={`hx-btn ${plan.featured ? 'hx-btn-primary' : 'hx-btn-ghost'}`}>
-                {plan.cta}
-              </Link>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="hx-site-shell hx-home-disclaimer-wrap">
-        <div className="hx-home-disclaimer hx-card">
-          HexAstra Coach est un outil d’exploration et de réflexion personnelle. Il ne remplace pas
-          un avis médical, juridique ou financier.
-        </div>
-      </section>
+      </footer>
     </main>
   )
 }

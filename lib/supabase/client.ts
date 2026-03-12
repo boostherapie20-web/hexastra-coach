@@ -13,6 +13,7 @@ export function createClient() {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
         signInWithPassword: async () => ({ error: { message: 'Non configuré' } }),
+        signInWithOAuth: async () => ({ data: null, error: { message: 'Non configuré' } }),
         signUp: async () => ({ error: { message: 'Non configuré' } }),
         signOut: async () => {},
       },

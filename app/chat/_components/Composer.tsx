@@ -1,149 +1,283 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { DS, QUICK_PROMPTS } from '../_lib/chat'
+import { useTranslation } from '@/lib/i18n/useTranslation'
 
 type Props = {
   value: string
-  onChange: (value: string) => void
+  onChange: (v: string) => void
   onSend: () => void
-  onQuickPrompt: (value: string) => void
-  showQuickPrompts: boolean
+  onQuickPrompt?: (v: string) => void
+  showQuickPrompts?: boolean
+  onAttach?: (file: File) => void
+  attachedFileName?: string
+  onRemoveAttach?: () => void
+  onBirthFormOpen?: () => void
+  highlightBirth?: boolean
 }
 
-export default function Composer({ value, onChange, onSend, onQuickPrompt, showQuickPrompts }: Props) {
-  const [focused, setFocused] = useState(false)
+function IconSend({ active }: { active: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      aria-hidden="true"
+      className={active ? 'hx-send-icon is-active' : 'hx-send-icon'}
+    >
+      <path
+        d="M3 9h12M10.5 4.5 15 9l-4.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function IconWaveform({ animated }: { animated: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      aria-hidden="true"
+      className={animated ? 'hx-waveform-animated' : ''}
+    >
+      <rect x="1" y="7.5" width="2" height="3" rx="1" fill="currentColor" className="hx-wf-bar hx-wf-b1" />
+      <rect x="4" y="5" width="2" height="8" rx="1" fill="currentColor" className="hx-wf-bar hx-wf-b2" />
+      <rect x="7" y="2.5" width="2" height="13" rx="1" fill="currentColor" className="hx-wf-bar hx-wf-b3" />
+      <rect x="10" y="5" width="2" height="8" rx="1" fill="currentColor" className="hx-wf-bar hx-wf-b4" />
+      <rect x="13" y="7.5" width="2" height="3" rx="1" fill="currentColor" className="hx-wf-bar hx-wf-b5" />
+    </svg>
+  )
+}
+
+function IconAvatar() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true">
+      <circle cx="8.5" cy="5.5" r="3" stroke="currentColor" strokeWidth="1.4" />
+      <path
+        d="M2 14.5c0-3.038 2.91-5 6.5-5s6.5 1.962 6.5 5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function IconPaperclip() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M13.5 7.5l-6 6a4 4 0 01-5.657-5.657l6.364-6.364a2.5 2.5 0 013.536 3.536L5.379 11.38a1 1 0 01-1.415-1.415L9.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export default function Composer({
+  value,
+  onChange,
+  onSend,
+  onQuickPrompt,
+  showQuickPrompts = true,
+  onAttach,
+  attachedFileName,
+  onRemoveAttach,
+  onBirthFormOpen,
+  highlightBirth = false,
+}: Props) {
+  const { t } = useTranslation()
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null)
+  const [focused, setFocused] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+
+  const SUGGESTIONS = [
+    t('chat.suggestion1'),
+    t('chat.suggestion2'),
+    t('chat.suggestion3'),
+    t('chat.suggestion4'),
+  ]
 
   useEffect(() => {
     if (!textareaRef.current) return
     textareaRef.current.style.height = 'auto'
-    textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`
+    textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 140)}px`
   }, [value])
 
+  const canSend = value.trim().length > 0 || !!attachedFileName
+
+  function handleAttachClick() {
+    fileInputRef.current?.click()
+  }
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file && onAttach) {
+      onAttach(file)
+    }
+    e.target.value = ''
+  }
+
+  function toggleRecording() {
+    if (isRecording) {
+      recognitionRef.current?.stop()
+      setIsRecording(false)
+      return
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any
+    const SpeechRec = win.SpeechRecognition ?? win.webkitSpeechRecognition
+
+    if (!SpeechRec) {
+      alert(t('chat.voiceNotSupported'))
+      return
+    }
+
+    const rec = new SpeechRec()
+    rec.lang = 'fr-FR'
+    rec.interimResults = false
+    rec.maxAlternatives = 1
+
+    rec.onresult = (event: { results: Array<{ 0: { transcript: string } }> }) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? ''
+      if (transcript) {
+        onChange(value ? `${value} ${transcript}` : transcript)
+      }
+    }
+
+    rec.onend = () => { setIsRecording(false) }
+    rec.onerror = () => { setIsRecording(false) }
+
+    recognitionRef.current = rec
+    rec.start()
+    setIsRecording(true)
+  }
+
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto' }}>
-      {showQuickPrompts && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 12 }}>
-          {QUICK_PROMPTS.map((prompt) => (
-            <button key={prompt} type="button" onClick={() => onQuickPrompt(prompt)} className="hx-chip">
-              {prompt}
+    <div className="hx-composer-wrap">
+      {showQuickPrompts && !value ? (
+        <div className="hx-composer-suggestions">
+          {SUGGESTIONS.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className="hx-chip"
+              onClick={() => (onQuickPrompt ? onQuickPrompt(s) : onChange(s))}
+            >
+              {s}
             </button>
           ))}
         </div>
+      ) : null}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hx-sr-only"
+        onChange={handleFileChange}
+        accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
+
+      {attachedFileName && (
+        <div className="hx-composer-attach-row">
+          <span className="hx-composer-attach-pill">
+            <IconPaperclip />
+            {attachedFileName}
+            <button
+              type="button"
+              className="hx-composer-attach-remove"
+              onClick={onRemoveAttach}
+              aria-label={t('chat.removeAttachment')}
+            >
+              ✕
+            </button>
+          </span>
+        </div>
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 12,
-          borderRadius: 28,
-          padding: '14px 16px',
-          background: '#ffffff',
-          border: `1px solid ${focused ? 'rgba(25,195,125,0.34)' : DS.lineStrong}`,
-          boxShadow: focused
-            ? '0 0 0 4px rgba(25,195,125,0.08), 0 18px 40px rgba(16,24,20,0.08)'
-            : '0 10px 30px rgba(16,24,20,0.08)',
-          transition: 'border-color 0.24s ease, box-shadow 0.24s ease',
-        }}
-      >
-        <IconGhost title="Ajouter des données plus tard">◎</IconGhost>
-        <IconGhost title="Assistant">◈</IconGhost>
+      <div className={`hx-composer-box${focused ? ' is-focused' : ''}${canSend ? ' has-content' : ''}`}>
+        <div className="hx-composer-actions-left">
+          <button
+            type="button"
+            className="hx-composer-action-btn"
+            onClick={handleAttachClick}
+            aria-label={t('chat.attachFile')}
+            title={t('chat.attachFile')}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path
+                d="M7 1v12M1 7h12"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            className={`hx-composer-action-btn${isRecording ? ' is-recording' : ''}`}
+            onClick={toggleRecording}
+            aria-label={isRecording ? t('chat.stopRecording') : t('chat.voiceRecord')}
+            title={isRecording ? t('chat.stopRecording') : t('chat.voiceRecord')}
+          >
+            <IconWaveform animated={isRecording} />
+          </button>
+
+          <button
+            type="button"
+            className={`hx-composer-action-btn${highlightBirth ? ' is-highlight' : ''}`}
+            onClick={onBirthFormOpen}
+            aria-label={t('chat.birthDataAriaLabel')}
+            title={t('chat.birthDataHint')}
+          >
+            <IconAvatar />
+          </button>
+        </div>
 
         <textarea
           ref={textareaRef}
           rows={1}
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              onSend()
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              if (canSend) onSend()
             }
           }}
-          placeholder="Décris ta situation, ton dilemme ou la zone que tu veux éclaircir…"
-          style={{
-            flex: 1,
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            minHeight: 28,
-            maxHeight: 120,
-            overflowY: 'auto',
-            padding: '8px 2px 6px',
-            color: DS.text,
-            fontFamily: DS.bodyFont,
-            fontSize: 16,
-            lineHeight: 1.8,
-            letterSpacing: '0.01em',
-          }}
+          className="hx-composer-textarea"
+          placeholder={t('chat.placeholder')}
         />
 
         <button
           type="button"
-          onClick={onSend}
-          disabled={!value.trim()}
-          style={{
-            minWidth: 58,
-            padding: '11px 16px',
-            borderRadius: 16,
-            border: 'none',
-            background: value.trim() ? DS.gradient : '#E7EFE9',
-            color: value.trim() ? '#fff' : DS.textFaint,
-            fontWeight: 700,
-            cursor: value.trim() ? 'pointer' : 'not-allowed',
-            boxShadow: value.trim() ? '0 10px 28px rgba(25,195,125,0.25)' : 'none',
-          }}
+          className={`hx-send-button${canSend ? ' is-active' : ''}`}
+          onClick={() => { if (canSend) onSend() }}
+          disabled={!canSend}
+          aria-label={t('chat.sendMessage')}
         >
-          →
+          <IconSend active={canSend} />
         </button>
       </div>
-
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '7px 12px',
-            borderRadius: 999,
-            border: `1px solid ${DS.line}`,
-            background: 'rgba(255,255,255,0.74)',
-            color: DS.textMute,
-            fontSize: 11,
-          }}
-        >
-          <span style={{ color: DS.emerald }}>↵</span>
-          Entrée pour envoyer · Maj + Entrée pour revenir à la ligne
-        </div>
-      </div>
     </div>
-  )
-}
-
-function IconGhost({ children, title }: { children: React.ReactNode; title: string }) {
-  return (
-    <button
-      type="button"
-      aria-label={title}
-      title={title}
-      style={{
-        width: 38,
-        height: 38,
-        borderRadius: 12,
-        display: 'grid',
-        placeItems: 'center',
-        border: `1px solid ${DS.line}`,
-        background: '#F6FAF6',
-        color: DS.textMute,
-        flexShrink: 0,
-      }}
-    >
-      {children}
-    </button>
   )
 }

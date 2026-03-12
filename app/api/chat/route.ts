@@ -97,10 +97,11 @@ function sanitizeMessages(messages: unknown): ChatMessage[] {
         !!m && typeof m === 'object',
     )
     .map((m) => ({
-      role:
+      role: (
         m.role === 'assistant' || m.role === 'system' || m.role === 'user'
           ? m.role
-          : 'user',
+          : 'user'
+      ) as ChatRole,
       content: typeof m.content === 'string' ? m.content.trim() : '',
     }))
     .filter((m) => m.content.length > 0)
@@ -648,7 +649,7 @@ async function chatCompletionsFallback(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1',
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
         max_tokens: 900,
         temperature: 0.72,
@@ -706,6 +707,13 @@ export async function POST(req: NextRequest) {
   const birthData: BirthData | null =
     body?.birthData && typeof body.birthData === 'object' ? body.birthData : null
 
+  // Contexte plan (envoyé par le client via buildPlanApiContext)
+  const plan: string = typeof body?.plan === 'string' ? body.plan : 'free'
+  const analysisDepth: string = typeof body?.analysisDepth === 'string' ? body.analysisDepth : 'low'
+  const practitionerEnabled: boolean = body?.practitionerEnabled === true
+  const longResponseAllowed: boolean = body?.longResponseAllowed === true
+  const chatLanguage: string = typeof body?.chatLanguage === 'string' && body.chatLanguage.length === 2 ? body.chatLanguage : 'fr'
+
   const threadId =
     body?.threadId ||
     body?.conversationId ||
@@ -732,6 +740,56 @@ export async function POST(req: NextRequest) {
         'Données de naissance et calculs précis enregistrés. Je génère la lecture personnalisée.',
     })
   }
+
+  // Injection du contexte plan dans la conversation
+  const planContextLines: string[] = [
+    `[CONTEXTE ABONNEMENT — NE PAS MENTIONNER À L'UTILISATEUR]`,
+    `Plan : ${plan}`,
+    `Profondeur d'analyse : ${analysisDepth}`,
+  ]
+
+  if (analysisDepth === 'low') {
+    planContextLines.push(
+      'Instruction : réponses courtes, synthétiques. Pas d\'analyse approfondie. Sujets simples du quotidien uniquement.',
+    )
+  } else if (analysisDepth === 'medium') {
+    planContextLines.push(
+      'Instruction : réponses de longueur modérée. Clarté rapide. Analyses de vie courante.',
+    )
+  } else if (analysisDepth === 'high') {
+    planContextLines.push(
+      'Instruction : réponses longues autorisées. Analyses profondes. Relations, périodes, décisions, blocages.',
+    )
+  } else if (analysisDepth === 'expert') {
+    planContextLines.push(
+      'Instruction : profondeur maximale. Vocabulaire technique autorisé. Analyses professionnelles complètes.',
+    )
+  }
+
+  if (practitionerEnabled) {
+    planContextLines.push('Mode Praticien activé : structure experte, usage professionnel ou accompagnement client autorisé.')
+  }
+
+  if (longResponseAllowed) {
+    planContextLines.push('Réponses longues et détaillées autorisées pour ce plan.')
+  }
+
+  if (chatLanguage && chatLanguage !== 'fr') {
+    const langNames: Record<string, string> = { en: 'English', es: 'Spanish / Español', pt: 'Portuguese / Português', de: 'German / Deutsch', it: 'Italian / Italiano' }
+    const langLabel = langNames[chatLanguage] ?? chatLanguage
+    planContextLines.push(`Langue de session : ${langLabel}. Répondre EXCLUSIVEMENT dans cette langue pour toute la session.`)
+  }
+
+  planContextLines.push('[FIN CONTEXTE ABONNEMENT]')
+
+  inputMessages.push({
+    role: 'user',
+    content: planContextLines.join('\n'),
+  })
+  inputMessages.push({
+    role: 'assistant',
+    content: 'Contexte de session enregistré.',
+  })
 
   if (mode === 'praticien') {
     inputMessages.push({
@@ -777,12 +835,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const maxTokens =
+      analysisDepth === 'expert' ? 2000 :
+      analysisDepth === 'high'   ? 1600 :
+      analysisDepth === 'medium' ? 1000 :
+      600 // free / low
+
     const payload: any = {
-      model: 'gpt-4o',
+      model: 'gpt-4.1',
       instructions: SYSTEM_PROMPT,
       input: inputMessages,
       temperature: 0.72,
-      max_output_tokens: 1000,
+      max_output_tokens: maxTokens,
     }
 
     if (VECTOR_STORE_ID) {
