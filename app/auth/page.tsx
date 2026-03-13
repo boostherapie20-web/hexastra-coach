@@ -33,6 +33,7 @@ export default function AuthPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -237,31 +238,51 @@ export default function AuthPage() {
         />
 
         <div className="hx-auth-pw-wrap">
-          {mode === 'login' ? (
-            <input
-              key="login-pw"
-              className="hx-auth-input"
-              placeholder="Mot de passe"
-              type="password"
-              name="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => handlePasswordChange(e.target.value)}
-              onKeyDown={onKey}
-            />
-          ) : (
-            <input
-              key="signup-pw"
-              className="hx-auth-input"
-              placeholder="Mot de passe"
-              type="password"
-              name="new-password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => handlePasswordChange(e.target.value)}
-              onKeyDown={onKey}
-            />
-          )}
+          <div className="hx-auth-pw-field">
+            {mode === 'login' ? (
+              <input
+                key="login-pw"
+                className="hx-auth-input"
+                placeholder="Mot de passe"
+                type={showPwd ? 'text' : 'password'}
+                name="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                onKeyDown={onKey}
+              />
+            ) : (
+              <input
+                key="signup-pw"
+                className="hx-auth-input"
+                placeholder="Mot de passe"
+                type={showPwd ? 'text' : 'password'}
+                name="new-password"
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => handlePasswordChange(e.target.value)}
+                onKeyDown={onKey}
+              />
+            )}
+            <button
+              type="button"
+              className="hx-auth-pw-toggle"
+              onClick={() => setShowPwd(!showPwd)}
+              aria-label={showPwd ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              tabIndex={-1}
+            >
+              {showPwd ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2 2l12 12M6.5 6.7A2 2 0 0010 10M4.3 4.5C2.8 5.5 1.5 7 1.5 8c0 1.5 3 5 6.5 5 1.3 0 2.5-.4 3.5-1M6.5 3.1C7 3 7.5 3 8 3c3.5 0 6.5 3.5 6.5 5 0 .7-.3 1.4-.8 2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M1.5 8C1.5 8 4.5 3 8 3s6.5 5 6.5 5-3 5-6.5 5S1.5 8 1.5 8z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                  <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.4" />
+                </svg>
+              )}
+            </button>
+          </div>
           {mode === 'signup' && (
             <p className={`hx-auth-pw-hint${pwError && password.length > 0 ? ' is-error' : ''}`}>
               8 caractères minimum · 1 majuscule · 1 chiffre

@@ -679,7 +679,7 @@ export default function ChatPageClient() {
     onChange: setInput,
     onSend: () => void handleSend(),
     onQuickPrompt: (v: string) => void handleSend(v),
-    showQuickPrompts: false,
+    showQuickPrompts: isWelcome,
     onAttach: (file: File) => setAttachedFile(file),
     attachedFileName: attachedFile?.name,
     onRemoveAttach: () => setAttachedFile(null),
