@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { runAnalysisEngine } from '@/lib/hexastra/analysisEngine'
+import { retrieveKnowledge } from '@/lib/vectorSearch'
+import { compressKnowledgeContext } from '@/lib/contextCompressor'
+import { getRetrievalConfig, normalizePlanKey } from '@/lib/retrievalPolicy'
+import { buildEvolutionContext } from '@/lib/evolution/evolutionContextBuilder'
+import { updateUserEvolutionProfile } from '@/lib/evolution/evolutionEngine'
+import type { UserEvolutionProfile } from '@/types/evolution'
 
 export const runtime = 'nodejs'
 
@@ -704,6 +711,7 @@ export async function POST(req: NextRequest) {
 
   const messages = sanitizeMessages(body?.messages)
   const mode = typeof body?.mode === 'string' ? body.mode : 'libre'
+  const requestType: string = typeof body?.requestType === 'string' ? body.requestType : 'chat'
   const birthData: BirthData | null =
     body?.birthData && typeof body.birthData === 'object' ? body.birthData : null
 
@@ -718,6 +726,14 @@ export async function POST(req: NextRequest) {
     body?.threadId ||
     body?.conversationId ||
     crypto.randomUUID()
+
+  // Evolution profile sent from client (localStorage)
+  const evolutionProfile: UserEvolutionProfile | null =
+    body?.evolutionProfile && typeof body.evolutionProfile === 'object'
+      ? (body.evolutionProfile as UserEvolutionProfile)
+      : null
+
+  const openaiKey = process.env.OPENAI_API_KEY
 
   const inputMessages: ChatMessage[] = []
 
@@ -803,6 +819,69 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  // ── Couche 3 : moteur d'analyse HexAstra ────────────────────────────────
+  // Only runs for normal chat (not micro-readings which have their own instructions)
+  if (requestType === 'chat' && messages.length > 0) {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
+    if (lastUserMsg) {
+      const analysisOutput = runAnalysisEngine({
+        userMessage: lastUserMsg.content,
+        conversationHistory: messages.slice(0, -1) as Array<{ role: 'user' | 'assistant'; content: string }>,
+        birthData: birthData
+          ? {
+              firstName: birthData.firstName,
+              lastName: birthData.lastName,
+              date: birthData.date,
+              time: birthData.time,
+              place: birthData.place,
+              country: birthData.country,
+              gender: birthData.gender,
+            }
+          : null,
+        microProfileExists: !!birthData?.date,
+        mode,
+      })
+      inputMessages.push(...analysisOutput.instructionMessages)
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
+  // ── Couche 4 : récupération adaptative du Vector Store ──────────────────
+  // Runs only for normal chat calls when key + store are available.
+  // Never throws — chat works without retrieval if store is unavailable.
+  if (requestType === 'chat' && openaiKey && VECTOR_STORE_ID && messages.length > 0) {
+    const lastUserContent = [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
+    if (lastUserContent.trim()) {
+      const searchResults = await retrieveKnowledge({
+        query: lastUserContent,
+        plan,
+        vectorStoreId: VECTOR_STORE_ID,
+        apiKey: openaiKey,
+      })
+      const { block: knowledgeBlock } = compressKnowledgeContext(
+        searchResults,
+        getRetrievalConfig(normalizePlanKey(plan)),
+      )
+      if (knowledgeBlock) {
+        inputMessages.push({ role: 'user', content: knowledgeBlock })
+        inputMessages.push({ role: 'assistant', content: 'Ressources intégrées.' })
+      }
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
+  // ── Couche 5 : contexte évolutif utilisateur ─────────────────────────────
+  // Inject compact evolution profile before conversation messages.
+  // Only for real chat interactions (not micro-readings).
+  if (requestType === 'chat') {
+    const { block: evolutionBlock } = buildEvolutionContext(evolutionProfile)
+    if (evolutionBlock) {
+      inputMessages.push({ role: 'user', content: evolutionBlock })
+      inputMessages.push({ role: 'assistant', content: 'Profil évolutif pris en compte.' })
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────
+
   inputMessages.push(...messages)
 
   const n8nReply = await callN8n({
@@ -822,7 +901,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  const openaiKey = process.env.OPENAI_API_KEY
   if (!openaiKey) {
     return NextResponse.json({
       reply:
@@ -849,15 +927,6 @@ export async function POST(req: NextRequest) {
       max_output_tokens: maxTokens,
     }
 
-    if (VECTOR_STORE_ID) {
-      payload.tools = [
-        {
-          type: 'file_search',
-          vector_store_ids: [VECTOR_STORE_ID],
-        },
-      ]
-    }
-
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
@@ -881,12 +950,31 @@ export async function POST(req: NextRequest) {
       return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
     }
 
+    // ── Couche 5 : mise à jour du profil évolutif ───────────────────────────
+    // Runs only for real chat exchanges, synchronous, zero extra API calls.
+    let updatedEvolutionProfile: UserEvolutionProfile | null = evolutionProfile
+    if (requestType === 'chat') {
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
+      if (lastUserMsg) {
+        const decision = updateUserEvolutionProfile({
+          userMessage: lastUserMsg.content,
+          assistantResponse: reply,
+          currentProfile: evolutionProfile,
+        })
+        if (decision.shouldUpdate) {
+          updatedEvolutionProfile = decision.nextProfile
+        }
+      }
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     return NextResponse.json({
       reply,
       threadId,
       conversationId: threadId,
       chips: [],
       needsBirthData: buildNeedsBirthData(reply, birthData),
+      updatedEvolutionProfile,
     })
   } catch (e) {
     console.error('Responses API fetch error:', e)
