@@ -685,10 +685,6 @@ transform: scale(1.08);
 transition: all 0.35s ease;
 
 }
-.hx-logo-wrap {
-  width: 35px !important;
-  height: 35px !important;
-}
 
 /* TEXTE */
 
@@ -781,7 +777,7 @@ transition: all 0.35s ease;
     transform 220ms ease,
     box-shadow 220ms ease,
     border-color 220ms ease;
-  overflow: hidden;
+  overflow: visible;
 }
 
 
@@ -805,23 +801,14 @@ transition: all 0.35s ease;
   animation: hxBrandHaloPulse 4.8s ease-in-out infinite;
 }
 
-/* LOGO */
-.hx-logo-wrap {
-  width: 48px !important;
-  height: 48px !important;
-}
-
-/* IMAGE DU LOGO */
-.hx-logo-image {
-  width: 100% !important;
-  height: 100% !important;
-
+/* IMAGE DU LOGO — glow renforcé dans le badge navbar */
+.hx-home-brand-badge .hx-logo-image {
   filter:
     brightness(1.25)
     contrast(1.1)
-    drop-shadow(0 0 12px rgba(255,255,255,0.25))
-    drop-shadow(0 0 22px rgba(88,226,194,0.25))
-    drop-shadow(0 0 35px rgba(73,215,255,0.18));
+    drop-shadow(0 0 10px rgba(255,255,255,0.2))
+    drop-shadow(0 0 20px rgba(88,226,194,0.22))
+    drop-shadow(0 0 32px rgba(73,215,255,0.14));
 }
 
 /* TITRE */
@@ -2877,26 +2864,6 @@ transition: all 0.35s ease;
 }
 
 /* HALO */
-
-.hx-home-brand-halo {
-  position: absolute;
-  inset: -4px;
-  border-radius: 999px;
-  background:
-    radial-gradient(
-      circle,
-      rgba(88, 226, 194, 0.16) 0%,
-      rgba(88, 226, 194, 0.08) 40%,
-      rgba(73, 215, 255, 0.04) 58%,
-      transparent 72%
-    );
-  opacity: 0.82;
-  filter: blur(6px);
-  pointer-events: none;
-  animation: hxBrandHaloPulse 4.8s ease-in-out infinite;
-}
-
-/* LOGO */
 
 .hx-home-brand-halo {
   position: absolute;
@@ -5786,6 +5753,22 @@ select {
     letter-spacing: -0.05em;
   }
   .hx-home-section { padding: 140px 24px; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOGO ANIMATION — responsive
+   ══════════════════════════════════════════════════════════════ */
+
+/* Badge : taille et animation adaptées à chaque breakpoint */
+@media (max-width: 767px) {
+  .hx-home-brand-badge {
+    animation: hx-logo-breathe-sm 6s ease-in-out infinite;
+  }
+}
+
+@keyframes hx-logo-breathe-sm {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.04); }
 }
 
 /* ══════════════════════════════════════════════════════════════
