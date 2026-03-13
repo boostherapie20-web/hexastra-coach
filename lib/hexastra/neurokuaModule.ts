@@ -15,7 +15,7 @@ import type { DominantPotential } from './potentialModule'
 
 type NeurokuaState = 'activation' | 'recuperation' | 'concentration' | 'equilibre_emotionnel'
 
-type NeurokuaResult = {
+export type NeurokuaResult = {
   state: NeurokuaState
   instructionBlock: string
 }

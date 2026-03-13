@@ -122,7 +122,7 @@ export function buildChatPayload({
   plan: PlanKey
   birthData: BirthData
   practitionerUsage: PractitionerUsage
-  chatLanguage: string
+  chatLanguage: string | undefined
   conversationId: string | null
   messages: ChatMessage[]
   evolutionProfile?: UserEvolutionProfile | null
@@ -145,7 +145,7 @@ export function buildChatPayload({
     requestType,
     mode: ents.chatMode,
     conversationId,
-    chatLanguage,
+    chatLanguage: chatLanguage ?? 'fr',
     plan: planCtx.plan,
     analysisDepth: planCtx.analysisDepth,
     practitionerEnabled: planCtx.practitionerEnabled,
