@@ -25,6 +25,9 @@ export default function PremiumStarfield() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
+    /* Skip canvas animation on mobile — saves battery and GPU */
+    if (window.innerWidth < 768) return
+
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -100,8 +103,10 @@ export default function PremiumStarfield() {
         ctx.beginPath()
         ctx.arc(s.x + driftX, s.y + driftY, s.r, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(255, 248, 235, ${alpha})`
-        ctx.shadowBlur = s.r > 1.4 ? 12 : 6
-        ctx.shadowColor = 'rgba(255,255,255,0.28)'
+        if (width > 1024) {
+          ctx.shadowBlur = s.r > 1.4 ? 12 : 6
+          ctx.shadowColor = 'rgba(255,255,255,0.28)'
+        }
         ctx.fill()
       }
 

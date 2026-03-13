@@ -5794,3 +5794,60 @@ select {
   .hx-home-section { padding: 140px 24px; }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   PERFORMANCE MOBILE — désactive les effets GPU lourds
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Stop infinite CSS animations on background layers */
+  .hx-bg-aurora-a,
+  .hx-bg-aurora-b,
+  .hx-bg-aurora-c,
+  .hx-bg-nebula-a,
+  .hx-bg-nebula-b,
+  .hx-bg-nebula-c,
+  .hx-bg-stars-1,
+  .hx-bg-stars-2,
+  .hx-bg-stars-3 {
+    animation: none;
+  }
+
+  /* Reduce blur intensity on background layers */
+  .hx-bg-aurora { filter: blur(60px); }
+  .hx-bg-nebula { filter: blur(50px); }
+
+  /* Remove backdrop-filter on mobile — biggest GPU killer */
+  .hx-home-nav,
+  .hx-home-search-shell,
+  .hx-home-preview-card,
+  .hx-home-dimension-card,
+  .hx-home-pricing-card,
+  .hx-home-finalcta,
+  .hx-chat-header,
+  .hx-sidebar,
+  .hx-chat-panel,
+  .hx-msg-bubble,
+  .hx-composer-wrap,
+  .hx-mobile-nav-sheet {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  /* Search bar — fix button proportion */
+  .hx-home-search-shell {
+    display: flex;
+    align-items: center;
+  }
+
+  .hx-home-search-input {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .hx-home-search-button {
+    flex: 0 0 auto;
+    width: auto;
+    padding-left: 18px;
+    padding-right: 18px;
+    white-space: nowrap;
+  }
+}
