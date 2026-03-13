@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
@@ -19,16 +18,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth', origin))
   }
 
-  const cookieStore = await cookies()
+  // Build the success response upfront so cookies can be set directly on it.
+  // Using cookieStore.set() + NextResponse.redirect() does NOT reliably
+  // forward cookies in all Next.js versions — explicit response cookies do.
+  const response = NextResponse.redirect(new URL('/chat', origin))
 
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
-        return cookieStore.getAll()
+        return request.cookies.getAll()
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value, options }) =>
-          cookieStore.set(name, value, options)
+          response.cookies.set(name, value, options)
         )
       },
     },
@@ -41,5 +43,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth?error=callback', origin))
   }
 
-  return NextResponse.redirect(new URL('/chat', origin))
+  return response
 }

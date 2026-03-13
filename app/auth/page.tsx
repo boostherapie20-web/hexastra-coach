@@ -77,6 +77,7 @@ export default function AuthPage() {
     } else {
       sessionStorage.removeItem('hx.noremember')
     }
+    router.refresh()
     router.push('/chat')
   }
 
@@ -101,6 +102,7 @@ export default function AuthPage() {
     /* If email confirmation is disabled in Supabase, redirect immediately */
     const { data: sessionData } = await supabase.auth.getSession()
     if (sessionData.session) {
+      router.refresh()
       router.push('/chat')
     } else {
       notify('Compte créé ! Vérifiez votre e-mail pour confirmer votre inscription.', false)

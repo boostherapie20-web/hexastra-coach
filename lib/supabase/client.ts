@@ -12,6 +12,8 @@ export function createClient() {
     return {
       auth: {
         getUser: async () => ({ data: { user: null }, error: null }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
         signInWithPassword: async () => ({ error: { message: 'Non configuré' } }),
         signInWithOAuth: async () => ({ data: null, error: { message: 'Non configuré' } }),
         signUp: async () => ({ error: { message: 'Non configuré' } }),
