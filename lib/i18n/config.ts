@@ -16,7 +16,7 @@ export const SUPPORTED_LANGUAGES: LangMeta[] = [
   { code: 'it', label: 'Italian',    native: 'Italiano',    flag: '🇮🇹' },
 ]
 
-export const DEFAULT_LANGUAGE: Lang = 'en'
+export const DEFAULT_LANGUAGE: Lang = 'fr'
 
 /** Languages not yet released — kept for future reference */
 export const FUTURE_LANGUAGES: string[] = ['ja', 'zh', 'ar', 'ru']
@@ -35,5 +35,5 @@ export function detectBrowserLang(): Lang {
 }
 
 export function getLangMeta(code: Lang): LangMeta {
-  return SUPPORTED_LANGUAGES.find((l) => l.code === code) ?? SUPPORTED_LANGUAGES[1]
+  return SUPPORTED_LANGUAGES.find((l) => l.code === code) ?? SUPPORTED_LANGUAGES[0]
 }

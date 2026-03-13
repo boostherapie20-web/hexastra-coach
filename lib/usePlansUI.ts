@@ -15,7 +15,7 @@ export function usePlansUI(): PlanUiData[] {
       desc: t('pricing.freeDesc'),
       features: [t('pricing.freeF1'), t('pricing.freeF2'), t('pricing.freeF3'), t('pricing.freeF4')],
       cta: t('pricing.freeCta'),
-      href: '/chat',
+      href: '/auth',
     },
     {
       key: 'essential',
