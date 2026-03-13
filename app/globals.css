@@ -3846,6 +3846,78 @@ transition: all 0.35s ease;
   color: var(--hx-emerald);
 }
 
+/* Password hint */
+.hx-auth-pw-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hx-auth-pw-hint {
+  margin: 0;
+  font-size: 0.74rem;
+  color: rgba(180, 205, 220, 0.5);
+  line-height: 1.4;
+  padding-left: 2px;
+}
+
+.hx-auth-pw-hint.is-error {
+  color: #fca5a5;
+}
+
+/* Rester connecté */
+.hx-auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.hx-auth-remember input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--hx-emerald);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.hx-auth-remember span {
+  font-size: 0.84rem;
+  color: rgba(200, 220, 240, 0.72);
+}
+
+/* Birth form — heure inconnue */
+.hx-birth-inline-unknown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.hx-birth-inline-unknown input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #19C37D;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.hx-birth-inline-unknown span {
+  font-size: 11px;
+  color: rgba(20, 33, 26, 0.58);
+  font-weight: 500;
+}
+
+.hx-birth-inline-input:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* ================================
    PRICING PAGE
 ================================ */

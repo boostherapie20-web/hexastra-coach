@@ -329,8 +329,7 @@ export default function HomePage() {
             <h2>{t('home.ctaTitle')}</h2>
             <p className="hx-home-copy">{t('home.ctaCopy')}</p>
             <div className="hx-home-hero-actions is-centered">
-              <Link href={user ? '/chat' : '/auth'} className="hx-home-hero-secondary is-prominent">{t('home.ctaOpen')}</Link>
-              <Link href="/auth" className="hx-home-hero-secondary">{t('home.ctaAuth')}</Link>
+              <Link href={user ? '/chat' : '/auth'} className="hx-home-hero-secondary is-prominent">{t('home.ctaAuth')}</Link>
             </div>
           </div>
         </div>

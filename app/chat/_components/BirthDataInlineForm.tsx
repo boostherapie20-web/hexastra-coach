@@ -5,10 +5,10 @@ import type { BirthData } from '../_lib/chat'
 import { EMPTY_BIRTH_DATA } from '../_lib/chat'
 
 type CityResult = {
-  displayName: string   // e.g. "Paris, Île-de-France, France"
-  city: string          // e.g. "Paris"
-  country: string       // e.g. "France"
-  countryCode: string   // e.g. "FR"
+  displayName: string
+  city: string
+  country: string
+  countryCode: string
   lat: string
   lng: string
 }
@@ -46,7 +46,9 @@ async function searchCities(query: string): Promise<CityResult[]> {
           lng: parseFloat(r.lon).toFixed(4),
         }
       })
-      .filter((r, i, arr) => arr.findIndex((x) => x.city === r.city && x.countryCode === r.countryCode) === i)
+      .filter((r, i, arr) =>
+        arr.findIndex((x) => x.city === r.city && x.countryCode === r.countryCode) === i
+      )
   } catch {
     return []
   }
@@ -62,6 +64,7 @@ function formatCoord(lat: string, lng: string): string {
 
 export default function BirthDataInlineForm({ data, onSave }: Props) {
   const [form, setForm] = useState<BirthData>({ ...EMPTY_BIRTH_DATA, ...data })
+  const [timeUnknown, setTimeUnknown] = useState(false)
 
   // City autocomplete state
   const [cityQuery, setCityQuery] = useState(data.birthCity ?? '')
@@ -103,8 +106,14 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
     const q = e.target.value
     setCityQuery(q)
     setCitySelected(false)
-    // Clear lat/lng/country when user edits manually
-    setForm((prev) => ({ ...prev, birthCity: q, birthLat: '', birthLng: '', birthCountryCode: '', birthCountryName: '' }))
+    setForm((prev) => ({
+      ...prev,
+      birthCity: q,
+      birthLat: '',
+      birthLng: '',
+      birthCountryCode: '',
+      birthCountryName: '',
+    }))
     triggerSearch(q)
   }
 
@@ -123,6 +132,11 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
     }))
   }
 
+  function handleTimeUnknown(checked: boolean) {
+    setTimeUnknown(checked)
+    if (checked) setForm((prev) => ({ ...prev, birthTime: '' }))
+  }
+
   function set(field: keyof BirthData, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
@@ -132,16 +146,20 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
     const trimmed: BirthData = {
       ...form,
       firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
       birthDate: form.birthDate.trim(),
       birthCity: form.birthCity.trim(),
+      birthTime: timeUnknown ? '' : form.birthTime.trim(),
     }
     onSave(trimmed)
   }
 
   const isValid =
     form.firstName.trim().length > 0 &&
+    form.lastName.trim().length > 0 &&
     form.birthDate.trim().length > 0 &&
-    form.birthCity.trim().length > 0
+    form.birthCity.trim().length > 0 &&
+    (timeUnknown || form.birthTime.trim().length > 0)
 
   return (
     <form
@@ -150,10 +168,12 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
       aria-label="Données de naissance"
     >
       <p className="hx-birth-inline-hint">
-        Pour personnaliser ta lecture, j'ai besoin de quelques informations.
+        Pour personnaliser ta lecture, j&apos;ai besoin de quelques informations.
+        Les champs marqués <span aria-hidden="true">*</span> sont obligatoires.
       </p>
 
       <div className="hx-birth-inline-grid">
+
         {/* Prénom */}
         <label className="hx-birth-inline-field">
           <span className="hx-birth-inline-label">Prénom <span aria-hidden="true">*</span></span>
@@ -165,6 +185,20 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
             onChange={(e) => set('firstName', e.target.value)}
             required
             autoComplete="given-name"
+          />
+        </label>
+
+        {/* Nom */}
+        <label className="hx-birth-inline-field">
+          <span className="hx-birth-inline-label">Nom <span aria-hidden="true">*</span></span>
+          <input
+            className="hx-birth-inline-input"
+            type="text"
+            placeholder="Nom de famille"
+            value={form.lastName}
+            onChange={(e) => set('lastName', e.target.value)}
+            required
+            autoComplete="family-name"
           />
         </label>
 
@@ -181,20 +215,34 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
         </label>
 
         {/* Heure */}
-        <label className="hx-birth-inline-field">
-          <span className="hx-birth-inline-label">Heure de naissance</span>
+        <div className="hx-birth-inline-field">
+          <span className="hx-birth-inline-label">
+            Heure de naissance <span aria-hidden="true">*</span>
+          </span>
           <input
             className="hx-birth-inline-input"
             type="time"
-            placeholder="HH:MM (facultatif)"
+            placeholder="HH:MM"
             value={form.birthTime}
             onChange={(e) => set('birthTime', e.target.value)}
+            disabled={timeUnknown}
+            required={!timeUnknown}
           />
-        </label>
+          <label className="hx-birth-inline-unknown">
+            <input
+              type="checkbox"
+              checked={timeUnknown}
+              onChange={(e) => handleTimeUnknown(e.target.checked)}
+            />
+            <span>Heure inconnue</span>
+          </label>
+        </div>
 
         {/* Ville avec autocomplete — occupe toute la largeur */}
         <div className="hx-birth-inline-field hx-birth-city-wrapper" ref={wrapperRef}>
-          <span className="hx-birth-inline-label">Ville de naissance <span aria-hidden="true">*</span></span>
+          <span className="hx-birth-inline-label">
+            Ville de naissance <span aria-hidden="true">*</span>
+          </span>
           <div className="hx-birth-city-input-row">
             <input
               className={`hx-birth-inline-input${citySelected && form.birthLat ? ' hx-birth-city-confirmed' : ''}`}
@@ -210,14 +258,12 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
             {isSearching && <span className="hx-birth-city-spinner" aria-hidden="true" />}
           </div>
 
-          {/* Coordonnées affichées une fois la ville sélectionnée */}
           {citySelected && form.birthLat && (
             <span className="hx-birth-city-coords">
               {form.birthCountryName} · {formatCoord(form.birthLat, form.birthLng)}
             </span>
           )}
 
-          {/* Dropdown */}
           {showDropdown && (
             <ul className="hx-birth-city-dropdown" role="listbox" aria-label="Suggestions de villes">
               {suggestions.map((r, i) => (
@@ -230,15 +276,14 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
                   <span className="hx-birth-city-name">{r.city}</span>
                   <span className="hx-birth-city-meta">
                     {r.country}
-                    {r.lat && r.lng && (
-                      <> · {formatCoord(r.lat, r.lng)}</>
-                    )}
+                    {r.lat && r.lng && <> · {formatCoord(r.lat, r.lng)}</>}
                   </span>
                 </li>
               ))}
             </ul>
           )}
         </div>
+
       </div>
 
       <button
