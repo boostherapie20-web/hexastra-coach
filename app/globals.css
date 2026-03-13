@@ -518,7 +518,6 @@ textarea {
 
   -webkit-backdrop-filter: blur(18px) saturate(135%);
   backdrop-filter: blur(18px) saturate(135%);
-  -webkit-backdrop-filter: blur(18px) saturate(135%);
 
   overflow: hidden;
 }
@@ -553,49 +552,6 @@ textarea {
   opacity: 0.9;
 }
 
-.hx-home-header {
-
--webkit-backdrop-filter: blur(16px);
-backdrop-filter: blur(16px);
--webkit-backdrop-filter: blur(16px);
-
-background:
-rgba(8,15,20,0.45);
-
-border-bottom:
-
-1px solid rgba(120,200,255,0.12);
-
-}
-
-/* LOGO BADGE */
-
-.hx-home-brand-badge {
-
-  width: 68px;
-  height: 68px;
-
-  border-radius: 50%;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid rgba(255,255,255,0.2);
-
-  background:
-
-  radial-gradient(circle at 30% 30%,
-  rgba(255,255,255,0.12),
-  rgba(255,255,255,0.04));
-
-  box-shadow:
-
-  0 10px 28px rgba(0,0,0,0.35),
-  0 0 20px rgba(88,226,194,0.15);
-
-}
-
 .hx-home-brand-badge.is-live {
   transform: scale(1.02);
   border-color: rgba(138, 236, 220, 0.22);
@@ -603,17 +559,6 @@ border-bottom:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 10px 26px rgba(0, 0, 0, 0.16),
     0 0 20px rgba(88, 226, 194, 0.1);
-}
-
-.hx-home-brand-halo {
-  position: absolute;
-  inset: -10px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle, rgba(88, 226, 194, 0.14) 0%, rgba(88, 226, 194, 0.06) 42%, rgba(73, 215, 255, 0.04) 60%, transparent 78%);
-  opacity: 0.7;
-  filter: blur(10px);
-  pointer-events: none;
 }
 
 .hx-home-brand-badge .hx-logo-wrap {
@@ -628,20 +573,6 @@ border-bottom:
     drop-shadow(0 0 10px rgba(255, 255, 255, 0.16))
     drop-shadow(0 0 18px rgba(88, 226, 194, 0.18))
     drop-shadow(0 0 28px rgba(73, 215, 255, 0.1));
-}
-
-.hx-home-brand-halo {
-  position: absolute;
-  inset: -14px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle, rgba(88, 226, 194, 0.2) 0%, rgba(88, 226, 194, 0.1) 36%, rgba(73, 215, 255, 0.06) 58%, transparent 78%);
-  opacity: 0.75;
-  filter: blur(12px);
-  pointer-events: none;
-  transition:
-    opacity 220ms ease,
-    transform 220ms ease;
 }
 
 .hx-home-brand-badge.is-live .hx-home-brand-halo {
@@ -685,25 +616,6 @@ transform: scale(1.08);
 transition: all 0.35s ease;
 
 }
-
-/* TEXTE */
-
-.hx-home-brand-title {
-  font-family: Sora, system-ui, sans-serif;
-  font-size: clamp(1rem, 0.92rem + 0.45vw, 1.35rem);
-  line-height: 1;
-  font-weight: 750;
-  letter-spacing: -0.04em;
-  color: #f7fbff;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.06);
-}
-
-.hx-home-brand-subtitle {
-  font-size: 0.78rem;
-  line-height: 1.15;
-  color: rgba(230, 240, 250, 0.78);
-}
-
 
 @media (max-width: 920px) {
   .hx-home-brand {
@@ -772,7 +684,6 @@ transition: all 0.35s ease;
     0 0 14px rgba(88, 226, 194, 0.06);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   transition:
     transform 220ms ease,
     box-shadow 220ms ease,
@@ -844,7 +755,7 @@ transition: all 0.35s ease;
 
 .hx-home-nav a {
   font-size: 0.94rem;
-  font-weight: 650;
+  font-weight: 600;
   color: rgba(242, 247, 252, 0.86);
   transition:
     color 180ms ease,
@@ -881,7 +792,6 @@ transition: all 0.35s ease;
 
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 
   transition:
     transform 180ms ease,
@@ -901,31 +811,6 @@ transition: all 0.35s ease;
 /* ============================== */
 /* HEXASTRA HEADER PREMIUM FX */
 /* ============================== */
-
-/* respiration du logo */
-
-.hx-home-brand-badge {
-
-  animation: hx-logo-breathe 6s ease-in-out infinite;
-
-}
-
-@keyframes hx-logo-breathe {
-
-  0% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.06);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-
-}
-
 
 /* halo dynamique */
 
@@ -1541,7 +1426,6 @@ transition: all 0.35s ease;
   box-shadow: var(--hx-shadow-panel);
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   overflow: hidden;
 }
 
@@ -1729,7 +1613,6 @@ transition: all 0.35s ease;
     0 14px 32px rgba(0, 0, 0, 0.24);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -2270,7 +2153,6 @@ transition: all 0.35s ease;
   background: rgba(4, 10, 18, 0.46);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .hx-chat-mobile-sheet {
@@ -2661,6 +2543,92 @@ transition: all 0.35s ease;
 .hx-birth-inline-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 .hx-birth-inline-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* City autocomplete */
+.hx-birth-city-wrapper {
+  position: relative;
+  grid-column: 1 / -1;
+}
+
+.hx-birth-city-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hx-birth-city-input-row .hx-birth-inline-input {
+  padding-right: 32px;
+}
+
+.hx-birth-city-confirmed {
+  border-color: rgba(25,195,125,0.50) !important;
+  background: rgba(25,195,125,0.04) !important;
+}
+
+.hx-birth-city-spinner {
+  position: absolute;
+  right: 10px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(20,33,26,0.12);
+  border-top-color: #19C37D;
+  border-radius: 50%;
+  animation: hx-spin 0.6s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes hx-spin { to { transform: rotate(360deg); } }
+
+.hx-birth-city-coords {
+  font-size: 11px;
+  color: #19C37D;
+  font-weight: 500;
+  margin-top: 3px;
+  display: block;
+  letter-spacing: 0.02em;
+}
+
+.hx-birth-city-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid rgba(20,33,26,0.10);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(16,24,20,0.12);
+  z-index: 100;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.hx-birth-city-option {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.hx-birth-city-option:hover {
+  background: rgba(25,195,125,0.08);
+}
+
+.hx-birth-city-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #14211A;
+}
+
+.hx-birth-city-meta {
+  font-size: 11px;
+  color: rgba(20,33,26,0.54);
+}
+
 /* PractitionerUsageStep */
 .hx-practitioner-step {
   background: rgba(255,255,255,0.86);
@@ -3013,125 +2981,40 @@ transition: all 0.35s ease;
 
 }
 
+@keyframes hxBrandHaloPulse {
+  0%, 100% { transform: scale(0.96); opacity: 0.68; }
+  50%       { transform: scale(1.03); opacity: 0.92; }
+}
+
 @media (max-width: 700px) {
   .hx-home-hero {
     min-height: 0;
   }
 
-/* ========================= */
-/* HEXASTRA BRAND BALANCE */
-/* ========================= */
-
-.hx-home-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-/* BADGE LOGO */
-
-.hx-home-brand-badge {
-  position: relative;
-  width: 58px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035) 45%, rgba(255, 255, 255, 0.015) 100%);
-  border: 1px solid rgba(220, 232, 244, 0.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 10px 24px rgba(0, 0, 0, 0.14),
-    0 0 14px rgba(88, 226, 194, 0.06);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition:
-    transform 220ms ease,
-    box-shadow 220ms ease,
-    border-color 220ms ease;
-  overflow: visible;
-}
-
-/* HALO */
-
-.hx-home-brand-halo {
-  position: absolute;
-  inset: -4px;
-  border-radius: 999px;
-  background:
-    radial-gradient(
-      circle,
-      rgba(88, 226, 194, 0.16) 0%,
-      rgba(88, 226, 194, 0.08) 40%,
-      rgba(73, 215, 255, 0.04) 58%,
-      transparent 72%
-    );
-  opacity: 0.82;
-  filter: blur(6px);
-  pointer-events: none;
-  animation: hxBrandHaloPulse 4.8s ease-in-out infinite;
-}
-
-@keyframes hxBrandHaloPulse {
-  0%,
-  100% {
-    transform: scale(0.96);
-    opacity: 0.68;
-  }
-  50% {
-    transform: scale(1.03);
-    opacity: 0.92;
-  }
-}
-
-/* TITRE */
-
-.hx-home-brand-title {
-  font-family: Sora, system-ui, sans-serif;
-
-  font-size: clamp(1.4rem, 1rem + 0.7vw, 1.9rem);
-
-  font-weight: 700;
-
-  letter-spacing: -0.04em;
-
-  color: #f7fbff;
-
-  text-shadow:
-    0 0 10px rgba(255,255,255,0.08);
-}
-
-/* SOUS TITRE */
-
-.hx-home-brand-subtitle {
-  font-size: 0.9rem;
-  color: rgba(230,240,250,0.82);
-}
-
-
-/* ANIMATION RESPIRATION */
-
-@keyframes hx-logo-breathe {
-
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
+  .hx-home-brand {
+    gap: 12px;
   }
 
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
+  .hx-home-brand-badge {
+    width: 44px;
+    height: 44px;
   }
 
-  100% {
-    transform: scale(0.95);
-    opacity: 0.8;
+  .hx-home-brand-badge .hx-logo-wrap {
+    --hx-logo-size: 24px;
   }
 
-}
+  .hx-home-brand-title {
+    font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.3rem);
+  }
+
+  .hx-home-brand-subtitle {
+    font-size: 0.78rem;
+  }
+
+  .hx-home-section {
+    padding: 56px 16px;
+  }
 
   .hx-home-hero-text,
   .hx-home-copy {

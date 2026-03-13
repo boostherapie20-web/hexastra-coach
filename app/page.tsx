@@ -165,7 +165,7 @@ export default function HomePage() {
               </div>
 
               <div className="hx-home-hero-actions">
-                <Link href="/chat" className="hx-home-hero-secondary">{t('home.heroFree')}</Link>
+                <Link href={user ? '/chat' : '/auth'} className="hx-home-hero-secondary">{t('home.heroFree')}</Link>
               </div>
             </div>
 
@@ -329,7 +329,7 @@ export default function HomePage() {
             <h2>{t('home.ctaTitle')}</h2>
             <p className="hx-home-copy">{t('home.ctaCopy')}</p>
             <div className="hx-home-hero-actions is-centered">
-              <Link href="/chat" className="hx-home-hero-secondary is-prominent">{t('home.ctaOpen')}</Link>
+              <Link href={user ? '/chat' : '/auth'} className="hx-home-hero-secondary is-prominent">{t('home.ctaOpen')}</Link>
               <Link href="/auth" className="hx-home-hero-secondary">{t('home.ctaAuth')}</Link>
             </div>
           </div>
