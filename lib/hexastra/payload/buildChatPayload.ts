@@ -7,11 +7,13 @@ export function buildChatPayload({
   userContext,
   sessionContext,
   messages,
+  knowledgeBlock,
 }: {
   systemPrompt: string
   userContext: HexastraUserContext
   sessionContext: HexastraSessionContext
   messages: ChatMessage[]
+  knowledgeBlock?: string | null
 }) {
   const contextBlock = {
     userContext: {
@@ -46,6 +48,7 @@ export function buildChatPayload({
         role: 'user',
         content: `Contexte HexAstra interne à intégrer silencieusement : ${JSON.stringify(contextBlock)}`,
       },
+      ...(knowledgeBlock ? [{ role: 'assistant' as const, content: knowledgeBlock }] : []),
       ...messages,
     ],
   }

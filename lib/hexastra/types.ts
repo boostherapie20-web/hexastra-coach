@@ -45,7 +45,17 @@ export type BirthProfile = {
   gender?: string
 }
 
-export type DomainRoute = 'general' | 'neurokua' | 'gps_kua' | 'fusion' | 'relationship' | 'career' | 'decision' | 'timing' | 'wellbeing' | 'science'
+export type DomainRoute =
+  | 'general'
+  | 'neurokua'
+  | 'gps_kua'
+  | 'fusion'
+  | 'relationship'
+  | 'career'
+  | 'decision'
+  | 'timing'
+  | 'wellbeing'
+  | 'science'
 
 export type HexastraMenuItem = {
   key: string
@@ -91,6 +101,8 @@ export type SessionStateRecord = {
   last_selected_menu_key?: string | null
   last_selected_submenu_key?: string | null
   active_flow?: string | null
+  current_domain_route?: DomainRoute | null
+  active_module?: string | null
 }
 
 export type UserMemoryRecord = {

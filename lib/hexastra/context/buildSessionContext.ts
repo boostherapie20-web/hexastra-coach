@@ -58,7 +58,7 @@ export async function buildSessionContext({
   const theme = state?.current_theme ?? (resolvedContext === 'general' ? null : resolvedContext)
   const mode = practitioner ? 'praticien' : 'libre'
   const selected = findMenuItem(mode, selectedSubmenuKey ?? selectedMenuKey ?? null)
-  const domainRoute = selected?.domainRoute ?? inferDomainRoute(message, resolvedContext)
+  const domainRoute = selected?.domainRoute ?? state?.current_domain_route ?? inferDomainRoute(message, resolvedContext)
   const activeModule =
     domainRoute === 'gps_kua' ? 'KS.HexAstra.GPS.V1' :
     domainRoute === 'neurokua' ? 'KS.NeuroKua.System.V1' :

@@ -1,14 +1,14 @@
 /**
  * Vector Search — adaptive retrieval from OpenAI Vector Store.
  *
- * Uses the Vector Stores Search API directly, giving full control
- * over topK and scoring before context is injected into the prompt.
- * This replaces the automatic file_search tool for better token control.
- *
- * Endpoint: POST /v1/vector_stores/{vector_store_id}/search
+ * Strategy:
+ * - retrieval is guided by plan + routed domain, not a static top_k ceiling
+ * - specialized routes enrich the query so the search surfaces the right KS corpus
+ * - results remain bounded by context budgets to avoid noisy prompt stuffing
  */
 
-import { getRetrievalConfig, normalizePlanKey, type PlanKey } from './retrievalPolicy'
+import { getAdaptiveRetrievalConfig, normalizePlanKey, type PlanKey } from './retrievalPolicy'
+import type { DomainRoute } from '@/lib/hexastra/types'
 
 export type SearchResult = {
   fileId: string
@@ -34,7 +34,6 @@ type ApiSearchResponse = {
   object?: string
 }
 
-/** Extract plain text from a result's content blocks */
 function extractText(content: ApiContentBlock[]): string {
   return content
     .filter((b) => b.type === 'text' && typeof b.text === 'string')
@@ -43,27 +42,50 @@ function extractText(content: ApiContentBlock[]): string {
     .trim()
 }
 
-/**
- * Retrieve documents from the vector store for a given query + plan.
- * Returns raw scored results — compression is handled separately.
- *
- * Returns empty array (never throws) so the chat still works if
- * the vector store is unavailable.
- */
+function buildDomainBiasedQuery(query: string, domainRoute?: DomainRoute): string {
+  const trimmed = query.trim().slice(0, 1200)
+  const bias =
+    domainRoute === 'gps_kua'
+      ? 'KS HexAstra GPS Kua orientation direction NeuroKua équilibre énergétique boussole'
+      : domainRoute === 'neurokua'
+      ? 'KS NeuroKua équilibre rythme fatigue surcharge récupération clarté stabilisation'
+      : domainRoute === 'fusion'
+      ? 'KS FUSION V13 orchestrateur exécutable signal envelope fusion engine arbiter sentinel'
+      : domainRoute === 'relationship'
+      ? 'relations amour dynamique relationnelle levier'
+      : domainRoute === 'career'
+      ? 'travail argent professionnel positionnement stratégie'
+      : domainRoute === 'decision'
+      ? 'décision timing levier risque arbitrage'
+      : domainRoute === 'timing'
+      ? 'timing cycle phase transition stabilisation expansion'
+      : domainRoute === 'science'
+      ? 'science module sous-module analyse spécialisée'
+      : 'HexAstra KS guidance stratégique'
+
+  return `${trimmed}\n\nPriorité documentaire: ${bias}`
+}
+
 export async function retrieveKnowledge({
   query,
   plan,
   vectorStoreId,
   apiKey,
+  domainRoute,
 }: {
   query: string
   plan: PlanKey | string
   vectorStoreId: string
   apiKey: string
+  domainRoute?: DomainRoute
 }): Promise<SearchResult[]> {
   if (!query.trim() || !vectorStoreId || !apiKey) return []
 
-  const config = getRetrievalConfig(normalizePlanKey(plan))
+  const config = getAdaptiveRetrievalConfig({
+    plan: normalizePlanKey(plan),
+    domainRoute,
+    query,
+  })
 
   try {
     const res = await fetch(
@@ -76,11 +98,11 @@ export async function retrieveKnowledge({
           'OpenAI-Beta': 'assistants=v2',
         },
         body: JSON.stringify({
-          query: query.slice(0, 800),  // cap query length
+          query: buildDomainBiasedQuery(query, domainRoute),
           max_num_results: config.topK,
           reranking: { ranker: 'auto' },
         }),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(10000),
       },
     )
 
@@ -90,7 +112,6 @@ export async function retrieveKnowledge({
     }
 
     const data: ApiSearchResponse = await res.json()
-
     if (!Array.isArray(data?.data)) return []
 
     return data.data
@@ -101,7 +122,7 @@ export async function retrieveKnowledge({
         score: r.score,
         text: extractText(r.content ?? []),
       }))
-      .filter((r) => r.text.length > 40)  // skip near-empty chunks
+      .filter((r) => r.text.length > 40)
   } catch (err) {
     console.warn('[vectorSearch] retrieval failed — skipping:', err)
     return []
