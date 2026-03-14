@@ -10,6 +10,7 @@ import { getAdaptiveRetrievalConfig } from '@/lib/retrievalPolicy'
 import { getMenuForMode, findMenuItem } from '@/lib/hexastra/menus/getMenuForMode'
 import { persistConversationMessage, writeSessionState } from '@/lib/hexastra/memory/sessionMemory'
 import { writeUserMemory } from '@/lib/hexastra/memory/userMemory'
+import { multiLayerRetrieval } from "@/lib/hexastra/retrieval/multiLayerRetrieval"
 import type {
   BirthProfile,
   ContextType,
@@ -187,13 +188,13 @@ async function buildKnowledgeBlock({
     querySuffix: retrievalPlan.querySuffix,
   })
 
-  const results = await retrieveKnowledge({
-    query,
-    plan,
-    vectorStoreId: VECTOR_STORE_ID,
-    apiKey: openaiKey,
-    domainRoute,
-  })
+  const knowledgeResults = await multiLayerRetrieval({
+  query: userMessage,
+  plan,
+  vectorStoreId: VECTOR_STORE_ID,
+  apiKey: openaiKey,
+  domainRoute
+})
 
   if (!results.length) return { block: null, profile: retrievalPlan.profile }
 
