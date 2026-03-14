@@ -375,6 +375,26 @@ function buildMenuOnlyMessage(mode: ReturnType<typeof getModeForPlan>, language:
   return [intro, '', ...lines].join('\n')
 }
 
+function isReadingRequest(args: {
+  requestType: 'micro_profile' | 'micro_year' | 'micro_month' | 'chat'
+  selectedMenuKey?: string | null
+  selectedSubmenuKey?: string | null
+  contextType?: ContextType
+  latestUserMessage: string
+}): boolean {
+  const msg = args.latestUserMessage.toLowerCase()
+
+  if (args.requestType === 'micro_profile' || args.requestType === 'micro_year' || args.requestType === 'micro_month') {
+    return true
+  }
+
+  if (args.contextType === 'hexastraReading') return true
+
+  if (args.selectedMenuKey || args.selectedSubmenuKey) return true
+
+  return /lecture|profil|analyse|scan|cycle|année|mois|portrait|lecture générale|lecture complete|lecture complète/i.test(msg)
+}
+
 export async function runHexastraFlow(input: {
   plan?: PlanKey
   language?: string
@@ -458,11 +478,22 @@ export async function runHexastraFlow(input: {
 
   const selectedMenu = findMenuItem(mode, input.selectedSubmenuKey ?? input.selectedMenuKey ?? null)
   const initialResolvedDomainRoute = resolveDomainRoute({
-  latestUserMessage,
-  selectedMenuDomainRoute: selectedMenu?.domainRoute ?? null,
-  sessionDomainRoute: sessionContext.domainRoute,
-  contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-})
+    latestUserMessage,
+    selectedMenuDomainRoute: selectedMenu?.domainRoute ?? null,
+    sessionDomainRoute: sessionContext.domainRoute,
+    contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+  })
+  
+  const readingRequest = isReadingRequest({
+    requestType: effectiveRequestType,
+    selectedMenuKey: input.selectedMenuKey,
+    selectedSubmenuKey: input.selectedSubmenuKey,
+    contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+    latestUserMessage,
+  })
+  
+  const resolvedDomainRoute: DomainRoute =
+    readingRequest ? 'fusion' : initialResolvedDomainRoute
 
 const resolvedDomainRoute =
   ['micro_profile', 'micro_year', 'micro_month'].includes(effectiveRequestType)
@@ -516,8 +547,8 @@ const resolvedDomainRoute =
 }
 
   const shouldRunSpecialized =
-    Boolean(userContext.birthData?.date && userContext.birthData?.place) &&
-    ['chat', 'micro_profile', 'micro_year', 'micro_month'].includes(effectiveRequestType)
+    readingRequest &&
+    Boolean(userContext.birthData?.date && userContext.birthData?.place)
   
   const specializedResult = shouldRunSpecialized
     ? await runSpecializedModule({
@@ -527,6 +558,32 @@ const resolvedDomainRoute =
         messages: input.messages,
       })
     : null
+
+  if (readingRequest && !specializedResult) {
+    const message = userContext.language.startsWith('en')
+      ? 'The HexAstra calculation service is temporarily unavailable. Please try again in a few moments.'
+      : 'Le service de calcul HexAstra est temporairement indisponible. Réessaie dans quelques instants.'
+  
+    return {
+      message,
+      reply: message,
+      mode,
+      plan,
+      conversationId,
+      flowState: { step: flowStep, completed: false },
+      metadata: {
+        contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+        practitionerUsage: userContext.practitionerUsage,
+        shouldPersistMemory: false,
+        selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
+        selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
+        sessionStep: flowStep,
+        emotionalState: sessionContext.emotionalState,
+        timing: sessionContext.timing,
+      },
+      updatedEvolutionProfile: input.evolutionProfile ?? null,
+    }
+  }
 
   const selectedMenuLabel = input.selectedMenuKey ? findMenuItem(mode, input.selectedMenuKey)?.label ?? null : null
   const selectedSubmenuLabel = input.selectedSubmenuKey ? findMenuItem(mode, input.selectedSubmenuKey)?.label ?? null : null
