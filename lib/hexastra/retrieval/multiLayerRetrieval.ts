@@ -20,9 +20,9 @@ export async function multiLayerRetrieval({
   domainRoute?: string
 }) {
 
-  const layers = []
+  const layers: LayerResult[] = []
 
-  // layer 1 : knowledge principal
+  // Layer 1 — Knowledge principal
   const knowledge = await retrieveKnowledge({
     query,
     plan,
@@ -39,12 +39,14 @@ export async function multiLayerRetrieval({
     }))
   )
 
-  // layer 2 : KS Fusion
-  if (query.toLowerCase().includes("ks") ||
-      query.toLowerCase().includes("fusion")) {
+  // Layer 2 — KS Fusion
+  if (
+    query.toLowerCase().includes("ks") ||
+    query.toLowerCase().includes("fusion")
+  ) {
 
     const fusion = await retrieveKnowledge({
-      query: `${query} KS Fusion V13 orchestrateur`,
+      query: `${query} KS Fusion V13 système`,
       plan,
       vectorStoreId,
       apiKey,
@@ -60,7 +62,7 @@ export async function multiLayerRetrieval({
     )
   }
 
-  // layer 3 : domain
+  // Layer 3 — Domaine spécialisé
   if (domainRoute) {
 
     const domain = await retrieveKnowledge({
@@ -81,6 +83,6 @@ export async function multiLayerRetrieval({
   }
 
   return layers
-    .sort((a,b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score)
     .slice(0, 10)
 }
