@@ -273,7 +273,8 @@ async function runSpecializedModule({
         publicSummary: summary,
         raw: kua && typeof kua === 'object' ? kua as Record<string, unknown> : null,
       }
-    } catch {
+        } catch (error) {
+      console.error('[runSpecializedModule:/kua] failed', error)
       // continue to fallback
     }
   }
@@ -456,12 +457,17 @@ export async function runHexastraFlow(input: {
   }
 
   const selectedMenu = findMenuItem(mode, input.selectedSubmenuKey ?? input.selectedMenuKey ?? null)
-  const resolvedDomainRoute = resolveDomainRoute({
-    latestUserMessage,
-    selectedMenuDomainRoute: selectedMenu?.domainRoute ?? null,
-    sessionDomainRoute: sessionContext.domainRoute,
-    contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-  })
+  const initialResolvedDomainRoute = resolveDomainRoute({
+  latestUserMessage,
+  selectedMenuDomainRoute: selectedMenu?.domainRoute ?? null,
+  sessionDomainRoute: sessionContext.domainRoute,
+  contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+})
+
+const resolvedDomainRoute =
+  ['micro_profile', 'micro_year', 'micro_month'].includes(effectiveRequestType)
+    ? 'fusion'
+    : initialResolvedDomainRoute
 
   const activeModules = getModulesForDomain(resolvedDomainRoute)
   const hasBirthData = isBirthComplete(userContext.birthData)
@@ -509,15 +515,18 @@ export async function runHexastraFlow(input: {
   }
 }
 
-  const specializedResult =
-    effectiveRequestType === 'chat'
-      ? await runSpecializedModule({
-          domainRoute: resolvedDomainRoute,
-          birthData: userContext.birthData,
-          practitionerUsage: userContext.practitionerUsage,
-          messages: input.messages,
-        })
-      : null
+  const shouldRunSpecialized =
+    Boolean(userContext.birthData?.date && userContext.birthData?.place) &&
+    ['chat', 'micro_profile', 'micro_year', 'micro_month'].includes(effectiveRequestType)
+  
+  const specializedResult = shouldRunSpecialized
+    ? await runSpecializedModule({
+        domainRoute: resolvedDomainRoute,
+        birthData: userContext.birthData,
+        practitionerUsage: userContext.practitionerUsage,
+        messages: input.messages,
+      })
+    : null
 
   const selectedMenuLabel = input.selectedMenuKey ? findMenuItem(mode, input.selectedMenuKey)?.label ?? null : null
   const selectedSubmenuLabel = input.selectedSubmenuKey ? findMenuItem(mode, input.selectedSubmenuKey)?.label ?? null : null
