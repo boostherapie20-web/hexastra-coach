@@ -4,6 +4,7 @@ import type { PractitionerUsage } from './bootstrapTypes'
 import type { UserEvolutionProfile } from '@/types/evolution'
 import { buildPlanApiContext } from '@/lib/plans'
 import { getEntitlements } from './entitlements'
+import type { ContextType, UiAction } from '@/lib/hexastra/types'
 
 export type RequestType = 'micro_profile' | 'micro_year' | 'micro_month' | 'chat'
 
@@ -12,7 +13,6 @@ export type ChatMessage = {
   content: string
 }
 
-/** Shape expected by /api/chat for birthData */
 type ApiBirthData = {
   firstName?: string
   lastName?: string
@@ -39,56 +39,19 @@ function toApiBirthData(bd: BirthData): ApiBirthData {
   }
 }
 
-/** Targeted system instruction injected for each micro-reading type */
 function microReadingInstruction(requestType: RequestType, bd: BirthData): string | null {
   const name = bd.firstName?.trim() || 'l\'utilisateur'
 
   if (requestType === 'micro_profile') {
-    return (
-      `[INSTRUCTION MICRO-PROFIL — GÉNÉRER MAINTENANT]\n` +
-      `Génère le Micro-Profil pour ${name} selon la structure exacte du système HexAstra :\n` +
-      `- Essence principale\n` +
-      `- Fonctionnement intérieur\n` +
-      `- Sensibilité dominante\n` +
-      `- Force naturelle\n` +
-      `- Zone de vigilance\n` +
-      `Clôture : "Cette lecture décrit ton fonctionnement de base. Nous pouvons maintenant explorer ta situation actuelle."\n` +
-      `Format : 6-10 lignes. Aucune question. Génère directement.`
-    )
+    return `[INSTRUCTION MICRO-PROFIL — GÉNÉRER MAINTENANT]\nGénère le Micro-Profil pour ${name} selon la structure HexAstra : essence, fonctionnement, sensibilité, force, vigilance. Format : 6-10 lignes. Aucune question.`
   }
-
   if (requestType === 'micro_year') {
     const year = new Date().getFullYear()
-    return (
-      `[INSTRUCTION MICRO-ANNÉE — GÉNÉRER MAINTENANT]\n` +
-      `Génère la Micro-Année ${year} pour ${name} selon la structure exacte du système HexAstra :\n` +
-      `- Phase de l'année\n` +
-      `- Mouvement principal\n` +
-      `- Opportunité dominante\n` +
-      `- Point de vigilance\n` +
-      `- Attitude optimale\n` +
-      `Clôture : "Ce cycle donne le contexte de ton année. Explorons maintenant ta situation actuelle."\n` +
-      `Format : 5-8 lignes. Aucune question. Génère directement.`
-    )
+    return `[INSTRUCTION MICRO-ANNÉE — GÉNÉRER MAINTENANT]\nGénère la Micro-Année ${year} pour ${name} selon la structure HexAstra : phase, mouvement, opportunité, vigilance, attitude optimale. Format : 5-8 lignes. Aucune question.`
   }
-
   if (requestType === 'micro_month') {
-    const d = new Date()
-    const monthNames = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
-    const monthLabel = `${monthNames[d.getMonth()]} ${d.getFullYear()}`
-    return (
-      `[INSTRUCTION MICRO-MOIS — GÉNÉRER MAINTENANT]\n` +
-      `Génère le Micro-Mois de ${monthLabel} pour ${name} selon la structure exacte du système HexAstra :\n` +
-      `- Thème principal du mois\n` +
-      `- Ce qui est favorable\n` +
-      `- Point de vigilance\n` +
-      `- Conseil clé\n` +
-      `Clôture : "Ton profil, ton année et ton contexte actuel sont maintenant posés. Que souhaites-tu explorer ?"\n` +
-      `Puis affiche le menu correspondant au mode actif.\n` +
-      `Format : 2-4 lignes. Aucune question. Génère directement.`
-    )
+    return `[INSTRUCTION MICRO-MOIS — GÉNÉRER MAINTENANT]\nGénère le Micro-Mois pour ${name} selon la structure HexAstra : thème principal, favorable, vigilance, conseil clé. Format : 2-4 lignes. Puis prépare la transition vers le menu.`
   }
-
   return null
 }
 
@@ -96,16 +59,21 @@ export type ChatPayload = {
   requestType: RequestType
   mode: string
   conversationId: string | null
+  language: string
   chatLanguage: string
   plan: string
   analysisDepth: string
   practitionerEnabled: boolean
   longResponseAllowed: boolean
   professionalUseAllowed: boolean
-  practitionerUsage: PractitionerUsage
+  practitionerUsage: PractitionerUsage | 'self' | 'client'
   birthData: ApiBirthData | null
   messages: ChatMessage[]
   evolutionProfile: UserEvolutionProfile | null
+  contextType: ContextType
+  selectedMenuKey?: string | null
+  selectedSubmenuKey?: string | null
+  uiAction?: UiAction
 }
 
 export function buildChatPayload({
@@ -117,6 +85,10 @@ export function buildChatPayload({
   conversationId,
   messages,
   evolutionProfile = null,
+  contextType = 'general',
+  selectedMenuKey = null,
+  selectedSubmenuKey = null,
+  uiAction = 'send_message',
 }: {
   requestType: RequestType
   plan: PlanKey
@@ -126,34 +98,39 @@ export function buildChatPayload({
   conversationId: string | null
   messages: ChatMessage[]
   evolutionProfile?: UserEvolutionProfile | null
+  contextType?: ContextType
+  selectedMenuKey?: string | null
+  selectedSubmenuKey?: string | null
+  uiAction?: UiAction
 }): ChatPayload {
   const planCtx = buildPlanApiContext(plan)
   const ents = getEntitlements(plan)
-
   const apiBirthData = toApiBirthData(birthData)
 
-  // For micro-readings, replace the user message with a targeted instruction
   let finalMessages = messages
   if (requestType !== 'chat') {
     const instruction = microReadingInstruction(requestType, birthData)
-    if (instruction) {
-      finalMessages = [{ role: 'user', content: instruction }]
-    }
+    if (instruction) finalMessages = [{ role: 'user', content: instruction }]
   }
 
   return {
     requestType,
     mode: ents.chatMode,
     conversationId,
+    language: chatLanguage ?? 'fr',
     chatLanguage: chatLanguage ?? 'fr',
     plan: planCtx.plan,
     analysisDepth: planCtx.analysisDepth,
     practitionerEnabled: planCtx.practitionerEnabled,
     longResponseAllowed: planCtx.longResponseAllowed,
     professionalUseAllowed: planCtx.professionalUseAllowed,
-    practitionerUsage,
+    practitionerUsage: practitionerUsage ?? null,
     birthData: apiBirthData,
     messages: finalMessages,
     evolutionProfile,
+    contextType,
+    selectedMenuKey,
+    selectedSubmenuKey,
+    uiAction,
   }
 }
