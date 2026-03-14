@@ -51,3 +51,7 @@ alter table public.profiles add column if not exists birth_date text;
 alter table public.profiles add column if not exists birth_time text;
 alter table public.profiles add column if not exists birth_location text;
 alter table public.profiles add column if not exists practitioner_usage text;
+
+
+alter table public.session_state add column if not exists current_domain_route text;
+alter table public.session_state add column if not exists active_module text;
