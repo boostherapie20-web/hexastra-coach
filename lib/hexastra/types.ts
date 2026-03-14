@@ -10,7 +10,11 @@ export type FlowStep =
   | 'micro_year'
   | 'micro_month'
   | 'menu'
+  | 'clarification'
   | 'analysis'
+  | 'decision'
+  | 'deep_reading'
+  | 'sensitive_support'
 
 export type ContextType =
   | 'general'
@@ -90,9 +94,16 @@ export type HexastraApiResponse = {
     shouldPersistMemory?: boolean
     selectedMenuKey?: string | null
     selectedSubmenuKey?: string | null
+    sessionStep?: FlowStep
+    emotionalState?: EmotionalState
+    timing?: TimingIntensity
   }
   updatedEvolutionProfile?: Record<string, unknown> | null
 }
+
+export type EmotionalState = 'neutral' | 'surcharge' | 'clarification' | 'decision' | 'exploration'
+export type PrecisionLevel = 'vague' | 'medium' | 'precise'
+export type TimingIntensity = 'exploration' | 'adjustment' | 'bascule' | 'high_tension'
 
 export type SessionStateRecord = {
   current_theme?: string | null
@@ -100,9 +111,14 @@ export type SessionStateRecord = {
   menu_level?: 'main' | 'submenu' | null
   last_selected_menu_key?: string | null
   last_selected_submenu_key?: string | null
-  active_flow?: string | null
+  active_flow?: FlowStep | string | null
   current_domain_route?: DomainRoute | null
   active_module?: string | null
+  has_shown_micro_readings?: boolean | null
+  last_emotional_state?: EmotionalState | string | null
+  last_timing?: TimingIntensity | string | null
+  last_precision?: PrecisionLevel | string | null
+  last_reading_level?: string | null
 }
 
 export type UserMemoryRecord = {
@@ -128,4 +144,8 @@ export type BuildPromptInput = {
   requestType: 'micro_profile' | 'micro_year' | 'micro_month' | 'chat'
   domainRoute?: DomainRoute
   specializedSource?: string | null
+  flowStep?: FlowStep
+  emotionalState?: EmotionalState
+  precision?: PrecisionLevel
+  retrievalProfile?: string
 }

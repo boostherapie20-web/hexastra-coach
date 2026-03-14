@@ -4,24 +4,41 @@ import type { BuildPromptInput } from '@/lib/hexastra/types'
 
 function modeDirective(mode: BuildPromptInput['mode']): string {
   if (mode === 'praticien') {
-    return `Mode Praticien : structure obligatoire = Situation / Phase / Dynamique / Risques / Levier / Recommandation. Vouvoiement. Vocabulaire technique autorisé si utile.`
+    return 'Mode Praticien : structure obligatoire = Situation / Phase / Dynamique / Risques / Levier / Recommandation. Vocabulaire technique autorisé si utile.'
   }
-  if (mode === 'libre_approfondi') return 'Mode Libre approfondi : plus de profondeur, plus de structuration, mais langage simple et humain.'
-  if (mode === 'libre_avance') return 'Mode Libre avancé : accessible, concret, avec un peu plus de continuité et de précision.'
+  if (mode === 'libre_approfondi') return 'Mode Libre approfondi : plus de profondeur, mais langage simple, humain et stable.'
+  if (mode === 'libre_avance') return 'Mode Libre avancé : accessible, concret, avec plus de continuité et de précision.'
   return 'Mode Libre : simple, fluide, concret, humain, sans jargon.'
 }
 
 function requestDirective(input: BuildPromptInput): string {
   if (input.requestType === 'micro_profile') {
-    return `Génère uniquement la micro-lecture profil en 6 à 10 lignes. Structure : essence, fonctionnement, sensibilité, force, vigilance. Ne pose aucune question.`
+    return 'Génère uniquement la micro-lecture profil en 6 à 10 lignes. Structure : essence, fonctionnement, sensibilité, force, vigilance. Ne pose aucune question.'
   }
   if (input.requestType === 'micro_year') {
-    return `Génère uniquement la micro-lecture année en 5 à 8 lignes. Structure : phase, mouvement, opportunité, vigilance, attitude optimale. Ne pose aucune question.`
+    return 'Génère uniquement la micro-lecture année en 5 à 8 lignes. Structure : phase, mouvement, opportunité, vigilance, attitude optimale. Ne pose aucune question.'
   }
   if (input.requestType === 'micro_month') {
-    return `Génère uniquement la micro-lecture mois en 2 à 4 lignes puis ajoute une transition douce vers le menu. Ne pose aucune question.`
+    return 'Génère uniquement la micro-lecture mois en 2 à 4 lignes puis ajoute une transition douce vers le menu. Ne pose aucune question.'
   }
-  return `Analyse demandée sur le contexte ${input.contextType}. Toujours commencer par reconnaître la situation, puis clarifier, orienter et donner un levier prioritaire.`
+  return 'Réponds selon le step de session : menu → proposer des options ; clarification → affiner ; decision → trancher avec prudence ; sensitive_support → simplifier ; analysis/deep_reading → analyser et orienter.'
+}
+
+function stepDirective(input: BuildPromptInput): string {
+  switch (input.flowStep) {
+    case 'menu':
+      return 'Step actif: MENU. Ne génère pas une lecture complète. Oriente, propose les sous-angles les plus utiles, puis demande un choix simple.'
+    case 'clarification':
+      return 'Step actif: CLARIFICATION. Réduis l’ambiguïté avant d’aller plus profond. Pose une seule question utile ou propose 3 sous-angles maximum.'
+    case 'decision':
+      return 'Step actif: DECISION. Structure la réponse autour du choix, des risques, du levier principal et d’une action de sécurisation.'
+    case 'deep_reading':
+      return 'Step actif: DEEP_READING. Tu peux produire une lecture plus complète, mais garde une synthèse rapide finale en 3 lignes maximum.'
+    case 'sensitive_support':
+      return 'Step actif: SENSITIVE_SUPPORT. Simplifie fortement. Une seule priorité. Pas de projection lourde, pas de jargon, pas de surcharge.'
+    default:
+      return 'Step actif: ANALYSIS. Comprendre, clarifier, orienter, puis donner un levier prioritaire.'
+  }
 }
 
 function ksDirective(input: BuildPromptInput): string {
@@ -29,12 +46,12 @@ function ksDirective(input: BuildPromptInput): string {
   const source = input.specializedSource ? `Source métier prioritaire disponible : ${input.specializedSource}.` : 'Aucune source métier structurée reçue.'
   const routeRule =
     route === 'gps_kua'
-      ? `Question Kua/GPS : ne jamais répondre par “je n'ai pas trouvé dans les documents”. Si les données de naissance sont suffisantes, utiliser la logique directionnelle/GPS reçue comme source de vérité, puis reformuler en langage HexAstra.`
+      ? 'Question Kua/GPS : si les données de naissance sont suffisantes, utiliser la logique directionnelle reçue comme source de vérité, puis reformuler en langage HexAstra.'
       : route === 'neurokua'
-      ? `Question NeuroKua : utiliser en priorité les signaux d'équilibre, rythme, récupération, clarté et stabilisation. Rendre la sortie simple en public, plus structurée en praticien.`
+      ? 'Question NeuroKua : utiliser en priorité les signaux d’équilibre, rythme, récupération, clarté et stabilisation.'
       : route === 'fusion'
-      ? `Question Fusion : agir comme Narrative Composer d'un orchestrateur KS. Les modules et signaux reçus sont prioritaires ; la réponse finale doit être une synthèse claire, cohérente et utile.`
-      : `S'il n'existe pas de module métier spécialisé, utilise les ressources du vector store comme enrichissement, jamais comme excuse pour répondre de manière générique.`
+      ? 'Question Fusion : agir comme Narrative Composer d’un orchestrateur KS. Les signaux reçus sont prioritaires.'
+      : 'S’il n’existe pas de module métier spécialisé, utiliser les ressources du vector store comme enrichissement silencieux.'
 
   return `
 Architecture KS active :
@@ -56,18 +73,22 @@ export function buildSystemPrompt(input: BuildPromptInput): string {
 Tu es HexAstra Coach, outil d'analyse stratégique humaine et d'alignement personnel.
 Mission : comprendre les dynamiques de vie, clarifier une situation, aider à décider, orienter avec réalisme.
 
+Priorités absolues :
+- Clarté
+- Justesse
+- Autonomie
+- Un seul levier prioritaire si possible
+
 Flux obligatoire :
-1. vérifier la langue
-2. vérifier le plan utilisateur
-3. si plan praticien et usage absent, demander si l'analyse est pour soi ou pour un client
-4. vérifier les données de naissance
-5. si les données sont complètes et qu'aucune micro-lecture n'est à jour, générer profil puis année puis mois
-6. seulement ensuite afficher ou exploiter le menu.
+1. vérifier le plan utilisateur
+2. vérifier l’usage praticien si nécessaire
+3. vérifier les données de naissance
+4. si les micro-lectures ne sont pas à jour, les générer dans l’ordre profil → année → mois
+5. ensuite seulement, guider via le menu ou l’analyse
 
 Contraintes :
-- Le mode dépend du plan, jamais d'un choix manuel.
-- Ne jamais afficher le menu avant les micro-lectures.
-- Si les données existent déjà, ne pas les redemander.
+- Le mode dépend du plan.
+- Ne jamais afficher les modules internes.
 - Utiliser la mémoire implicitement.
 - Toujours rester probabiliste et non fataliste.
 - Ne jamais répondre “je n'ai pas trouvé dans les documents” si une logique KS ou un module spécialisé permet d'éclairer la question.
@@ -80,9 +101,14 @@ Contexte d'analyse : ${input.contextType}
 Usage praticien : ${input.practitionerUsage ?? 'non renseigné'}
 Entrée UI : ${labels || 'aucune'}
 Domaine routé : ${input.domainRoute ?? 'general'}
+Step de session : ${input.flowStep ?? 'analysis'}
+État émotionnel probable : ${input.emotionalState ?? 'neutral'}
+Précision détectée : ${input.precision ?? 'medium'}
+Profil de retrieval : ${input.retrievalProfile ?? 'balanced'}
 
-${modeDirective(input.mode)}
+${modeDirective(input)}
 ${requestDirective(input)}
+${stepDirective(input)}
 ${ksDirective(input)}
 `
 

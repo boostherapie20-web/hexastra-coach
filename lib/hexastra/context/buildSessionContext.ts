@@ -1,11 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { ContextType, DomainRoute, SessionStateRecord } from '@/lib/hexastra/types'
+import type { ContextType, DomainRoute, EmotionalState, PrecisionLevel, SessionStateRecord, TimingIntensity } from '@/lib/hexastra/types'
 import { readSessionState } from '@/lib/hexastra/memory/sessionMemory'
 import { detectDominantPotential } from '@/lib/hexastra/detection/detectDominantPotential'
 import { detectLifePhase } from '@/lib/hexastra/detection/detectLifePhase'
 import { detectReadingLevel } from '@/lib/hexastra/detection/detectReadingLevel'
 import { detectTimingIntensity } from '@/lib/hexastra/detection/detectTimingIntensity'
-import { getMenuForMode, findMenuItem } from '@/lib/hexastra/menus/getMenuForMode'
+import { detectEmotionalState } from '@/lib/hexastra/detection/detectEmotionalState'
+import { detectPrecision } from '@/lib/hexastra/session/sessionBrain'
+import { findMenuItem } from '@/lib/hexastra/menus/getMenuForMode'
 
 export type HexastraSessionContext = {
   state: SessionStateRecord | null
@@ -14,7 +16,9 @@ export type HexastraSessionContext = {
   selectedMenuKey: string | null
   selectedSubmenuKey: string | null
   readingLevel: string
-  timing: string
+  timing: TimingIntensity
+  emotionalState: EmotionalState
+  precision: PrecisionLevel
   dominantPotential: string
   lifePhase: string
   domainRoute: DomainRoute
@@ -23,8 +27,8 @@ export type HexastraSessionContext = {
 
 function inferDomainRoute(message: string, contextType: ContextType): DomainRoute {
   const t = message.toLowerCase()
-  if (/(neurokua|kua|feng|direction|orientation|boussole|equilibre énergétique|équilibre énergétique)/i.test(t)) return 'gps_kua'
-  if (/(fatigue|surcharge|stress|recharge|énergie|etat du jour|état du jour)/i.test(t)) return 'neurokua'
+  if (/(neurokua|kua|feng|direction|orientation|boussole|équilibre énergétique|equilibre energetique)/i.test(t)) return 'gps_kua'
+  if (/(fatigue|surcharge|stress|recharge|énergie|energie|etat du jour|état du jour)/i.test(t)) return 'neurokua'
   if (/(fusion|lecture générale|lecture complete|lecture complète|hexastra complète|hexastra complete)/i.test(t)) return 'fusion'
   if (contextType === 'career') return 'career'
   if (contextType === 'relationship') return 'relationship'
@@ -72,7 +76,9 @@ export async function buildSessionContext({
     selectedMenuKey: selectedMenuKey ?? state?.last_selected_menu_key ?? null,
     selectedSubmenuKey: selectedSubmenuKey ?? state?.last_selected_submenu_key ?? null,
     readingLevel: detectReadingLevel(message, practitioner),
-    timing: detectTimingIntensity(message),
+    timing: detectTimingIntensity(message) as TimingIntensity,
+    emotionalState: detectEmotionalState(message),
+    precision: detectPrecision(message),
     dominantPotential: detectDominantPotential(message),
     lifePhase: detectLifePhase(message),
     domainRoute,
