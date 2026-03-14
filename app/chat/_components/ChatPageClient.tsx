@@ -70,7 +70,7 @@ function IconMenu() {
 const WELCOME_MESSAGE: Msg = {
   id: 'welcome',
   role: 'assistant',
-  content: '__welcome__',
+  content: "Bienvenue.\n\nJe suis HexAstra Coach.\nUn outil de lecture stratégique pour t'aider à comprendre ta situation, ton timing et la meilleure direction à prendre.",
   created_at: new Date().toISOString(),
 }
 
@@ -160,7 +160,7 @@ export default function ChatPageClient() {
   })
 
   const isWelcome = useMemo(
-    () => messages.length === 1 && messages[0]?.content === '__welcome__',
+    () => messages.length === 1 && messages[0]?.id === 'welcome',
     [messages]
   )
 
@@ -374,7 +374,7 @@ export default function ChatPageClient() {
     // Show a loading placeholder in the chat
     const loadingId = `${Date.now()}-micro-loading`
     setMessages((prev) => {
-      const base = prev[0]?.content === '__welcome__' ? [] : prev
+      const base = prev[0]?.id === 'welcome' ? [] : prev
       return [
         ...base,
         {
@@ -636,7 +636,7 @@ export default function ChatPageClient() {
     />
   )
 
-  const mobileOverlay = (isWelcome ? showLeft : (!desktopLeft && showLeft)) ? (
+  const mobileOverlay = (!desktopLeft && showLeft) ? (
     <div className="hx-chat-overlay" onClick={() => setShowLeft(false)} role="presentation">
       <aside
         className="hx-chat-mobile-sheet hx-chat-mobile-sheet-left hx-chat-panel"
@@ -685,102 +685,6 @@ export default function ChatPageClient() {
     onBirthFormOpen: () => setShowBirthForm(true),
     highlightBirth: isWelcome && !isBirthDataComplete(birthData),
     disabled: step !== 'conversation_ready' || isLimitReached,
-  }
-
-  // ── WELCOME SCREEN ────────────────────────────────────────────────────────
-  if (isWelcome && step !== 'conversation_ready') {
-    return (
-      <div className="hx-chat-page">
-        <PremiumBackground />
-        {mobileOverlay}
-        {showBirthForm && (
-          <BirthFormModal
-            data={birthData}
-            onChange={handleBirthDataChange}
-            onClose={() => setShowBirthForm(false)}
-          />
-        )}
-
-        <div className="hx-welcome-screen">
-          <header className="hx-welcome-nav">
-            <div className="hx-welcome-nav-brand">
-              <button type="button" className="hx-icon-btn" onClick={() => setShowLeft(true)} aria-label="Historique">
-                <IconMenu />
-              </button>
-            </div>
-            <LanguageSwitcher variant="flag" className="hx-nav-lang" />
-          </header>
-
-          <div className="hx-welcome-body">
-            <div className="hx-welcome-center">
-              <div className="hx-chat-hero-eyebrow">
-                <span className="hx-chat-hero-dot" aria-hidden="true" />
-                {t('chat.welcomeEyebrow')}
-              </div>
-
-              <h1 className="hx-welcome-title">
-                {t('chat.welcomeTitle')}<br />
-                <em>{t('chat.welcomeTitleEm')}</em>
-              </h1>
-
-              <p className="hx-welcome-subtitle">{t('chat.welcomeSubtitle')}</p>
-
-              <div className="hx-welcome-input">
-                {bootstrapOverlay ?? (
-                  isLimitReached
-                    ? <PaywallBanner plan={userPlan} resetAt={freeResetAt} />
-                    : <Composer {...composerProps} />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <footer className="hx-welcome-footer">{t('chat.disclaimer')}</footer>
-        </div>
-      </div>
-    )
-  }
-
-  // ── WELCOME → transition to conversation after bootstrap ──────────────────
-  if (isWelcome && step === 'conversation_ready') {
-    return (
-      <div className="hx-chat-page">
-        <PremiumBackground />
-        {mobileOverlay}
-
-        <div className="hx-welcome-screen">
-          <header className="hx-welcome-nav">
-            <div className="hx-welcome-nav-brand">
-              <button type="button" className="hx-icon-btn" onClick={() => setShowLeft(true)} aria-label="Historique">
-                <IconMenu />
-              </button>
-            </div>
-            <LanguageSwitcher variant="flag" className="hx-nav-lang" />
-          </header>
-
-          <div className="hx-welcome-body">
-            <div className="hx-welcome-center">
-              <div className="hx-chat-hero-eyebrow">
-                <span className="hx-chat-hero-dot" aria-hidden="true" />
-                {t('chat.welcomeEyebrow')}
-              </div>
-              <h1 className="hx-welcome-title">
-                {t('chat.welcomeTitle')}<br />
-                <em>{t('chat.welcomeTitleEm')}</em>
-              </h1>
-              <p className="hx-welcome-subtitle">{t('chat.welcomeSubtitle')}</p>
-              <div className="hx-welcome-input">
-                {isLimitReached
-                  ? <PaywallBanner plan={userPlan} resetAt={freeResetAt} />
-                  : <Composer {...composerProps} />
-                }
-              </div>
-            </div>
-          </div>
-          <footer className="hx-welcome-footer">{t('chat.disclaimer')}</footer>
-        </div>
-      </div>
-    )
   }
 
   // ── CONVERSATION SCREEN ───────────────────────────────────────────────────
