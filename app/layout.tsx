@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import I18nProvider from '@/lib/i18n/I18nProvider'
 
 export const metadata: Metadata = {
   title: 'HexAstra — Comprenez votre moment de vie',
@@ -78,7 +79,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#2C1F1A" />
         <meta name="msapplication-TileColor" content="#2C1F1A" />
       </head>
-      <body>{children}</body>
+      <body><I18nProvider>{children}</I18nProvider></body>
     </html>
   )
 }
