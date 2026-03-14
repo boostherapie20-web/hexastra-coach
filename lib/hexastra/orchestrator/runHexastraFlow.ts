@@ -495,11 +495,6 @@ export async function runHexastraFlow(input: {
   const resolvedDomainRoute: DomainRoute =
     readingRequest ? 'fusion' : initialResolvedDomainRoute
 
-const resolvedDomainRoute =
-  ['micro_profile', 'micro_year', 'micro_month'].includes(effectiveRequestType)
-    ? 'fusion'
-    : initialResolvedDomainRoute
-
   const activeModules = getModulesForDomain(resolvedDomainRoute)
   const hasBirthData = isBirthComplete(userContext.birthData)
   const hasShownMicroReadings = Boolean(sessionContext.state?.has_shown_micro_readings)
