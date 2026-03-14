@@ -21,8 +21,11 @@ export default function LibraryPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.from('readings').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { setReadings(data || []); setLoading(false) })
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) { router.replace('/auth'); return }
+      supabase.from('readings').select('*').order('created_at', { ascending: false })
+        .then(({ data: rows }) => { setReadings(rows || []); setLoading(false) })
+    })
   }, [])
 
   const download = async (readingId: string, type: 'pdf' | 'audio') => {

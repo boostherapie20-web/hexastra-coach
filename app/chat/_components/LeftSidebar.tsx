@@ -10,7 +10,7 @@ type Props = {
   readings: Reading[]
   userInitials?: string
   onNewReading?: () => void
-  onCreateProject?: () => void
+  onCreateProject?: (name: string) => void
   onOpenReading?: (reading: Reading) => void
   onAssignReadingToProject?: (readingId: string, projectId: string) => void
 }
@@ -119,6 +119,27 @@ export default function LeftSidebar({
   const [dragOverProjectId, setDragOverProjectId] = useState<string | null>(null)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [collapsedProjects, setCollapsedProjects] = useState<Set<string>>(new Set())
+  const [showProjectInput, setShowProjectInput] = useState(false)
+  const [projectInputValue, setProjectInputValue] = useState('')
+  const projectInputRef = useRef<HTMLInputElement | null>(null)
+
+  function openProjectInput() {
+    setShowProjectInput(true)
+    setProjectInputValue('')
+    setTimeout(() => projectInputRef.current?.focus(), 50)
+  }
+
+  function confirmProjectInput() {
+    const name = projectInputValue.trim()
+    if (name) onCreateProject?.(name)
+    setShowProjectInput(false)
+    setProjectInputValue('')
+  }
+
+  function cancelProjectInput() {
+    setShowProjectInput(false)
+    setProjectInputValue('')
+  }
 
   function toggleProject(id: string) {
     setCollapsedProjects((prev) => {
@@ -293,13 +314,33 @@ export default function LeftSidebar({
             <button
               type="button"
               className="hx-leftbar-add-btn"
-              onClick={onCreateProject}
+              onClick={openProjectInput}
               aria-label={t('chat.newProject')}
               title={t('chat.newProject')}
             >
               <IconPlus />
             </button>
           </div>
+
+          {showProjectInput && (
+            <div className="hx-leftbar-project-input-row">
+              <input
+                ref={projectInputRef}
+                type="text"
+                className="hx-leftbar-project-input"
+                placeholder={t('chat.newProject')}
+                value={projectInputValue}
+                onChange={(e) => setProjectInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') confirmProjectInput()
+                  if (e.key === 'Escape') cancelProjectInput()
+                }}
+                autoComplete="off"
+              />
+              <button type="button" className="hx-leftbar-project-input-confirm" onClick={confirmProjectInput}>✓</button>
+              <button type="button" className="hx-leftbar-project-input-cancel" onClick={cancelProjectInput}>✕</button>
+            </div>
+          )}
 
           {projectsOpen && (
             <div className="hx-leftbar-stack">

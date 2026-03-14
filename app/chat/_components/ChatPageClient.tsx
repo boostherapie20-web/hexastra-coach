@@ -600,10 +600,9 @@ export default function ChatPageClient() {
     microTriggerRef.current = null
   }, [])
 
-  const handleCreateProject = useCallback(() => {
-    const name = window.prompt('Nom du projet')?.trim()
-    if (!name) return
-    persistProjects([...projects, { id: `${Date.now()}`, name, collapsed: false }])
+  const handleCreateProject = useCallback((name: string) => {
+    if (!name.trim()) return
+    persistProjects([...projects, { id: `${Date.now()}`, name: name.trim(), collapsed: false }])
   }, [persistProjects, projects])
 
   const handleAssignReadingToProject = useCallback(

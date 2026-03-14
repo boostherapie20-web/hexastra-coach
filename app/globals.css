@@ -5266,6 +5266,51 @@ select {
   .hx-home-brand-title { font-size: 0.98rem; }
 }
 
+/* ── MOBILE NAVBAR : sans border sur le badge logo et le burger ── */
+@media (max-width: 767px) {
+  /* Supprime le cercle autour du logo */
+  .hx-home-brand-badge {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .hx-home-brand-badge .hx-logo-wrap {
+    --hx-logo-size: 36px !important;
+  }
+
+  /* Agrandit le logo SVG */
+  .hx-home-brand-badge .hx-logo-image {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Agrandit le texte "HexAstra Coach" */
+  .hx-home-brand-title {
+    font-size: 1.25rem !important;
+    letter-spacing: -0.01em;
+  }
+
+  /* Supprime le border/background du bouton burger */
+  .hx-mobile-nav-toggle {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0;
+  }
+
+  .hx-mobile-nav-toggle:hover {
+    background: none !important;
+    border: none !important;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════
    5. HERO — hauteur + grid + typographie
    ══════════════════════════════════════════════════════════════ */
@@ -6115,4 +6160,177 @@ select {
 .hx-auth-pw-toggle:hover {
   color: rgba(180, 205, 220, 0.85);
   background: rgba(255, 255, 255, 0.06);
+}
+
+/* ================================
+   PRICING OVERVIEW PAGE (/pricing)
+================================ */
+
+.hx-pricing-overview-wrap {
+  width: 100%;
+  max-width: 1080px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.hx-pricing-overview-title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
+  text-align: center;
+  margin: 10px 0 0;
+  line-height: 1.2;
+}
+
+.hx-pricing-overview-copy {
+  margin: 14px 0 48px;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: rgba(200, 220, 255, 0.65);
+  text-align: center;
+  max-width: 580px;
+}
+
+.hx-pricing-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .hx-pricing-overview-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 540px) {
+  .hx-pricing-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hx-pricing-overview-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 22px;
+  padding: 30px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: border-color 0.2s, transform 0.2s;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.hx-pricing-overview-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+.hx-pricing-overview-card.is-highlighted {
+  border-color: rgba(88, 226, 194, 0.35);
+  background: rgba(88, 226, 194, 0.05);
+  box-shadow: 0 0 40px rgba(88, 226, 194, 0.08);
+}
+
+.hx-pricing-overview-card-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(180, 220, 255, 0.75);
+  margin-bottom: 4px;
+}
+
+.hx-pricing-overview-card .hx-pricing-price-amount {
+  font-size: 2rem;
+}
+
+.hx-pricing-overview-card .hx-pricing-tagline {
+  font-size: 0.88rem;
+  margin-top: 10px;
+}
+
+.hx-pricing-overview-card .hx-pricing-feature-list {
+  flex: 1;
+}
+
+.hx-pricing-overview-card .hx-pricing-cta-btn {
+  margin-top: 24px;
+  padding: 12px 16px;
+  font-size: 0.88rem;
+}
+
+.hx-pricing-overview-card:not(.is-highlighted) .hx-pricing-cta-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(200, 220, 255, 0.85);
+  box-shadow: none;
+}
+
+.hx-pricing-overview-card:not(.is-highlighted) .hx-pricing-cta-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Inline project name input in left sidebar */
+.hx-leftbar-project-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+}
+
+.hx-leftbar-project-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  padding: 5px 9px;
+  font-size: 0.82rem;
+  color: rgba(210, 230, 255, 0.9);
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+
+.hx-leftbar-project-input:focus {
+  border-color: rgba(88, 226, 194, 0.5);
+}
+
+.hx-leftbar-project-input-confirm {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  background: rgba(88, 226, 194, 0.15);
+  border: 1px solid rgba(88, 226, 194, 0.3);
+  border-radius: 6px;
+  color: #6ef0d2;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hx-leftbar-project-input-confirm:hover {
+  background: rgba(88, 226, 194, 0.25);
+}
+
+.hx-leftbar-project-input-cancel {
+  flex-shrink: 0;
+  padding: 4px 7px;
+  background: transparent;
+  border: none;
+  color: rgba(200, 200, 220, 0.45);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.hx-leftbar-project-input-cancel:hover {
+  color: rgba(200, 200, 220, 0.8);
 }

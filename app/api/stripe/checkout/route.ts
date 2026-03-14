@@ -39,11 +39,6 @@ export async function POST(req: NextRequest) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/chat?payment=success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       locale: 'fr',
-      // Metadata au niveau session — accessible directement dans le webhook
-      metadata: {
-        supabase_user_id: user?.id || '',
-        price_key: priceKey,
-      },
       subscription_data: {
         metadata: {
           supabase_user_id: user?.id || '',

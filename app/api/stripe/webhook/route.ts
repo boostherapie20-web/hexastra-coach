@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 
-const PRICE_KEY_TO_PLAN: Record<string, string> = {
-  essentiel_monthly: 'essential',
-  premium_monthly:   'premium',
-  praticien_monthly: 'practitioner',
-}
+// ⚠ Ne pas initialiser Supabase ou Stripe au niveau du module —
+//   les variables d'env ne sont pas disponibles au build.
 
 export async function POST(req: NextRequest) {
   const stripeKey     = process.env.STRIPE_SECRET_KEY
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const supabaseUrl   = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey   = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!stripeKey || !webhookSecret) {
     return NextResponse.json({ error: 'Stripe non configuré' }, { status: 503 })
   }
 
+  // Init à l'intérieur du handler — jamais au module level
   const stripe = new Stripe(stripeKey, { apiVersion: '2024-06-20' })
-  const body   = await req.text()
-  const sig    = req.headers.get('stripe-signature')
+
+  const body = await req.text()
+  const sig  = req.headers.get('stripe-signature')
 
   if (!sig) {
     return NextResponse.json({ error: 'Signature manquante' }, { status: 400 })
@@ -33,28 +34,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Signature invalide' }, { status: 400 })
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  // ── Paiement complété ───────────────────────────────────────────────────
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.Checkout.Session
+    const session = event.data.object as Stripe.CheckoutSession
+    const { userId, readingId } = session.metadata ?? {}
 
-    // session.metadata contient supabase_user_id + price_key (ajoutés dans /checkout)
-    const userId   = session.metadata?.supabase_user_id
-    const priceKey = session.metadata?.price_key
-    const plan     = priceKey ? (PRICE_KEY_TO_PLAN[priceKey] ?? null) : null
-
-    if (supabaseUrl && supabaseKey && userId && plan) {
-      const admin = createAdminClient()
-
-      // Mettre à jour le plan dans les user_metadata Supabase
-      await admin.auth.admin.updateUserById(userId, {
-        user_metadata: { plan },
-      })
-
-      // Marquer la commande comme payée
-      await admin
+    // Supabase — init ici uniquement si configuré
+    if (supabaseUrl && supabaseKey) {
+      const supabase = createClient(supabaseUrl, supabaseKey)
+      await supabase
         .from('orders')
         .update({ status: 'paid', stripe_payment_id: session.payment_intent as string })
         .eq('stripe_session_id', session.id)
@@ -70,23 +57,7 @@ export async function POST(req: NextRequest) {
           'Content-Type': 'application/json',
           'x-webhook-secret': n8nSecret ?? '',
         },
-        body: JSON.stringify({ userId, plan, sessionId: session.id }),
-      })
-    }
-  }
-
-  // ── Abonnement annulé / expiré → repasser en free ───────────────────────
-  if (
-    event.type === 'customer.subscription.deleted' ||
-    event.type === 'customer.subscription.paused'
-  ) {
-    const sub      = event.data.object as Stripe.Subscription
-    const userId   = sub.metadata?.supabase_user_id
-
-    if (supabaseUrl && supabaseKey && userId) {
-      const admin = createAdminClient()
-      await admin.auth.admin.updateUserById(userId, {
-        user_metadata: { plan: 'free' },
+        body: JSON.stringify({ userId, readingId, sessionId: session.id }),
       })
     }
   }

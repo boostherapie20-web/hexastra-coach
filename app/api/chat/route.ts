@@ -1,11 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { runAnalysisEngine } from '@/lib/hexastra/analysisEngine'
-import { retrieveKnowledge } from '@/lib/vectorSearch'
-import { compressKnowledgeContext } from '@/lib/contextCompressor'
-import { getRetrievalConfig, normalizePlanKey } from '@/lib/retrievalPolicy'
-import { buildEvolutionContext } from '@/lib/evolution/evolutionContextBuilder'
-import { updateUserEvolutionProfile } from '@/lib/evolution/evolutionEngine'
-import type { UserEvolutionProfile } from '@/types/evolution'
 
 export const runtime = 'nodejs'
 
@@ -104,11 +97,10 @@ function sanitizeMessages(messages: unknown): ChatMessage[] {
         !!m && typeof m === 'object',
     )
     .map((m) => ({
-      role: (
+      role:
         m.role === 'assistant' || m.role === 'system' || m.role === 'user'
           ? m.role
-          : 'user'
-      ) as ChatRole,
+          : 'user',
       content: typeof m.content === 'string' ? m.content.trim() : '',
     }))
     .filter((m) => m.content.length > 0)
@@ -656,7 +648,7 @@ async function chatCompletionsFallback(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4.1',
+        model: 'gpt-4o',
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
         max_tokens: 900,
         temperature: 0.72,
@@ -711,29 +703,13 @@ export async function POST(req: NextRequest) {
 
   const messages = sanitizeMessages(body?.messages)
   const mode = typeof body?.mode === 'string' ? body.mode : 'libre'
-  const requestType: string = typeof body?.requestType === 'string' ? body.requestType : 'chat'
   const birthData: BirthData | null =
     body?.birthData && typeof body.birthData === 'object' ? body.birthData : null
-
-  // Contexte plan (envoyé par le client via buildPlanApiContext)
-  const plan: string = typeof body?.plan === 'string' ? body.plan : 'free'
-  const analysisDepth: string = typeof body?.analysisDepth === 'string' ? body.analysisDepth : 'low'
-  const practitionerEnabled: boolean = body?.practitionerEnabled === true
-  const longResponseAllowed: boolean = body?.longResponseAllowed === true
-  const chatLanguage: string = typeof body?.chatLanguage === 'string' && body.chatLanguage.length === 2 ? body.chatLanguage : 'fr'
 
   const threadId =
     body?.threadId ||
     body?.conversationId ||
     crypto.randomUUID()
-
-  // Evolution profile sent from client (localStorage)
-  const evolutionProfile: UserEvolutionProfile | null =
-    body?.evolutionProfile && typeof body.evolutionProfile === 'object'
-      ? (body.evolutionProfile as UserEvolutionProfile)
-      : null
-
-  const openaiKey = process.env.OPENAI_API_KEY
 
   const inputMessages: ChatMessage[] = []
 
@@ -757,56 +733,6 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // Injection du contexte plan dans la conversation
-  const planContextLines: string[] = [
-    `[CONTEXTE ABONNEMENT — NE PAS MENTIONNER À L'UTILISATEUR]`,
-    `Plan : ${plan}`,
-    `Profondeur d'analyse : ${analysisDepth}`,
-  ]
-
-  if (analysisDepth === 'low') {
-    planContextLines.push(
-      'Instruction : réponses courtes, synthétiques. Pas d\'analyse approfondie. Sujets simples du quotidien uniquement.',
-    )
-  } else if (analysisDepth === 'medium') {
-    planContextLines.push(
-      'Instruction : réponses de longueur modérée. Clarté rapide. Analyses de vie courante.',
-    )
-  } else if (analysisDepth === 'high') {
-    planContextLines.push(
-      'Instruction : réponses longues autorisées. Analyses profondes. Relations, périodes, décisions, blocages.',
-    )
-  } else if (analysisDepth === 'expert') {
-    planContextLines.push(
-      'Instruction : profondeur maximale. Vocabulaire technique autorisé. Analyses professionnelles complètes.',
-    )
-  }
-
-  if (practitionerEnabled) {
-    planContextLines.push('Mode Praticien activé : structure experte, usage professionnel ou accompagnement client autorisé.')
-  }
-
-  if (longResponseAllowed) {
-    planContextLines.push('Réponses longues et détaillées autorisées pour ce plan.')
-  }
-
-  if (chatLanguage && chatLanguage !== 'fr') {
-    const langNames: Record<string, string> = { en: 'English', es: 'Spanish / Español', pt: 'Portuguese / Português', de: 'German / Deutsch', it: 'Italian / Italiano' }
-    const langLabel = langNames[chatLanguage] ?? chatLanguage
-    planContextLines.push(`Langue de session : ${langLabel}. Répondre EXCLUSIVEMENT dans cette langue pour toute la session.`)
-  }
-
-  planContextLines.push('[FIN CONTEXTE ABONNEMENT]')
-
-  inputMessages.push({
-    role: 'user',
-    content: planContextLines.join('\n'),
-  })
-  inputMessages.push({
-    role: 'assistant',
-    content: 'Contexte de session enregistré.',
-  })
-
   if (mode === 'praticien') {
     inputMessages.push({
       role: 'user',
@@ -818,69 +744,6 @@ export async function POST(req: NextRequest) {
       content: 'Mode Praticien activé.',
     })
   }
-
-  // ── Couche 3 : moteur d'analyse HexAstra ────────────────────────────────
-  // Only runs for normal chat (not micro-readings which have their own instructions)
-  if (requestType === 'chat' && messages.length > 0) {
-    const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
-    if (lastUserMsg) {
-      const analysisOutput = runAnalysisEngine({
-        userMessage: lastUserMsg.content,
-        conversationHistory: messages.slice(0, -1) as Array<{ role: 'user' | 'assistant'; content: string }>,
-        birthData: birthData
-          ? {
-              firstName: birthData.firstName,
-              lastName: birthData.lastName,
-              date: birthData.date,
-              time: birthData.time,
-              place: birthData.place,
-              country: birthData.country,
-              gender: birthData.gender,
-            }
-          : null,
-        microProfileExists: !!birthData?.date,
-        mode,
-      })
-      inputMessages.push(...analysisOutput.instructionMessages)
-    }
-  }
-  // ────────────────────────────────────────────────────────────────────────
-
-  // ── Couche 4 : récupération adaptative du Vector Store ──────────────────
-  // Runs only for normal chat calls when key + store are available.
-  // Never throws — chat works without retrieval if store is unavailable.
-  if (requestType === 'chat' && openaiKey && VECTOR_STORE_ID && messages.length > 0) {
-    const lastUserContent = [...messages].reverse().find((m) => m.role === 'user')?.content ?? ''
-    if (lastUserContent.trim()) {
-      const searchResults = await retrieveKnowledge({
-        query: lastUserContent,
-        plan,
-        vectorStoreId: VECTOR_STORE_ID,
-        apiKey: openaiKey,
-      })
-      const { block: knowledgeBlock } = compressKnowledgeContext(
-        searchResults,
-        getRetrievalConfig(normalizePlanKey(plan)),
-      )
-      if (knowledgeBlock) {
-        inputMessages.push({ role: 'user', content: knowledgeBlock })
-        inputMessages.push({ role: 'assistant', content: 'Ressources intégrées.' })
-      }
-    }
-  }
-  // ────────────────────────────────────────────────────────────────────────
-
-  // ── Couche 5 : contexte évolutif utilisateur ─────────────────────────────
-  // Inject compact evolution profile before conversation messages.
-  // Only for real chat interactions (not micro-readings).
-  if (requestType === 'chat') {
-    const { block: evolutionBlock } = buildEvolutionContext(evolutionProfile)
-    if (evolutionBlock) {
-      inputMessages.push({ role: 'user', content: evolutionBlock })
-      inputMessages.push({ role: 'assistant', content: 'Profil évolutif pris en compte.' })
-    }
-  }
-  // ────────────────────────────────────────────────────────────────────────
 
   inputMessages.push(...messages)
 
@@ -901,6 +764,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
+  const openaiKey = process.env.OPENAI_API_KEY
   if (!openaiKey) {
     return NextResponse.json({
       reply:
@@ -913,18 +777,21 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const maxTokens =
-      analysisDepth === 'expert' ? 2000 :
-      analysisDepth === 'high'   ? 1600 :
-      analysisDepth === 'medium' ? 1000 :
-      600 // free / low
-
     const payload: any = {
-      model: 'gpt-4.1',
+      model: 'gpt-4o',
       instructions: SYSTEM_PROMPT,
       input: inputMessages,
       temperature: 0.72,
-      max_output_tokens: maxTokens,
+      max_output_tokens: 1000,
+    }
+
+    if (VECTOR_STORE_ID) {
+      payload.tools = [
+        {
+          type: 'file_search',
+          vector_store_ids: [VECTOR_STORE_ID],
+        },
+      ]
     }
 
     const res = await fetch('https://api.openai.com/v1/responses', {
@@ -950,31 +817,12 @@ export async function POST(req: NextRequest) {
       return await chatCompletionsFallback(openaiKey, inputMessages, threadId)
     }
 
-    // ── Couche 5 : mise à jour du profil évolutif ───────────────────────────
-    // Runs only for real chat exchanges, synchronous, zero extra API calls.
-    let updatedEvolutionProfile: UserEvolutionProfile | null = evolutionProfile
-    if (requestType === 'chat') {
-      const lastUserMsg = [...messages].reverse().find((m) => m.role === 'user')
-      if (lastUserMsg) {
-        const decision = updateUserEvolutionProfile({
-          userMessage: lastUserMsg.content,
-          assistantResponse: reply,
-          currentProfile: evolutionProfile,
-        })
-        if (decision.shouldUpdate) {
-          updatedEvolutionProfile = decision.nextProfile
-        }
-      }
-    }
-    // ────────────────────────────────────────────────────────────────────────
-
     return NextResponse.json({
       reply,
       threadId,
       conversationId: threadId,
       chips: [],
       needsBirthData: buildNeedsBirthData(reply, birthData),
-      updatedEvolutionProfile,
     })
   } catch (e) {
     console.error('Responses API fetch error:', e)
