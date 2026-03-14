@@ -11,15 +11,18 @@ export const metadata: Metadata = {
   // ── Favicon & App Icons ──────────────────────────────
   icons: {
     icon: [
-      { url: '/favicon/favicon-16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon/favicon-32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon/favicon.ico', sizes: 'any' },
+      { url: '/favicon/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon/favicon-64x64.png', sizes: '64x64', type: 'image/png' },
+      { url: '/favicon/favicon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon/favicon-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/app-icon/hexastra-app-512.png', sizes: '512x512', type: 'image/png' },
-      { url: '/app-icon/hexastra-app-256.png', sizes: '256x256', type: 'image/png' },
+      { url: '/favicon/favicon-180x180.png', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/favicon/favicon.ico',
+    shortcut: '/favicon/favicon-32x32.png',
   },
 
   // ── Open Graph (Facebook, LinkedIn, WhatsApp…) ───────
