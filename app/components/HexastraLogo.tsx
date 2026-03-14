@@ -7,6 +7,7 @@ type HexastraLogoProps = {
   priority?: boolean
   animated?: boolean
   className?: string
+  variant?: string
 }
 
 export default function HexastraLogo({
@@ -29,12 +30,13 @@ export default function HexastraLogo({
 
       <div className="hx-logo-core">
         <Image
-          src="/logo/hexastra-logo-transparent.png"
+          src="/logo/hexastra_logo_white_petals_triangles.svg"
           alt="HexAstra"
           width={size}
           height={size}
           priority={priority}
           className="hx-logo-image"
+          unoptimized
         />
       </div>
     </div>
