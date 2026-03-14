@@ -31,6 +31,8 @@ export function buildChatPayload({
       timing: sessionContext.timing,
       dominantPotential: sessionContext.dominantPotential,
       lifePhase: sessionContext.lifePhase,
+      domainRoute: sessionContext.domainRoute,
+      activeModule: sessionContext.activeModule,
     },
   }
 

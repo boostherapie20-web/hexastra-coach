@@ -45,11 +45,14 @@ export type BirthProfile = {
   gender?: string
 }
 
+export type DomainRoute = 'general' | 'neurokua' | 'gps_kua' | 'fusion' | 'relationship' | 'career' | 'decision' | 'timing' | 'wellbeing' | 'science'
+
 export type HexastraMenuItem = {
   key: string
   label: string
   description: string
   contextType: ContextType
+  domainRoute?: DomainRoute
   promptHint?: string
   submenu?: HexastraMenuItem[]
 }
@@ -111,4 +114,6 @@ export type BuildPromptInput = {
   selectedMenuLabel?: string | null
   selectedSubmenuLabel?: string | null
   requestType: 'micro_profile' | 'micro_year' | 'micro_month' | 'chat'
+  domainRoute?: DomainRoute
+  specializedSource?: string | null
 }

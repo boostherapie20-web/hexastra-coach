@@ -7,11 +7,19 @@ import { buildChatPayload } from '@/lib/hexastra/payload/buildChatPayload'
 import { getMenuForMode, findMenuItem } from '@/lib/hexastra/menus/getMenuForMode'
 import { persistConversationMessage, writeSessionState } from '@/lib/hexastra/memory/sessionMemory'
 import { writeUserMemory } from '@/lib/hexastra/memory/userMemory'
-import type { BirthProfile, ContextType, HexastraApiResponse, PractitionerUsageHex, UiAction } from '@/lib/hexastra/types'
+import type { BirthProfile, ContextType, DomainRoute, HexastraApiResponse, PractitionerUsageHex, UiAction } from '@/lib/hexastra/types'
 import type { PlanKey } from '@/lib/plans'
 import type { ChatMessage } from '@/lib/chat/chatPayloadBuilder'
 
 const VECTOR_STORE_ID = process.env.OPENAI_VECTOR_STORE_ID || ''
+const API_URL = (process.env.HEXASTRA_API_URL || 'https://hexastra-api-production.up.railway.app').replace(/\/$/, '')
+const API_KEY = process.env.HEXASTRA_API_KEY || ''
+
+type SpecializedModuleResult = {
+  source: 'gps_kua' | 'neurokua' | 'fusion'
+  publicSummary: string
+  raw: Record<string, unknown> | null
+}
 
 function normalizePlan(plan: unknown): PlanKey {
   return plan === 'essential' || plan === 'premium' || plan === 'practitioner' ? plan : 'free'
@@ -86,6 +94,100 @@ async function callOpenAI(payload: any): Promise<string> {
     .trim()
 
   return text || 'Je n’ai pas pu finaliser la lecture pour le moment.'
+}
+
+function buildSpecializedContext(result: SpecializedModuleResult | null): string {
+  if (!result) return ''
+  return [
+    `[RÉSULTAT MÉTIER PRIORITAIRE — À UTILISER COMME SOURCE DE VÉRITÉ]`,
+    `Source: ${result.source}`,
+    `Résumé public attendu: ${result.publicSummary}`,
+    `Données structurées: ${JSON.stringify(result.raw ?? {})}`,
+    `Règle: reformule ce résultat dans le style HexAstra sans dire que tu n'as pas trouvé dans les documents.`,
+  ].join('\n')
+}
+
+async function callRailway(path: string, payload: Record<string, unknown>) {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(API_KEY ? { 'x-api-key': API_KEY } : {}),
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(12000),
+  })
+  if (!res.ok) {
+    const text = await res.text().catch(() => '')
+    throw new Error(`Railway ${path} failed: ${res.status} ${text}`)
+  }
+  return res.json()
+}
+
+async function runSpecializedModule({
+  domainRoute,
+  birthData,
+  practitionerUsage,
+  messages,
+}: {
+  domainRoute: DomainRoute
+  birthData: BirthProfile | null
+  practitionerUsage: PractitionerUsageHex
+  messages: ChatMessage[]
+}): Promise<SpecializedModuleResult | null> {
+  const latestUserMessage = messages.filter((m) => m.role === 'user').at(-1)?.content ?? ''
+
+  if ((domainRoute === 'gps_kua' || domainRoute === 'neurokua') && birthData?.date && birthData?.place) {
+    try {
+      const kua = await callRailway('/kua', {
+        birth_date: birthData.date,
+        birth_time: birthData.time || 'unknown',
+        birth_city: birthData.place,
+        birth_country: birthData.country,
+        first_name: birthData.firstName,
+        question: latestUserMessage,
+        practitioner_usage: practitionerUsage,
+      })
+      const summary =
+        typeof kua?.publicSummary === 'string' ? kua.publicSummary :
+        typeof kua?.summary === 'string' ? kua.summary :
+        `Utilise le calcul Kua/GPS fourni pour éclairer l'orientation, l'équilibre et la direction prioritaire.`
+      return {
+        source: domainRoute === 'gps_kua' ? 'gps_kua' : 'neurokua',
+        publicSummary: summary,
+        raw: kua && typeof kua === 'object' ? kua as Record<string, unknown> : null,
+      }
+    } catch {
+      // continue to fallback
+    }
+  }
+
+  if (domainRoute === 'fusion' && birthData?.date && birthData?.place) {
+    try {
+      const fusion = await callRailway('/chart/fusion', {
+        first_name: birthData.firstName,
+        birth_date: birthData.date,
+        birth_time: birthData.time || 'unknown',
+        birth_city: birthData.place,
+        birth_country: birthData.country,
+        question: latestUserMessage,
+        practitioner_usage: practitionerUsage,
+      })
+      const summary =
+        typeof fusion?.publicSummary === 'string' ? fusion.publicSummary :
+        typeof fusion?.summary === 'string' ? fusion.summary :
+        `Utilise la synthèse fusionnée fournie comme signal dominant de la réponse finale.`
+      return {
+        source: 'fusion',
+        publicSummary: summary,
+        raw: fusion && typeof fusion === 'object' ? fusion as Record<string, unknown> : null,
+      }
+    } catch {
+      // continue to fallback
+    }
+  }
+
+  return null
 }
 
 export async function runHexastraFlow(input: {
@@ -169,6 +271,15 @@ export async function runHexastraFlow(input: {
   }
 
   const selectedMenu = findMenuItem(mode, input.selectedSubmenuKey ?? input.selectedMenuKey ?? null)
+  const specializedResult = effectiveRequestType === 'chat'
+    ? await runSpecializedModule({
+        domainRoute: selectedMenu?.domainRoute ?? sessionContext.domainRoute,
+        birthData: userContext.birthData,
+        practitionerUsage: userContext.practitionerUsage,
+        messages: input.messages,
+      })
+    : null
+
   const systemPrompt = buildSystemPrompt({
     plan,
     mode,
@@ -178,15 +289,20 @@ export async function runHexastraFlow(input: {
     selectedMenuLabel: input.selectedMenuKey ? findMenuItem(mode, input.selectedMenuKey)?.label ?? null : null,
     selectedSubmenuLabel: input.selectedSubmenuKey ? findMenuItem(mode, input.selectedSubmenuKey)?.label ?? null : null,
     requestType: effectiveRequestType,
+    domainRoute: selectedMenu?.domainRoute ?? sessionContext.domainRoute,
+    specializedSource: specializedResult?.source ?? null,
   })
 
   const menuInstruction = input.uiAction === 'select_menu_item' || input.uiAction === 'select_submenu_item'
     ? `${selectedMenu ? `L’utilisateur a choisi : ${selectedMenu.label}. ${selectedMenu.description}` : ''} ${selectedMenu?.promptHint ?? ''}`.trim()
     : ''
 
-  const messages = menuInstruction
-    ? [...input.messages, { role: 'user' as const, content: menuInstruction }]
-    : input.messages
+  const specializedInstruction = buildSpecializedContext(specializedResult)
+  const messages = [
+    ...input.messages,
+    ...(menuInstruction ? [{ role: 'user' as const, content: menuInstruction }] : []),
+    ...(specializedInstruction ? [{ role: 'assistant' as const, content: specializedInstruction }] : []),
+  ]
 
   const payload = buildChatPayload({
     systemPrompt,
@@ -207,7 +323,7 @@ export async function runHexastraFlow(input: {
   const menuItems = getMenuForMode(mode)
 
   await persistConversationMessage(supabase, conversationId, 'user', latestUserMessage || menuInstruction || `[${effectiveRequestType}]`)
-  await persistConversationMessage(supabase, conversationId, 'assistant', message, { flowStep, mode, contextType: selectedMenu?.contextType ?? sessionContext.contextType })
+  await persistConversationMessage(supabase, conversationId, 'assistant', message, { flowStep, mode, contextType: selectedMenu?.contextType ?? sessionContext.contextType, domainRoute: selectedMenu?.domainRoute ?? sessionContext.domainRoute, activeModule: specializedResult?.source ?? sessionContext.activeModule })
 
   await writeSessionState(supabase, conversationId, {
     current_theme: selectedMenu?.label ?? sessionContext.currentTheme ?? null,
@@ -218,25 +334,17 @@ export async function runHexastraFlow(input: {
     active_flow: flowStep,
   })
 
-  const memoryPatch: Record<string, string> = {}
-  if (sessionContext.dominantPotential !== 'unknown') memoryPatch.dominant_potential = sessionContext.dominantPotential
-  if (sessionContext.lifePhase !== 'unknown') memoryPatch.life_phase = sessionContext.lifePhase
-  if (sessionContext.readingLevel) memoryPatch.reading_level = sessionContext.readingLevel
-  if (effectiveRequestType === 'micro_profile') memoryPatch.last_profile_reading_at = new Date().toISOString()
-  if (effectiveRequestType === 'micro_year') memoryPatch.last_year_reading_at = new Date().toISOString()
-  if (effectiveRequestType === 'micro_month') memoryPatch.last_month_reading_at = new Date().toISOString()
-  await writeUserMemory(supabase, userContext.userId, memoryPatch)
-
-  const updatedEvolutionProfile = {
-    ...(input.evolutionProfile ?? {}),
-    firstName: userContext.firstName ?? undefined,
-    language: userContext.language,
-    plan,
-    practitionerUsage: userContext.practitionerUsage === 'self' ? 'personal' : userContext.practitionerUsage,
-    dominantPotential: sessionContext.dominantPotential !== 'unknown' ? sessionContext.dominantPotential : undefined,
-    currentPhase: sessionContext.lifePhase !== 'unknown' ? sessionContext.lifePhase : undefined,
-    dominantTheme: selectedMenu?.label ?? sessionContext.currentTheme ?? undefined,
-    updatedAt: new Date().toISOString(),
+  const nowIso = new Date().toISOString()
+  if (user?.id) {
+    const memoryPatch: Record<string, string | null> = {
+      reading_level: sessionContext.readingLevel,
+      dominant_potential: sessionContext.dominantPotential,
+      life_phase: sessionContext.lifePhase,
+    }
+    if (effectiveRequestType === 'micro_profile') memoryPatch.last_profile_reading_at = nowIso
+    if (effectiveRequestType === 'micro_year') memoryPatch.last_year_reading_at = nowIso
+    if (effectiveRequestType === 'micro_month') memoryPatch.last_month_reading_at = nowIso
+    await writeUserMemory(supabase, user.id, memoryPatch)
   }
 
   return {
@@ -245,20 +353,16 @@ export async function runHexastraFlow(input: {
     mode,
     plan,
     conversationId,
-    flowState: { step: flowStep, completed: effectiveRequestType === 'chat' },
-    menu: menuVisible ? { visible: true, items: menuItems } : undefined,
-    suggestions: [
-      'Approfondir ce sujet',
-      'Explorer un autre angle',
-      'Revenir au menu principal',
-    ],
+    flowState: { step: menuVisible ? 'menu' : flowStep, completed: true },
+    menu: { visible: menuVisible, items: menuItems },
+    suggestions: menuVisible ? menuItems.slice(0, 4).map((item) => item.label) : undefined,
     metadata: {
       contextType: selectedMenu?.contextType ?? sessionContext.contextType,
       practitionerUsage: userContext.practitionerUsage,
       shouldPersistMemory: true,
-      selectedMenuKey: input.selectedMenuKey ?? null,
-      selectedSubmenuKey: input.selectedSubmenuKey ?? null,
+      selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
+      selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
     },
-    updatedEvolutionProfile,
+    updatedEvolutionProfile: input.evolutionProfile ?? null,
   }
 }

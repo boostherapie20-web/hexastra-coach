@@ -24,6 +24,30 @@ function requestDirective(input: BuildPromptInput): string {
   return `Analyse demandée sur le contexte ${input.contextType}. Toujours commencer par reconnaître la situation, puis clarifier, orienter et donner un levier prioritaire.`
 }
 
+function ksDirective(input: BuildPromptInput): string {
+  const route = input.domainRoute ?? 'general'
+  const source = input.specializedSource ? `Source métier prioritaire disponible : ${input.specializedSource}.` : 'Aucune source métier structurée reçue.'
+  const routeRule =
+    route === 'gps_kua'
+      ? `Question Kua/GPS : ne jamais répondre par “je n'ai pas trouvé dans les documents”. Si les données de naissance sont suffisantes, utiliser la logique directionnelle/GPS reçue comme source de vérité, puis reformuler en langage HexAstra.`
+      : route === 'neurokua'
+      ? `Question NeuroKua : utiliser en priorité les signaux d'équilibre, rythme, récupération, clarté et stabilisation. Rendre la sortie simple en public, plus structurée en praticien.`
+      : route === 'fusion'
+      ? `Question Fusion : agir comme Narrative Composer d'un orchestrateur KS. Les modules et signaux reçus sont prioritaires ; la réponse finale doit être une synthèse claire, cohérente et utile.`
+      : `S'il n'existe pas de module métier spécialisé, utilise les ressources du vector store comme enrichissement, jamais comme excuse pour répondre de manière générique.`
+
+  return `
+Architecture KS active :
+- Router -> Modules -> KS Signal Envelope -> Fusion Engine -> Sentinel -> Arbiter -> Narrative Composer.
+- Tu es la couche Narrative Composer / Output Stabilizer, pas le calculateur principal.
+- Si un résultat métier structuré est fourni, il prime sur le retrieval documentaire.
+- Le vector store sert à enrichir et stabiliser, pas à remplacer un moteur spécialisé.
+- Ne révèle jamais les noms internes KS au grand public.
+${source}
+${routeRule}
+`.trim()
+}
+
 export function buildSystemPrompt(input: BuildPromptInput): string {
   const planConfig = PLAN_MODE_MAP[input.plan]
   const labels = [input.selectedMenuLabel, input.selectedSubmenuLabel].filter(Boolean).join(' → ')
@@ -46,6 +70,7 @@ Contraintes :
 - Si les données existent déjà, ne pas les redemander.
 - Utiliser la mémoire implicitement.
 - Toujours rester probabiliste et non fataliste.
+- Ne jamais répondre “je n'ai pas trouvé dans les documents” si une logique KS ou un module spécialisé permet d'éclairer la question.
 
 Plan : ${input.plan}
 Mode : ${input.mode}
@@ -54,9 +79,11 @@ Niveau de profondeur maximum : ${planConfig.maxDepth}
 Contexte d'analyse : ${input.contextType}
 Usage praticien : ${input.practitionerUsage ?? 'non renseigné'}
 Entrée UI : ${labels || 'aucune'}
+Domaine routé : ${input.domainRoute ?? 'general'}
 
 ${modeDirective(input.mode)}
 ${requestDirective(input)}
+${ksDirective(input)}
 `
 
   return applySafetySuffix(base)
