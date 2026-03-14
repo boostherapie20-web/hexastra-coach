@@ -4,6 +4,8 @@ import { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import type { Lang } from './config'
 import { DEFAULT_LANGUAGE, STORAGE_KEY, detectBrowserLang } from './config'
 
+import frDict from './translations/fr.json'
+
 // ── Dynamic translation loader ──────────────────────────────────────────────
 
 async function loadTranslations(lang: Lang): Promise<Record<string, any>> {
@@ -39,7 +41,7 @@ export default function I18nProvider({ children }: { children: React.ReactNode }
   // Always start with DEFAULT_LANGUAGE on both server and client to avoid hydration mismatch.
   // After mount, read localStorage / browser preference and switch if needed.
   const [lang, setLangState] = useState<Lang>(DEFAULT_LANGUAGE)
-  const [dict, setDict] = useState<Record<string, any>>({})
+  const [dict, setDict] = useState<Record<string, any>>(frDict)
 
   // Resolve stored/browser language after first paint (client-only)
   useEffect(() => {
