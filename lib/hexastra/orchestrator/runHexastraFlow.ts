@@ -250,7 +250,9 @@ async function runSpecializedModule({
   messages: ChatMessage[]
 }): Promise<SpecializedModuleResult | null> {
   const latestUserMessage = messages.filter((m) => m.role === 'user').at(-1)?.content ?? ''
-
+  const isGreeting = /^(bonjour|salut|hello|hey|bonsoir|coucou|yo)\s*$/i.test(
+  latestUserMessage.trim(),
+)
   if ((domainRoute === 'gps_kua' || domainRoute === 'neurokua') && birthData?.date && birthData?.place) {
     try {
       const kua = await callRailway('/kua', {
@@ -479,30 +481,33 @@ export async function runHexastraFlow(input: {
     precision: sessionContext.precision,
   })
 
-  if (flowStep === 'menu' && !latestUserMessage.trim() && !input.selectedMenuKey && !input.selectedSubmenuKey) {
-    const message = buildMenuOnlyMessage(mode, userContext.language)
-    return {
-      message,
-      reply: message,
-      mode,
-      plan,
-      conversationId,
-      flowState: { step: 'menu', completed: true },
-      menu: { visible: true, items: getMenuForMode(mode) },
-      suggestions: getMenuForMode(mode).slice(0, 4).map((item) => item.label),
-      metadata: {
-        contextType: sessionContext.contextType,
-        practitionerUsage: userContext.practitionerUsage,
-        shouldPersistMemory: false,
-        selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
-        selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
-        sessionStep: 'menu',
-        emotionalState: sessionContext.emotionalState,
-        timing: sessionContext.timing,
-      },
-      updatedEvolutionProfile: input.evolutionProfile ?? null,
-    }
+  if (
+  (flowStep === 'menu' && !latestUserMessage.trim() && !input.selectedMenuKey && !input.selectedSubmenuKey) ||
+  (isGreeting && !input.selectedMenuKey && !input.selectedSubmenuKey)
+) {
+  const message = buildMenuOnlyMessage(mode, userContext.language)
+  return {
+    message,
+    reply: message,
+    mode,
+    plan,
+    conversationId,
+    flowState: { step: 'menu', completed: true },
+    menu: { visible: true, items: getMenuForMode(mode) },
+    suggestions: getMenuForMode(mode).slice(0, 4).map((item) => item.label),
+    metadata: {
+      contextType: sessionContext.contextType,
+      practitionerUsage: userContext.practitionerUsage,
+      shouldPersistMemory: false,
+      selectedMenuKey: null,
+      selectedSubmenuKey: null,
+      sessionStep: 'menu',
+      emotionalState: sessionContext.emotionalState,
+      timing: sessionContext.timing,
+    },
+    updatedEvolutionProfile: input.evolutionProfile ?? null,
   }
+}
 
   const specializedResult =
     effectiveRequestType === 'chat'
