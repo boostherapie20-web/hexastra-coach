@@ -25,9 +25,36 @@ export type Reading = {
   projectId?: string
 }
 
+export type BirthData = {
+  firstName: string
+  lastName: string
+  birthDate: string
+  birthTime: string
+  birthCity: string
+  birthLat: string
+  birthLng: string
+  birthCountryCode: string
+  birthCountryName: string
+  gender?: string
+}
+
+export const EMPTY_BIRTH_DATA: BirthData = {
+  firstName: '',
+  lastName: '',
+  birthDate: '',
+  birthTime: '',
+  birthCity: '',
+  birthLat: '',
+  birthLng: '',
+  birthCountryCode: '',
+  birthCountryName: '',
+  gender: '',
+}
+
 export const STORAGE_KEYS = {
   readings: 'hexastra.readings.v2',
   projects: 'hexastra.projects.v2',
+  birthData: 'hexastra.birthData.v1',
 } as const
 
 export const QUICK_PROMPTS = [
