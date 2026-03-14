@@ -5266,6 +5266,51 @@ select {
   .hx-home-brand-title { font-size: 0.98rem; }
 }
 
+/* ── MOBILE NAVBAR : sans border sur le badge logo et le burger ── */
+@media (max-width: 767px) {
+  /* Supprime le cercle autour du logo */
+  .hx-home-brand-badge {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .hx-home-brand-badge .hx-logo-wrap {
+    --hx-logo-size: 36px !important;
+  }
+
+  /* Agrandit le logo SVG */
+  .hx-home-brand-badge .hx-logo-image {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Agrandit le texte "HexAstra Coach" */
+  .hx-home-brand-title {
+    font-size: 1.25rem !important;
+    letter-spacing: -0.01em;
+  }
+
+  /* Supprime le border/background du bouton burger */
+  .hx-mobile-nav-toggle {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0;
+  }
+
+  .hx-mobile-nav-toggle:hover {
+    background: none !important;
+    border: none !important;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════
    5. HERO — hauteur + grid + typographie
    ══════════════════════════════════════════════════════════════ */
