@@ -6334,3 +6334,87 @@ select {
 .hx-leftbar-project-input-cancel:hover {
   color: rgba(200, 200, 220, 0.8);
 }
+
+/* ============================= */
+/* COMPOSER — NEW ELEMENTS       */
+/* ============================= */
+
+.hx-composer-attach-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.hx-composer-recording-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.22);
+  color: #f87171;
+  font-size: 0.78rem;
+}
+
+.hx-composer-transcribing-bar {
+  background: rgba(113, 227, 212, 0.07);
+  border-color: rgba(113, 227, 212, 0.18);
+  color: rgba(113, 227, 212, 0.8);
+}
+
+.hx-rec-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f87171;
+  flex-shrink: 0;
+  will-change: opacity;
+  animation: hx-recording-pulse 1s ease-in-out infinite;
+}
+
+@keyframes hx-recording-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.hx-composer-hint {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  color: rgba(216, 229, 240, 0.28);
+  font-size: 0.7rem;
+}
+
+.hx-composer-hint-enter {
+  color: rgba(88, 226, 194, 0.6);
+}
+
+.hx-composer-action-btn.is-loading {
+  opacity: 0.5;
+  cursor: wait;
+  pointer-events: none;
+}
+
+/* ============================= */
+/* BIRTH FORM — NEW ELEMENTS     */
+/* ============================= */
+
+.hx-birth-inline-field--full {
+  grid-column: 1 / -1;
+}
+
+.hx-birth-time-unknown-note {
+  margin-top: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.07);
+  border: 1px solid rgba(251, 191, 36, 0.18);
+  color: rgba(251, 191, 36, 0.85);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}

@@ -158,6 +158,7 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
     form.firstName.trim().length > 0 &&
     form.lastName.trim().length > 0 &&
     form.birthDate.trim().length > 0 &&
+    form.birthCountryName.trim().length > 0 &&
     form.birthCity.trim().length > 0 &&
     (timeUnknown || form.birthTime.trim().length > 0)
 
@@ -236,6 +237,26 @@ export default function BirthDataInlineForm({ data, onSave }: Props) {
             />
             <span>Heure inconnue</span>
           </label>
+          {timeUnknown && (
+            <p className="hx-birth-time-unknown-note">
+              ⚠ Sans heure de naissance, la lecture sera généralisée — certains éléments comme l&apos;Ascendant ne pourront pas être calculés avec précision.
+            </p>
+          )}
+        </div>
+
+        {/* Pays — occupe toute la largeur, auto-rempli par la ville */}
+        <div className="hx-birth-inline-field hx-birth-inline-field--full">
+          <span className="hx-birth-inline-label">
+            Pays de naissance <span aria-hidden="true">*</span>
+          </span>
+          <input
+            className={`hx-birth-inline-input${form.birthCountryName ? ' hx-birth-city-confirmed' : ''}`}
+            type="text"
+            placeholder="Sera rempli automatiquement lors du choix de la ville…"
+            value={form.birthCountryName}
+            onChange={(e) => set('birthCountryName', e.target.value)}
+            autoComplete="country-name"
+          />
         </div>
 
         {/* Ville avec autocomplete — occupe toute la largeur */}
