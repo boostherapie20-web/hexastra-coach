@@ -56,6 +56,8 @@ import {
 import type { UserEvolutionProfile } from '@/types/evolution'
 import { useChatLanguage, useTranslation } from '@/lib/i18n/useTranslation'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
+import MenuDock from './MenuDock'
+import type { ContextType, HexastraApiResponse, HexastraMenuItem } from '@/lib/hexastra/types'
 
 function IconMenu() {
   return (
@@ -109,6 +111,10 @@ export default function ChatPageClient() {
   const [isTyping, setIsTyping] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
+  const [menuItems, setMenuItems] = useState<HexastraMenuItem[]>([])
+  const [activeContextType, setActiveContextType] = useState<ContextType>('general')
+  const [selectedMenuKey, setSelectedMenuKey] = useState<string | null>(null)
+  const [selectedSubmenuKey, setSelectedSubmenuKey] = useState<string | null>(null)
 
   const [readings, setReadings] = useState<Reading[]>([])
   const [projects, setProjects] = useState<Project[]>([])
@@ -167,6 +173,77 @@ export default function ChatPageClient() {
   const desktopLeft = viewportWidth >= 1100
   const userInitials = getInitials(userEmail)
   const isLimitReached = isFreePlan(userPlan) && !canContinueChat(userPlan, freeMessagesUsed)
+
+  const applyApiResponse = useCallback((data: HexastraApiResponse | null | undefined) => {
+    if (!data) return ''
+    const reply = typeof data.message === 'string' ? data.message : (typeof data.reply === 'string' ? data.reply : '')
+    if (data.conversationId) setConversationId(data.conversationId)
+    if (data.menu?.visible && Array.isArray(data.menu.items)) setMenuItems(data.menu.items)
+    if (data.metadata?.contextType) setActiveContextType(data.metadata.contextType)
+    if (data.metadata?.selectedMenuKey !== undefined) setSelectedMenuKey(data.metadata.selectedMenuKey ?? null)
+    if (data.metadata?.selectedSubmenuKey !== undefined) setSelectedSubmenuKey(data.metadata.selectedSubmenuKey ?? null)
+    if (data.updatedEvolutionProfile) {
+      setEvolutionProfile(data.updatedEvolutionProfile as UserEvolutionProfile)
+      saveEvolutionProfile(data.updatedEvolutionProfile as UserEvolutionProfile)
+    }
+    return reply
+  }, [])
+
+  const sendStructuredAction = useCallback(async ({
+    message,
+    contextType,
+    menuKey,
+    submenuKey,
+    uiAction,
+  }: {
+    message: string
+    contextType: ContextType
+    menuKey?: string | null
+    submenuKey?: string | null
+    uiAction: 'select_menu_item' | 'select_submenu_item' | 'open_menu' | 'restart_flow'
+  }) => {
+    if (isTyping) return
+    const userMessage: Msg = {
+      id: `${Date.now()}-user`,
+      role: 'user',
+      content: message,
+      created_at: new Date().toISOString(),
+    }
+    const baseMessages = isWelcome ? [] : messages
+    const nextConversation = [...baseMessages, userMessage]
+    setMessages(nextConversation)
+    setIsTyping(true)
+
+    const payload = buildChatPayload({
+      requestType: 'chat',
+      plan: userPlan,
+      birthData,
+      practitionerUsage,
+      chatLanguage,
+      conversationId,
+      messages: nextConversation.map((m) => ({ role: m.role, content: m.content })),
+      evolutionProfile,
+      contextType,
+      selectedMenuKey: menuKey ?? null,
+      selectedSubmenuKey: submenuKey ?? null,
+      uiAction,
+    })
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await response.json()
+      const reply = applyApiResponse(data) || 'Une erreur est survenue.'
+      setMessages([...nextConversation, { id: `${Date.now()}-assistant`, role: 'assistant', content: reply, created_at: new Date().toISOString() }])
+    } catch {
+      setMessages([...nextConversation, { id: `${Date.now()}-error`, role: 'assistant', content: "Je n'ai pas pu ouvrir cet angle pour le moment.", created_at: new Date().toISOString() }])
+    } finally {
+      setIsTyping(false)
+    }
+  }, [applyApiResponse, birthData, chatLanguage, conversationId, evolutionProfile, isTyping, isWelcome, messages, practitionerUsage, userPlan])
 
   // ── Init effects ──────────────────────────────────────────────────────────
 
@@ -396,6 +473,10 @@ export default function ChatPageClient() {
       chatLanguage,
       conversationId,
       messages: historyMsgs,
+      contextType: activeContextType,
+      selectedMenuKey,
+      selectedSubmenuKey,
+      uiAction: 'send_message',
     })
 
     try {
@@ -405,7 +486,7 @@ export default function ChatPageClient() {
         body: JSON.stringify(payload),
       })
       const data = await res.json()
-      const reply = typeof data?.reply === 'string' ? data.reply : ''
+      const reply = applyApiResponse(data)
 
       setMessages((prev) => {
         const without = prev.filter((m) => m.id !== loadingId)
@@ -420,8 +501,6 @@ export default function ChatPageClient() {
           },
         ]
       })
-
-      if (data?.conversationId) setConversationId(data.conversationId)
 
       // Mark the reading as done and allow the next step
       setMicroReadings((prev) => {
@@ -524,6 +603,10 @@ export default function ChatPageClient() {
         conversationId,
         messages: historyMsgs,
         evolutionProfile,
+        contextType: activeContextType,
+        selectedMenuKey,
+        selectedSubmenuKey,
+        uiAction: 'send_message',
       })
 
       try {
@@ -540,7 +623,7 @@ export default function ChatPageClient() {
         }
 
         const data = await response.json()
-        const reply = typeof data?.reply === 'string' ? data.reply : 'Une erreur est survenue.'
+        const reply = applyApiResponse(data) || 'Une erreur est survenue.'
 
         const assistantMessage: Msg = {
           id: `${Date.now()}-assistant`,
@@ -553,14 +636,7 @@ export default function ChatPageClient() {
         setMessages(final)
         setIsTyping(false)
         cacheRef.current.set(content, reply)
-        setConversationId(data?.conversationId ?? null)
         saveReading(final)
-
-        // Persist updated evolution profile returned by the server
-        if (data?.updatedEvolutionProfile) {
-          setEvolutionProfile(data.updatedEvolutionProfile)
-          saveEvolutionProfile(data.updatedEvolutionProfile)
-        }
 
         if (isFreePlan(userPlan)) {
           const next = freeMessagesUsed + 1
@@ -587,9 +663,9 @@ export default function ChatPageClient() {
       }
     },
     [
-      attachedFile, birthData, chatLanguage, conversationId, evolutionProfile,
+      activeContextType, applyApiResponse, attachedFile, birthData, chatLanguage, conversationId, evolutionProfile,
       freeMessagesUsed, input, isTyping, isWelcome,
-      messages, mode, practitionerUsage, saveReading, step, userPlan,
+      messages, mode, practitionerUsage, saveReading, selectedMenuKey, selectedSubmenuKey, step, userPlan,
     ]
   )
 
@@ -597,6 +673,10 @@ export default function ChatPageClient() {
     setMessages([WELCOME_MESSAGE])
     setConversationId(null)
     setInput('')
+    setMenuItems([])
+    setActiveContextType('general')
+    setSelectedMenuKey(null)
+    setSelectedSubmenuKey(null)
     microTriggerRef.current = null
   }, [])
 
@@ -727,6 +807,24 @@ export default function ChatPageClient() {
           <div className="hx-app-feed hx-scroll-soft">
             <div className="hx-app-feed-inner">
               <MessageList messages={messages} isTyping={isTyping} />
+              {step === 'conversation_ready' && menuItems.length > 0 && (
+                <MenuDock
+                  items={menuItems}
+                  onSelect={(item, parent) => {
+                    const context = item.contextType ?? parent?.contextType ?? 'general'
+                    setActiveContextType(context)
+                    setSelectedMenuKey(parent?.key ?? item.key)
+                    setSelectedSubmenuKey(parent ? item.key : null)
+                    void sendStructuredAction({
+                      message: parent ? `${parent.label} → ${item.label}` : item.label,
+                      contextType: context,
+                      menuKey: parent?.key ?? item.key,
+                      submenuKey: parent ? item.key : null,
+                      uiAction: parent ? 'select_submenu_item' : 'select_menu_item',
+                    })
+                  }}
+                />
+              )}
             </div>
           </div>
 
