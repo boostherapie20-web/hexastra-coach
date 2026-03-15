@@ -57,7 +57,11 @@ import type { UserEvolutionProfile } from '@/types/evolution'
 import { useChatLanguage, useTranslation } from '@/lib/i18n/useTranslation'
 import LanguageSwitcher from '@/app/components/LanguageSwitcher'
 import MenuDock from './MenuDock'
-import type { ContextType, HexastraApiResponse, HexastraMenuItem } from '@/lib/hexastra/types'
+import type {
+  ContextType,
+  HexastraApiResponse,
+  HexastraMenuItem,
+} from '@/lib/hexastra/types'
 
 function IconMenu() {
   return (
@@ -72,16 +76,22 @@ function IconMenu() {
 const WELCOME_MESSAGE: Msg = {
   id: 'welcome',
   role: 'assistant',
-  content: "Bienvenue.\n\nJe suis HexAstra Coach.\nUn outil de lecture stratégique pour t'aider à comprendre ta situation, ton timing et la meilleure direction à prendre.",
+  content:
+    "Bienvenue.\n\nJe suis HexAstra Coach.\nUn outil de lecture stratégique pour t'aider à comprendre ta situation, ton timing et la meilleure direction à prendre.",
   created_at: new Date().toISOString(),
 }
+
+const API_TIMEOUT_MS = 30000
 
 function getInitials(email: string) {
   if (!email) return 'HX'
   const clean = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ' ')
   const parts = clean.split(' ').filter(Boolean)
   if (parts.length === 0) return 'HX'
-  return parts.slice(0, 2).map((part) => part[0]?.toUpperCase()).join('')
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
 }
 
 function isValidReading(value: unknown): value is Reading {
@@ -98,6 +108,14 @@ function isValidProject(value: unknown): value is Project {
   if (!value || typeof value !== 'object') return false
   const project = value as Partial<Project>
   return typeof project.id === 'string' && typeof project.name === 'string'
+}
+
+async function safeJson(response: Response) {
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
 }
 
 export default function ChatPageClient() {
@@ -127,24 +145,19 @@ export default function ChatPageClient() {
   const [showBirthForm, setShowBirthForm] = useState(false)
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
 
-  /** Plan loaded from Supabase user_metadata.plan */
   const [userPlan, setUserPlan] = useState<PlanKey>('free')
   const [planLoaded, setPlanLoaded] = useState(false)
 
-  /** Practitioner usage: personal vs client */
   const [practitionerUsage, setPractitionerUsage] = useState<PractitionerUsage>(null)
 
-  /** Micro-readings completion state */
   const [microReadings, setMicroReadings] = useState<MicroReadings>({
     profileKey: null,
     yearKey: null,
     monthKey: null,
   })
 
-  /** Evolution profile — loaded from localStorage, updated after each exchange */
   const [evolutionProfile, setEvolutionProfile] = useState<UserEvolutionProfile | null>(null)
 
-  /** Free plan usage tracking */
   const [freeMessagesUsed, setFreeMessagesUsed] = useState(0)
   const [freeResetAt, setFreeResetAt] = useState<Date | null>(null)
 
@@ -152,9 +165,6 @@ export default function ChatPageClient() {
   const hasPrefilled = useRef(false)
   const microTriggerRef = useRef<string | null>(null)
 
-  // ── Derived state ─────────────────────────────────────────────────────────
-
-  /** Mode auto-derived from plan — never user-selectable */
   const mode = planLoaded ? getEntitlements(userPlan).chatMode : 'essentiel'
 
   const step = computeBootstrapStep({
@@ -175,94 +185,185 @@ export default function ChatPageClient() {
   const isLimitReached = isFreePlan(userPlan) && !canContinueChat(userPlan, freeMessagesUsed)
 
   const applyApiResponse = useCallback((data: HexastraApiResponse | null | undefined) => {
-    if (!data) return ''
-    const reply = typeof data.message === 'string' ? data.message : (typeof data.reply === 'string' ? data.reply : '')
+    if (!data) {
+      return "Je n’ai pas pu terminer la lecture pour le moment."
+    }
+
+    const reply =
+      typeof data?.message === 'string'
+        ? data.message
+        : typeof data?.reply === 'string'
+          ? data.reply
+          : "Je n’ai pas pu terminer la lecture pour le moment."
+
     if (data.conversationId) setConversationId(data.conversationId)
     if (data.menu?.visible && Array.isArray(data.menu.items)) setMenuItems(data.menu.items)
     if (data.metadata?.contextType) setActiveContextType(data.metadata.contextType)
-    if (data.metadata?.selectedMenuKey !== undefined) setSelectedMenuKey(data.metadata.selectedMenuKey ?? null)
-    if (data.metadata?.selectedSubmenuKey !== undefined) setSelectedSubmenuKey(data.metadata.selectedSubmenuKey ?? null)
+    if (data.metadata?.selectedMenuKey !== undefined) {
+      setSelectedMenuKey(data.metadata.selectedMenuKey ?? null)
+    }
+    if (data.metadata?.selectedSubmenuKey !== undefined) {
+      setSelectedSubmenuKey(data.metadata.selectedSubmenuKey ?? null)
+    }
     if (data.updatedEvolutionProfile) {
       setEvolutionProfile(data.updatedEvolutionProfile as UserEvolutionProfile)
       saveEvolutionProfile(data.updatedEvolutionProfile as UserEvolutionProfile)
     }
+
     return reply
   }, [])
 
-  const sendStructuredAction = useCallback(async ({
-    message,
-    contextType,
-    menuKey,
-    submenuKey,
-    uiAction,
-  }: {
-    message: string
-    contextType: ContextType
-    menuKey?: string | null
-    submenuKey?: string | null
-    uiAction: 'select_menu_item' | 'select_submenu_item' | 'open_menu' | 'restart_flow'
-  }) => {
-    if (isTyping) return
-    const userMessage: Msg = {
-      id: `${Date.now()}-user`,
-      role: 'user',
-      content: message,
-      created_at: new Date().toISOString(),
-    }
-    const baseMessages = isWelcome ? [] : messages
-    const nextConversation = [...baseMessages, userMessage]
-    setMessages(nextConversation)
-    setIsTyping(true)
+  const postChatPayload = useCallback(
+    async (payload: unknown): Promise<HexastraApiResponse> => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
 
-    const payload = buildChatPayload({
-      requestType: 'chat',
-      plan: userPlan,
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        })
+
+        if (response.status === 401) {
+          window.location.href = '/auth?reason=session_expired'
+          throw new Error('Session expired')
+        }
+
+        const data = await safeJson(response)
+
+        if (!response.ok) {
+          console.error('[ChatPageClient] /api/chat error', response.status, data)
+          throw new Error(`API error ${response.status}`)
+        }
+
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid API response')
+        }
+
+        return data as HexastraApiResponse
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          throw new Error('Request timeout')
+        }
+        throw error
+      } finally {
+        clearTimeout(timeout)
+      }
+    },
+    []
+  )
+
+  const sendStructuredAction = useCallback(
+    async ({
+      message,
+      contextType,
+      menuKey,
+      submenuKey,
+      uiAction,
+    }: {
+      message: string
+      contextType: ContextType
+      menuKey?: string | null
+      submenuKey?: string | null
+      uiAction: 'select_menu_item' | 'select_submenu_item' | 'open_menu' | 'restart_flow'
+    }) => {
+      if (isTyping) return
+
+      const userMessage: Msg = {
+        id: `${Date.now()}-user`,
+        role: 'user',
+        content: message,
+        created_at: new Date().toISOString(),
+      }
+
+      const baseMessages = isWelcome ? [] : messages
+      const nextConversation = [...baseMessages, userMessage]
+
+      setMessages(nextConversation)
+      setIsTyping(true)
+
+      const payload = buildChatPayload({
+        requestType: 'chat',
+        plan: userPlan,
+        birthData,
+        practitionerUsage,
+        chatLanguage,
+        conversationId,
+        messages: nextConversation.map((m) => ({ role: m.role, content: m.content })),
+        evolutionProfile,
+        contextType,
+        selectedMenuKey: menuKey ?? null,
+        selectedSubmenuKey: submenuKey ?? null,
+        uiAction,
+      })
+
+      try {
+        const data = await postChatPayload(payload)
+        const reply = applyApiResponse(data)
+
+        setMessages([
+          ...nextConversation,
+          {
+            id: `${Date.now()}-assistant`,
+            role: 'assistant',
+            content: reply,
+            created_at: new Date().toISOString(),
+          },
+        ])
+      } catch (error) {
+        console.error('[sendStructuredAction] failed', error)
+        setMessages([
+          ...nextConversation,
+          {
+            id: `${Date.now()}-error`,
+            role: 'assistant',
+            content: "Je n'ai pas pu ouvrir cet angle pour le moment.",
+            created_at: new Date().toISOString(),
+          },
+        ])
+      } finally {
+        setIsTyping(false)
+      }
+    },
+    [
+      applyApiResponse,
       birthData,
-      practitionerUsage,
       chatLanguage,
       conversationId,
-      messages: nextConversation.map((m) => ({ role: m.role, content: m.content })),
       evolutionProfile,
-      contextType,
-      selectedMenuKey: menuKey ?? null,
-      selectedSubmenuKey: submenuKey ?? null,
-      uiAction,
-    })
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await response.json()
-      const reply = applyApiResponse(data) || 'Une erreur est survenue.'
-      setMessages([...nextConversation, { id: `${Date.now()}-assistant`, role: 'assistant', content: reply, created_at: new Date().toISOString() }])
-    } catch {
-      setMessages([...nextConversation, { id: `${Date.now()}-error`, role: 'assistant', content: "Je n'ai pas pu ouvrir cet angle pour le moment.", created_at: new Date().toISOString() }])
-    } finally {
-      setIsTyping(false)
-    }
-  }, [applyApiResponse, birthData, chatLanguage, conversationId, evolutionProfile, isTyping, isWelcome, messages, practitionerUsage, userPlan])
-
-  // ── Init effects ──────────────────────────────────────────────────────────
+      isTyping,
+      isWelcome,
+      messages,
+      practitionerUsage,
+      userPlan,
+      postChatPayload,
+    ]
+  )
 
   useEffect(() => {
     let mounted = true
+
     supabase.auth.getUser().then(({ data }) => {
       if (!mounted) return
+
       if (data.user?.email) setUserEmail(data.user.email)
+
       const plan = (data.user?.user_metadata?.plan as PlanKey) ?? 'free'
       setUserPlan(plan)
       setPlanLoaded(true)
-      // Sync plan (and language) into evolution profile
+
       setEvolutionProfile((prev) => {
         const updated = { ...(prev ?? {}), plan }
         saveEvolutionProfile(updated)
         return updated
       })
     })
-    return () => { mounted = false }
+
+    return () => {
+      mounted = false
+    }
   }, [supabase])
 
   useEffect(() => {
@@ -279,7 +380,7 @@ export default function ChatPageClient() {
         const parsed = JSON.parse(stored) as BirthData
         if (parsed && typeof parsed === 'object') setBirthData(parsed)
       }
-    } catch { /* noop */ }
+    } catch {}
   }, [])
 
   useEffect(() => {
@@ -292,7 +393,7 @@ export default function ChatPageClient() {
       if (stored === 'personal' || stored === 'client') {
         setPractitionerUsage(stored)
       }
-    } catch { /* noop */ }
+    } catch {}
   }, [])
 
   useEffect(() => {
@@ -304,10 +405,12 @@ export default function ChatPageClient() {
     try {
       const storedReadings = localStorage.getItem(STORAGE_KEYS.readings)
       const storedProjects = localStorage.getItem(STORAGE_KEYS.projects)
+
       if (storedReadings) {
         const parsed = JSON.parse(storedReadings)
         if (Array.isArray(parsed)) setReadings(parsed.filter(isValidReading))
       }
+
       if (storedProjects) {
         const parsed = JSON.parse(storedProjects)
         if (Array.isArray(parsed)) setProjects(parsed.filter(isValidProject))
@@ -328,20 +431,21 @@ export default function ChatPageClient() {
   useEffect(() => {
     if (searchParams.get('payment') === 'success') {
       setPaymentSuccess(true)
-      // Auto-dismiss after 6 s
       const t = setTimeout(() => setPaymentSuccess(false), 6000)
       return () => clearTimeout(t)
     }
   }, [searchParams])
 
-  /** Sync free plan usage counter */
   useEffect(() => {
     if (!isFreePlan(userPlan)) return
+
     try {
       const firstMsgRaw = localStorage.getItem(FREE_USAGE_FIRST_MSG_KEY)
+
       if (firstMsgRaw) {
         const firstMsgTime = new Date(firstMsgRaw).getTime()
         const resetAt = new Date(firstMsgTime + 24 * 60 * 60 * 1000)
+
         if (Date.now() >= resetAt.getTime()) {
           localStorage.removeItem(FREE_USAGE_FIRST_MSG_KEY)
           localStorage.setItem(FREE_USAGE_STORAGE_KEY, '0')
@@ -361,54 +465,59 @@ export default function ChatPageClient() {
     }
   }, [userPlan])
 
-  // ── Auto-trigger micro-readings ───────────────────────────────────────────
-
   useEffect(() => {
     if (
       step !== 'micro_profile_pending' &&
       step !== 'micro_year_pending' &&
       step !== 'micro_month_pending'
-    ) return
+    ) {
+      return
+    }
 
-    // Avoid double-triggering the same step
     if (microTriggerRef.current === step) return
     microTriggerRef.current = step
 
     const requestType: RequestType =
-      step === 'micro_profile_pending' ? 'micro_profile' :
-      step === 'micro_year_pending'    ? 'micro_year'    :
-      'micro_month'
+      step === 'micro_profile_pending'
+        ? 'micro_profile'
+        : step === 'micro_year_pending'
+          ? 'micro_year'
+          : 'micro_month'
 
     void triggerMicroReading(requestType)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step])
-
-  // ── Helpers ───────────────────────────────────────────────────────────────
 
   const handleBirthDataChange = useCallback((next: BirthData) => {
     setBirthData(next)
-    try { localStorage.setItem(STORAGE_KEYS.birthData, JSON.stringify(next)) } catch { /* noop */ }
+    try {
+      localStorage.setItem(STORAGE_KEYS.birthData, JSON.stringify(next))
+    } catch {}
   }, [])
 
-  const handleBirthDataSave = useCallback((next: BirthData) => {
-    handleBirthDataChange(next)
-    // Reset micro-readings so they regenerate for the new profile
-    const reset = loadMicroReadings()
-    setMicroReadings({ ...reset, profileKey: null })
-    microTriggerRef.current = null
-    // Sync firstName to evolution profile so the AI always knows the user's name
-    if (next.firstName) {
-      setEvolutionProfile((prev) => {
-        const updated = { ...(prev ?? {}), firstName: next.firstName }
-        saveEvolutionProfile(updated)
-        return updated
-      })
-    }
-  }, [handleBirthDataChange])
+  const handleBirthDataSave = useCallback(
+    (next: BirthData) => {
+      handleBirthDataChange(next)
+
+      const reset = loadMicroReadings()
+      setMicroReadings({ ...reset, profileKey: null })
+      microTriggerRef.current = null
+
+      if (next.firstName) {
+        setEvolutionProfile((prev) => {
+          const updated = { ...(prev ?? {}), firstName: next.firstName }
+          saveEvolutionProfile(updated)
+          return updated
+        })
+      }
+    },
+    [handleBirthDataChange]
+  )
 
   const handlePractitionerUsageSelect = useCallback((usage: PractitionerUsage) => {
     setPractitionerUsage(usage)
-    try { localStorage.setItem(PRACTITIONER_USAGE_KEY, usage ?? '') } catch { /* noop */ }
+    try {
+      localStorage.setItem(PRACTITIONER_USAGE_KEY, usage ?? '')
+    } catch {}
   }, [])
 
   const persistReadings = useCallback((next: Reading[]) => {
@@ -425,31 +534,33 @@ export default function ChatPageClient() {
     (conversation: Msg[]) => {
       const lastAssistant = [...conversation].reverse().find((m) => m.role === 'assistant')
       const firstUser = conversation.find((m) => m.role === 'user')
+
       if (!lastAssistant || !firstUser) return
 
       const reading: Reading = {
         id: `${Date.now()}`,
         title: makeReadingTitle(firstUser.content),
         science:
-          mode === 'essentiel' ? 'Mode Essentiel' :
-          mode === 'premium'   ? 'Mode Premium' :
-          'Mode Praticien',
+          mode === 'essentiel'
+            ? 'Mode Essentiel'
+            : mode === 'premium'
+              ? 'Mode Premium'
+              : 'Mode Praticien',
         date: new Date().toISOString(),
         preview: lastAssistant.content.slice(0, 220),
       }
+
       persistReadings([reading, ...readings].slice(0, 80))
     },
     [mode, persistReadings, readings]
   )
 
-  // ── Micro-reading auto-call ───────────────────────────────────────────────
-
   async function triggerMicroReading(requestType: RequestType) {
     if (isTyping) return
     setIsTyping(true)
 
-    // Show a loading placeholder in the chat
     const loadingId = `${Date.now()}-micro-loading`
+
     setMessages((prev) => {
       const base = prev[0]?.id === 'welcome' ? [] : prev
       return [
@@ -480,17 +591,13 @@ export default function ChatPageClient() {
     })
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-      const data = await res.json()
+      const data = await postChatPayload(payload)
       const reply = applyApiResponse(data)
 
       setMessages((prev) => {
         const without = prev.filter((m) => m.id !== loadingId)
         if (!reply) return without
+
         return [
           ...without,
           {
@@ -502,16 +609,18 @@ export default function ChatPageClient() {
         ]
       })
 
-      // Mark the reading as done and allow the next step
       setMicroReadings((prev) => {
         let next: MicroReadings
+
         if (requestType === 'micro_profile') next = markProfileDone(prev, birthData)
-        else if (requestType === 'micro_year')    next = markYearDone(prev)
-        else                                       next = markMonthDone(prev)
+        else if (requestType === 'micro_year') next = markYearDone(prev)
+        else next = markMonthDone(prev)
+
         microTriggerRef.current = null
         return next
       })
-    } catch {
+    } catch (error) {
+      console.error('[triggerMicroReading] failed', error)
       setMessages((prev) => prev.filter((m) => m.id !== loadingId))
       microTriggerRef.current = null
     } finally {
@@ -519,18 +628,16 @@ export default function ChatPageClient() {
     }
   }
 
-  // ── Normal chat send ──────────────────────────────────────────────────────
-
   const handleSend = useCallback(
     async (provided?: string) => {
       const baseContent = (provided ?? input).trim()
       const attachNote = attachedFile ? `\n\n[Pièce jointe : ${attachedFile.name}]` : ''
       const content = baseContent + attachNote
+
       if (!content.trim() || isTyping) return
       if (step !== 'conversation_ready') return
       if (!canContinueChat(userPlan, freeMessagesUsed)) return
 
-      // ── Couche 2 : domain guard ─────────────────────────────────────────
       const routeResult = routeUserQuery(baseContent)
       if (routeResult.decision !== 'allowed') {
         const baseMessages = isWelcome ? [] : messages
@@ -540,6 +647,7 @@ export default function ChatPageClient() {
           content,
           created_at: new Date().toISOString(),
         }
+
         setMessages([
           ...baseMessages,
           userMsg,
@@ -550,11 +658,11 @@ export default function ChatPageClient() {
             created_at: new Date().toISOString(),
           },
         ])
+
         setInput('')
         setAttachedFile(null)
         return
       }
-      // ────────────────────────────────────────────────────────────────────
 
       const userMessage: Msg = {
         id: `${Date.now()}-user`,
@@ -571,7 +679,16 @@ export default function ChatPageClient() {
       setAttachedFile(null)
       setIsTyping(true)
 
-      const cachedReply = cacheRef.current.get(content)
+      const cacheKey = [
+        userPlan,
+        activeContextType,
+        selectedMenuKey ?? '',
+        selectedSubmenuKey ?? '',
+        conversationId ?? '',
+        content,
+      ].join('::')
+
+      const cachedReply = cacheRef.current.get(cacheKey)
       if (cachedReply) {
         const assistantMessage: Msg = {
           id: `${Date.now()}-cached`,
@@ -580,12 +697,14 @@ export default function ChatPageClient() {
           created_at: new Date().toISOString(),
           cached: true,
         }
+
         setTimeout(() => {
           const final = [...nextConversation, assistantMessage]
           setMessages(final)
           setIsTyping(false)
           saveReading(final)
         }, 180)
+
         return
       }
 
@@ -610,20 +729,8 @@ export default function ChatPageClient() {
       })
 
       try {
-        const response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        })
-
-        // Session expired — redirect to auth
-        if (response.status === 401) {
-          window.location.href = '/auth?reason=session_expired'
-          return
-        }
-
-        const data = await response.json()
-        const reply = applyApiResponse(data) || 'Une erreur est survenue.'
+        const data = await postChatPayload(payload)
+        const reply = applyApiResponse(data)
 
         const assistantMessage: Msg = {
           id: `${Date.now()}-assistant`,
@@ -635,37 +742,61 @@ export default function ChatPageClient() {
         const final = [...nextConversation, assistantMessage]
         setMessages(final)
         setIsTyping(false)
-        cacheRef.current.set(content, reply)
+
+        cacheRef.current.set(cacheKey, reply)
         saveReading(final)
 
         if (isFreePlan(userPlan)) {
           const next = freeMessagesUsed + 1
           setFreeMessagesUsed(next)
+
           try {
             localStorage.setItem(FREE_USAGE_STORAGE_KEY, String(next))
             if (!localStorage.getItem(FREE_USAGE_FIRST_MSG_KEY)) {
               localStorage.setItem(FREE_USAGE_FIRST_MSG_KEY, new Date().toISOString())
               setFreeResetAt(new Date(Date.now() + 24 * 60 * 60 * 1000))
             }
-          } catch { /* noop */ }
+          } catch {}
         }
-      } catch {
+      } catch (error) {
+        console.error('[handleSend] failed', error)
+
         setMessages([
           ...nextConversation,
           {
             id: `${Date.now()}-error`,
             role: 'assistant',
-            content: "Je n'ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.",
+            content:
+              error instanceof Error && error.message === 'Request timeout'
+                ? "La réponse prend trop de temps. Réessaie dans quelques instants."
+                : "Je n'ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.",
             created_at: new Date().toISOString(),
           },
         ])
+
         setIsTyping(false)
       }
     },
     [
-      activeContextType, applyApiResponse, attachedFile, birthData, chatLanguage, conversationId, evolutionProfile,
-      freeMessagesUsed, input, isTyping, isWelcome,
-      messages, mode, practitionerUsage, saveReading, selectedMenuKey, selectedSubmenuKey, step, userPlan,
+      activeContextType,
+      applyApiResponse,
+      attachedFile,
+      birthData,
+      chatLanguage,
+      conversationId,
+      evolutionProfile,
+      freeMessagesUsed,
+      input,
+      isTyping,
+      isWelcome,
+      messages,
+      practitionerUsage,
+      saveReading,
+      selectedMenuKey,
+      selectedSubmenuKey,
+      step,
+      userPlan,
+      postChatPayload,
     ]
   )
 
@@ -680,29 +811,32 @@ export default function ChatPageClient() {
     microTriggerRef.current = null
   }, [])
 
-  const handleCreateProject = useCallback((name: string) => {
-    if (!name.trim()) return
-    persistProjects([...projects, { id: `${Date.now()}`, name: name.trim(), collapsed: false }])
-  }, [persistProjects, projects])
+  const handleCreateProject = useCallback(
+    (name: string) => {
+      if (!name.trim()) return
+      persistProjects([...projects, { id: `${Date.now()}`, name: name.trim(), collapsed: false }])
+    },
+    [persistProjects, projects]
+  )
 
   const handleAssignReadingToProject = useCallback(
     (readingId: string, projectId: string) => {
-      persistReadings(readings.map((r) => r.id === readingId ? { ...r, projectId } : r))
+      persistReadings(readings.map((r) => (r.id === readingId ? { ...r, projectId } : r)))
     },
     [persistReadings, readings]
   )
 
   const handleOpenReading = useCallback((reading: Reading) => {
-    setMessages([{
-      id: `reading-${reading.id}`,
-      role: 'assistant',
-      content: `Lecture sauvegardée\n\n${reading.preview}`,
-      created_at: reading.date,
-    }])
+    setMessages([
+      {
+        id: `reading-${reading.id}`,
+        role: 'assistant',
+        content: `Lecture sauvegardée\n\n${reading.preview}`,
+        created_at: reading.date,
+      },
+    ])
     setShowLeft(false)
   }, [])
-
-  // ── Shared sub-components ─────────────────────────────────────────────────
 
   const sidebar = (
     <LeftSidebar
@@ -716,28 +850,25 @@ export default function ChatPageClient() {
     />
   )
 
-  const mobileOverlay = (!desktopLeft && showLeft) ? (
-    <div className="hx-chat-overlay" onClick={() => setShowLeft(false)} role="presentation">
-      <aside
-        className="hx-chat-mobile-sheet hx-chat-mobile-sheet-left hx-chat-panel"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {sidebar}
-      </aside>
-    </div>
-  ) : null
+  const mobileOverlay =
+    !desktopLeft && showLeft ? (
+      <div className="hx-chat-overlay" onClick={() => setShowLeft(false)} role="presentation">
+        <aside
+          className="hx-chat-mobile-sheet hx-chat-mobile-sheet-left hx-chat-panel"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {sidebar}
+        </aside>
+      </div>
+    ) : null
 
-  /** Bootstrap overlay content (shown before conversation_ready) */
   const bootstrapOverlay = (() => {
     if (step === 'loading') return null
 
     if (step === 'birthdata_missing') {
       return (
         <div className="hx-bootstrap-overlay">
-          <BirthDataInlineForm
-            data={birthData}
-            onSave={handleBirthDataSave}
-          />
+          <BirthDataInlineForm data={birthData} onSave={handleBirthDataSave} />
         </div>
       )
     }
@@ -764,21 +895,25 @@ export default function ChatPageClient() {
     onRemoveAttach: () => setAttachedFile(null),
     onBirthFormOpen: () => setShowBirthForm(true),
     highlightBirth: isWelcome && !isBirthDataComplete(birthData),
-    disabled: step !== 'conversation_ready' || isLimitReached,
+    disabled: step !== 'conversation_ready' || isLimitReached || isTyping,
   }
 
-  // ── CONVERSATION SCREEN ───────────────────────────────────────────────────
   return (
     <div className="hx-chat-page">
       <PremiumBackground />
+
       {paymentSuccess && (
         <div className="hx-payment-success-banner" role="status">
           <span>✦</span>
           <span>Paiement confirmé — votre abonnement est activé.</span>
-          <button type="button" onClick={() => setPaymentSuccess(false)} aria-label="Fermer">✕</button>
+          <button type="button" onClick={() => setPaymentSuccess(false)} aria-label="Fermer">
+            ✕
+          </button>
         </div>
       )}
+
       {mobileOverlay}
+
       {showBirthForm && (
         <BirthFormModal
           data={birthData}
@@ -788,25 +923,30 @@ export default function ChatPageClient() {
       )}
 
       <div className="hx-app-layout">
-        {desktopLeft && (
-          <aside className="hx-app-sidebar">{sidebar}</aside>
-        )}
+        {desktopLeft && <aside className="hx-app-sidebar">{sidebar}</aside>}
 
         <main className="hx-app-main">
           <div className="hx-app-topbar">
             <div className="hx-app-topbar-left">
               {!desktopLeft && (
-                <button type="button" className="hx-icon-btn" onClick={() => setShowLeft(true)} aria-label="Menu">
+                <button
+                  type="button"
+                  className="hx-icon-btn"
+                  onClick={() => setShowLeft(true)}
+                  aria-label="Menu"
+                >
                   <IconMenu />
                 </button>
               )}
             </div>
+
             <LanguageSwitcher variant="flag" className="hx-nav-lang" />
           </div>
 
           <div className="hx-app-feed hx-scroll-soft">
             <div className="hx-app-feed-inner">
               <MessageList messages={messages} isTyping={isTyping} />
+
               {step === 'conversation_ready' && menuItems.length > 0 && (
                 <MenuDock
                   items={menuItems}
@@ -815,6 +955,7 @@ export default function ChatPageClient() {
                     setActiveContextType(context)
                     setSelectedMenuKey(parent?.key ?? item.key)
                     setSelectedSubmenuKey(parent ? item.key : null)
+
                     void sendStructuredAction({
                       message: parent ? `${parent.label} → ${item.label}` : item.label,
                       contextType: context,
@@ -830,11 +971,13 @@ export default function ChatPageClient() {
 
           <div className="hx-app-bottom">
             <div className="hx-app-composer-wrap">
-              {bootstrapOverlay ?? (
-                isLimitReached
-                  ? <PaywallBanner plan={userPlan} resetAt={freeResetAt} />
-                  : <Composer {...composerProps} />
-              )}
+              {bootstrapOverlay ??
+                (isLimitReached ? (
+                  <PaywallBanner plan={userPlan} resetAt={freeResetAt} />
+                ) : (
+                  <Composer {...composerProps} />
+                ))}
+
               {!isLimitReached && !bootstrapOverlay && (
                 <p className="hx-app-disclaimer">{t('chat.disclaimer')}</p>
               )}
