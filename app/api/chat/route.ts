@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runHexastraFlow } from '@/lib/hexastra/orchestrator/runHexastraFlow'
-import type { BirthProfile, ContextType, PractitionerUsageHex, UiAction } from '@/lib/hexastra/types'
+import type {
+  BirthProfile,
+  ContextType,
+  PractitionerUsageHex,
+  UiAction,
+} from '@/lib/hexastra/types'
 import type { PlanKey } from '@/lib/plans'
 import type { ChatMessage } from '@/lib/chat/chatPayloadBuilder'
 
@@ -8,71 +13,180 @@ export const runtime = 'nodejs'
 
 function sanitizeMessages(messages: unknown): ChatMessage[] {
   if (!Array.isArray(messages)) return []
+
   return messages
-    .filter((m): m is { role?: unknown; content?: unknown } => Boolean(m && typeof m === 'object'))
-    .map((m): ChatMessage => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
-      content: typeof m.content === 'string' ? m.content.trim() : '',
-    }))
+    .filter(
+      (m): m is { role?: unknown; content?: unknown } =>
+        Boolean(m && typeof m === 'object')
+    )
+    .map(
+      (m): ChatMessage => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: typeof m.content === 'string' ? m.content.trim() : '',
+      })
+    )
     .filter((m) => m.content.length > 0)
     .slice(-20)
 }
 
-function normalizeBirthData(raw: any): BirthProfile | null {
+function normalizePlan(plan: unknown): PlanKey {
+  return plan === 'essential' ||
+    plan === 'premium' ||
+    plan === 'practitioner' ||
+    plan === 'free'
+    ? plan
+    : 'free'
+}
+
+function normalizeContextType(value: unknown): ContextType {
+  return typeof value === 'string' ? (value as ContextType) : 'general'
+}
+
+function normalizeUiAction(value: unknown): UiAction {
+  return typeof value === 'string' ? (value as UiAction) : 'send_message'
+}
+
+function normalizePractitionerUsage(value: unknown): PractitionerUsageHex {
+  if (value === 'self' || value === 'client') return value
+  if (value === 'personal') return 'self'
+  return null
+}
+
+function toOptionalNumber(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
+function normalizeBirthData(raw: unknown): BirthProfile | null {
   if (!raw || typeof raw !== 'object') return null
+
+  const data = raw as Record<string, unknown>
+
+  const birth: BirthProfile = {
+    firstName: typeof data.firstName === 'string' ? data.firstName.trim() : undefined,
+    lastName: typeof data.lastName === 'string' ? data.lastName.trim() : undefined,
+    date:
+      typeof data.date === 'string'
+        ? data.date.trim()
+        : typeof data.birthDate === 'string'
+          ? data.birthDate.trim()
+          : undefined,
+    time:
+      typeof data.time === 'string'
+        ? data.time.trim()
+        : typeof data.birthTime === 'string'
+          ? data.birthTime.trim()
+          : undefined,
+    place:
+      typeof data.place === 'string'
+        ? data.place.trim()
+        : typeof data.birthCity === 'string'
+          ? data.birthCity.trim()
+          : undefined,
+    country:
+      typeof data.country === 'string'
+        ? data.country.trim()
+        : typeof data.birthCountryName === 'string'
+          ? data.birthCountryName.trim()
+          : undefined,
+    lat: toOptionalNumber(data.lat ?? data.birthLat),
+    lon: toOptionalNumber(data.lon ?? data.birthLng),
+    gender: typeof data.gender === 'string' ? data.gender.trim() : undefined,
+  }
+
+  const hasUsefulData = Boolean(
+    birth.firstName ||
+      birth.lastName ||
+      birth.date ||
+      birth.time ||
+      birth.place ||
+      birth.country ||
+      typeof birth.lat === 'number' ||
+      typeof birth.lon === 'number'
+  )
+
+  return hasUsefulData ? birth : null
+}
+
+function buildSafeErrorResponse() {
   return {
-    firstName: typeof raw.firstName === 'string' ? raw.firstName : undefined,
-    lastName: typeof raw.lastName === 'string' ? raw.lastName : undefined,
-    date: typeof raw.date === 'string' ? raw.date : typeof raw.birthDate === 'string' ? raw.birthDate : undefined,
-    time: typeof raw.time === 'string' ? raw.time : typeof raw.birthTime === 'string' ? raw.birthTime : undefined,
-    place: typeof raw.place === 'string' ? raw.place : typeof raw.birthCity === 'string' ? raw.birthCity : undefined,
-    country: typeof raw.country === 'string' ? raw.country : typeof raw.birthCountryName === 'string' ? raw.birthCountryName : undefined,
-    lat: typeof raw.lat === 'number' ? raw.lat : raw.birthLat ? Number(raw.birthLat) : undefined,
-    lon: typeof raw.lon === 'number' ? raw.lon : raw.birthLng ? Number(raw.birthLng) : undefined,
-    gender: typeof raw.gender === 'string' ? raw.gender : undefined,
+    message:
+      'Je n’ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.',
+    reply:
+      'Je n’ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.',
+    mode: 'free',
+    plan: 'free',
+    flowState: { step: 'error', completed: false },
+    conversationId: crypto.randomUUID(),
+    metadata: {
+      shouldPersistMemory: false,
+    },
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const body = await req.json().catch(() => null)
+
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(buildSafeErrorResponse(), { status: 400 })
+    }
 
     const response = await runHexastraFlow({
-      plan: (typeof body?.plan === 'string' ? body.plan : 'free') as PlanKey,
-      language: typeof body?.language === 'string' ? body.language : typeof body?.chatLanguage === 'string' ? body.chatLanguage : 'fr',
+      plan: normalizePlan((body as Record<string, unknown>).plan),
+      language:
+        typeof (body as Record<string, unknown>).language === 'string'
+          ? ((body as Record<string, unknown>).language as string)
+          : typeof (body as Record<string, unknown>).chatLanguage === 'string'
+            ? ((body as Record<string, unknown>).chatLanguage as string)
+            : 'fr',
       requestType:
-        body?.requestType === 'micro_profile' || body?.requestType === 'micro_year' || body?.requestType === 'micro_month'
-          ? body.requestType
+        (body as Record<string, unknown>).requestType === 'micro_profile' ||
+        (body as Record<string, unknown>).requestType === 'micro_year' ||
+        (body as Record<string, unknown>).requestType === 'micro_month'
+          ? ((body as Record<string, unknown>).requestType as
+              | 'micro_profile'
+              | 'micro_year'
+              | 'micro_month')
           : 'chat',
-      birthData: normalizeBirthData(body?.birthData),
-      practitionerUsage:
-        body?.practitionerUsage === 'self' || body?.practitionerUsage === 'client'
-          ? body.practitionerUsage
-          : body?.practitionerUsage === 'personal'
-          ? 'self'
+      birthData: normalizeBirthData((body as Record<string, unknown>).birthData),
+      practitionerUsage: normalizePractitionerUsage(
+        (body as Record<string, unknown>).practitionerUsage
+      ),
+      contextType: normalizeContextType(
+        (body as Record<string, unknown>).contextType
+      ),
+      selectedMenuKey:
+        typeof (body as Record<string, unknown>).selectedMenuKey === 'string'
+          ? ((body as Record<string, unknown>).selectedMenuKey as string)
           : null,
-      contextType: (typeof body?.contextType === 'string' ? body.contextType : 'general') as ContextType,
-      selectedMenuKey: typeof body?.selectedMenuKey === 'string' ? body.selectedMenuKey : null,
-      selectedSubmenuKey: typeof body?.selectedSubmenuKey === 'string' ? body.selectedSubmenuKey : null,
-      uiAction: (typeof body?.uiAction === 'string' ? body.uiAction : 'send_message') as UiAction,
-      conversationId: typeof body?.conversationId === 'string' ? body.conversationId : null,
-      messages: sanitizeMessages(body?.messages),
-      evolutionProfile: body?.evolutionProfile && typeof body.evolutionProfile === 'object' ? body.evolutionProfile : null,
+      selectedSubmenuKey:
+        typeof (body as Record<string, unknown>).selectedSubmenuKey === 'string'
+          ? ((body as Record<string, unknown>).selectedSubmenuKey as string)
+          : null,
+      uiAction: normalizeUiAction((body as Record<string, unknown>).uiAction),
+      conversationId:
+        typeof (body as Record<string, unknown>).conversationId === 'string'
+          ? ((body as Record<string, unknown>).conversationId as string)
+          : null,
+      messages: sanitizeMessages((body as Record<string, unknown>).messages),
+      evolutionProfile:
+        (body as Record<string, unknown>).evolutionProfile &&
+        typeof (body as Record<string, unknown>).evolutionProfile === 'object'
+          ? ((body as Record<string, unknown>).evolutionProfile as Record<
+              string,
+              unknown
+            >)
+          : null,
     })
 
-    return NextResponse.json(response)
+    return NextResponse.json(response, { status: 200 })
   } catch (error) {
-    console.error('[api/chat]', error)
-    return NextResponse.json(
-      {
-        message: 'Je n’ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.',
-        reply: 'Je n’ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.',
-        mode: 'libre',
-        plan: 'free',
-        flowState: { step: 'analysis', completed: false },
-        conversationId: crypto.randomUUID(),
-      },
-      { status: 500 },
-    )
+    console.error('[api/chat] fatal error', error)
+    return NextResponse.json(buildSafeErrorResponse(), { status: 500 })
   }
 }
