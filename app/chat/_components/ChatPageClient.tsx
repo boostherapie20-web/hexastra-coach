@@ -82,6 +82,8 @@ const WELCOME_MESSAGE: Msg = {
 }
 
 const API_TIMEOUT_MS = 30000
+const CONVERSATION_STORAGE_KEY = 'hexastra_conversation_id'
+const CACHE_LIMIT = 50
 
 function getInitials(email: string) {
   if (!email) return 'HX'
@@ -115,6 +117,22 @@ async function safeJson(response: Response) {
     return await response.json()
   } catch {
     return null
+  }
+}
+
+function setCacheEntry(
+  cache: Map<string, string>,
+  key: string,
+  value: string,
+  limit = CACHE_LIMIT
+) {
+  cache.set(key, value)
+
+  if (cache.size > limit) {
+    const firstKey = cache.keys().next().value
+    if (firstKey) {
+      cache.delete(firstKey)
+    }
   }
 }
 
@@ -164,6 +182,7 @@ export default function ChatPageClient() {
   const cacheRef = useRef<Map<string, string>>(new Map())
   const hasPrefilled = useRef(false)
   const microTriggerRef = useRef<string | null>(null)
+  const requestAbortRef = useRef<AbortController | null>(null)
 
   const mode = planLoaded ? getEntitlements(userPlan).chatMode : 'essentiel'
 
@@ -215,7 +234,12 @@ export default function ChatPageClient() {
 
   const postChatPayload = useCallback(
     async (payload: unknown): Promise<HexastraApiResponse> => {
+      if (requestAbortRef.current) {
+        requestAbortRef.current.abort()
+      }
+
       const controller = new AbortController()
+      requestAbortRef.current = controller
       const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS)
 
       try {
@@ -245,11 +269,14 @@ export default function ChatPageClient() {
         return data as HexastraApiResponse
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
-          throw new Error('Request timeout')
+          throw new Error('Request aborted')
         }
         throw error
       } finally {
         clearTimeout(timeout)
+        if (requestAbortRef.current === controller) {
+          requestAbortRef.current = null
+        }
       }
     },
     []
@@ -319,7 +346,10 @@ export default function ChatPageClient() {
           {
             id: `${Date.now()}-error`,
             role: 'assistant',
-            content: "Je n'ai pas pu ouvrir cet angle pour le moment.",
+            content:
+              error instanceof Error && error.message === 'Request aborted'
+                ? "La demande précédente a été interrompue au profit de la nouvelle."
+                : "Je n'ai pas pu ouvrir cet angle pour le moment.",
             created_at: new Date().toISOString(),
           },
         ])
@@ -372,6 +402,22 @@ export default function ChatPageClient() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CONVERSATION_STORAGE_KEY)
+      if (stored) {
+        setConversationId(stored)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!conversationId) return
+    try {
+      localStorage.setItem(CONVERSATION_STORAGE_KEY, conversationId)
+    } catch {}
+  }, [conversationId])
 
   useEffect(() => {
     try {
@@ -487,6 +533,14 @@ export default function ChatPageClient() {
     void triggerMicroReading(requestType)
   }, [step])
 
+  useEffect(() => {
+    return () => {
+      if (requestAbortRef.current) {
+        requestAbortRef.current.abort()
+      }
+    }
+  }, [])
+
   const handleBirthDataChange = useCallback((next: BirthData) => {
     setBirthData(next)
     try {
@@ -596,7 +650,6 @@ export default function ChatPageClient() {
 
       setMessages((prev) => {
         const without = prev.filter((m) => m.id !== loadingId)
-        if (!reply) return without
 
         return [
           ...without,
@@ -685,7 +738,7 @@ export default function ChatPageClient() {
         selectedMenuKey ?? '',
         selectedSubmenuKey ?? '',
         conversationId ?? '',
-        content,
+        content.slice(0, 120),
       ].join('::')
 
       const cachedReply = cacheRef.current.get(cacheKey)
@@ -743,7 +796,7 @@ export default function ChatPageClient() {
         setMessages(final)
         setIsTyping(false)
 
-        cacheRef.current.set(cacheKey, reply)
+        setCacheEntry(cacheRef.current, cacheKey, reply)
         saveReading(final)
 
         if (isFreePlan(userPlan)) {
@@ -767,8 +820,8 @@ export default function ChatPageClient() {
             id: `${Date.now()}-error`,
             role: 'assistant',
             content:
-              error instanceof Error && error.message === 'Request timeout'
-                ? "La réponse prend trop de temps. Réessaie dans quelques instants."
+              error instanceof Error && error.message === 'Request aborted'
+                ? "La demande précédente a été annulée pour laisser passer la nouvelle."
                 : "Je n'ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.",
             created_at: new Date().toISOString(),
           },
@@ -809,6 +862,9 @@ export default function ChatPageClient() {
     setSelectedMenuKey(null)
     setSelectedSubmenuKey(null)
     microTriggerRef.current = null
+    try {
+      localStorage.removeItem(CONVERSATION_STORAGE_KEY)
+    } catch {}
   }, [])
 
   const handleCreateProject = useCallback(
