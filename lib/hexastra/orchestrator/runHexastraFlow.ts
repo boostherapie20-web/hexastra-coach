@@ -4,13 +4,13 @@ import { buildSystemPrompt } from '@/lib/hexastra/prompts/buildSystemPrompt'
 import { buildUserContext } from '@/lib/hexastra/context/buildUserContext'
 import { buildSessionContext } from '@/lib/hexastra/context/buildSessionContext'
 import { buildChatPayload } from '@/lib/hexastra/payload/buildChatPayload'
-import { retrieveKnowledge } from '@/lib/vectorSearch'
 import { compressKnowledgeContext } from '@/lib/contextCompressor'
 import { getAdaptiveRetrievalConfig } from '@/lib/retrievalPolicy'
 import { getMenuForMode, findMenuItem } from '@/lib/hexastra/menus/getMenuForMode'
 import { persistConversationMessage, writeSessionState } from '@/lib/hexastra/memory/sessionMemory'
 import { writeUserMemory } from '@/lib/hexastra/memory/userMemory'
-import { multiLayerRetrieval } from "@/lib/hexastra/retrieval/multiLayerRetrieval"
+import { multiLayerRetrieval } from '@/lib/hexastra/retrieval/multiLayerRetrieval'
+
 import type {
   BirthProfile,
   ContextType,
@@ -22,6 +22,7 @@ import type {
 } from '@/lib/hexastra/types'
 import type { PlanKey } from '@/lib/plans'
 import type { ChatMessage } from '@/lib/chat/chatPayloadBuilder'
+
 import { classifyQuery } from '@/lib/hexastra/router/classifyQuery'
 import { getModulesForDomain } from '@/lib/hexastra/router/moduleRouter'
 import { buildSignalEnvelope } from '@/lib/hexastra/fusion/signalEnvelope'
@@ -32,7 +33,9 @@ import { computeFlowStep } from '@/lib/hexastra/session/sessionBrain'
 import { buildRetrievalPlan } from '@/lib/hexastra/vector/retrievalPlanner'
 
 const VECTOR_STORE_ID = process.env.OPENAI_VECTOR_STORE_ID || ''
-const API_URL = (process.env.HEXASTRA_API_URL || 'https://hexastra-api-production.up.railway.app').replace(/\/$/, '')
+const API_URL = (
+  process.env.HEXASTRA_API_URL || 'https://hexastra-api-production.up.railway.app'
+).replace(/\/$/, '')
 const API_KEY = process.env.HEXASTRA_API_KEY || ''
 
 type SpecializedModuleResult = {
@@ -83,37 +86,48 @@ function shouldGenerateMonthReading(lastAt?: string | null): boolean {
   return !lastAt.startsWith(monthKey())
 }
 
-async function callOpenAI(payload: any): Promise<string> {
-  const openaiKey = process.env.OPENAI_API_KEY
-  if (!openaiKey) {
-    return 'OPENAI_API_KEY manquante. Configure la variable d’environnement pour activer HexAstra.'
+async function callOpenAI(payload: unknown): Promise<string> {
+  try {
+    const openaiKey = process.env.OPENAI_API_KEY
+    if (!openaiKey) {
+      return 'OPENAI_API_KEY manquante. Configure la variable d’environnement pour activer HexAstra.'
+    }
+
+    const res = await fetch('https://api.openai.com/v1/responses', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openaiKey}`,
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(30000),
+    })
+
+    const json = await res.json().catch(() => null)
+
+    if (!res.ok || !json) {
+      console.error('[callOpenAI] OpenAI error', res.status, json)
+      return 'Je n’ai pas pu terminer la lecture pour le moment.'
+    }
+
+    const output = Array.isArray((json as any).output) ? (json as any).output : []
+    const text = output
+      .flatMap((block: any) => (Array.isArray(block?.content) ? block.content : []))
+      .filter((item: any) => item?.type === 'output_text' && typeof item.text === 'string')
+      .map((item: any) => item.text)
+      .join('')
+      .trim()
+
+    return text || 'Je n’ai pas pu finaliser la lecture pour le moment.'
+  } catch (error) {
+    console.error('[callOpenAI] failed', error)
+    return 'Le moteur HexAstra est temporairement indisponible.'
   }
-
-  const res = await fetch('https://api.openai.com/v1/responses', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey}` },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(30000),
-  })
-
-  const json = await res.json().catch(() => null)
-  if (!res.ok || !json) {
-    throw new Error(`OpenAI error ${res.status}`)
-  }
-
-  const output = Array.isArray(json.output) ? json.output : []
-  const text = output
-    .flatMap((block: any) => (Array.isArray(block?.content) ? block.content : []))
-    .filter((item: any) => item?.type === 'output_text' && typeof item.text === 'string')
-    .map((item: any) => item.text)
-    .join('')
-    .trim()
-
-  return text || 'Je n’ai pas pu finaliser la lecture pour le moment.'
 }
 
 function buildSpecializedContext(result: SpecializedModuleResult | null): string {
   if (!result) return ''
+
   return [
     `[RÉSULTAT MÉTIER PRIORITAIRE — À UTILISER COMME SOURCE DE VÉRITÉ]`,
     `Source: ${result.source}`,
@@ -139,12 +153,17 @@ function buildKnowledgeQuery({
   querySuffix?: string
 }): string {
   const parts = [latestUserMessage.trim()]
+
   if (selectedMenuLabel) parts.push(`menu principal: ${selectedMenuLabel}`)
   if (selectedSubmenuLabel) parts.push(`sous-menu: ${selectedSubmenuLabel}`)
   if (contextType) parts.push(`contexte: ${contextType}`)
   if (domainRoute) parts.push(`domaine KS prioritaire: ${domainRoute}`)
   if (querySuffix) parts.push(querySuffix)
-  parts.push('Appliquer les règles HexAstra, les garde-fous, la mémoire, le timing, le potentiel dominant, et la logique KS.FUSION.V13 si pertinent.')
+
+  parts.push(
+    'Appliquer les règles HexAstra, les garde-fous, la mémoire, le timing, le potentiel dominant, et la logique KS.FUSION.V13 si pertinent.'
+  )
+
   return parts.filter(Boolean).join('\n')
 }
 
@@ -168,7 +187,10 @@ async function buildKnowledgeBlock({
   specializedSource?: string | null
 }): Promise<{ block: string | null; profile: string }> {
   const openaiKey = process.env.OPENAI_API_KEY
-  if (!VECTOR_STORE_ID || !openaiKey || !latestUserMessage.trim()) return { block: null, profile: 'disabled' }
+
+  if (!VECTOR_STORE_ID || !openaiKey || !latestUserMessage.trim()) {
+    return { block: null, profile: 'disabled' }
+  }
 
   const retrievalPlan = buildRetrievalPlan({
     plan,
@@ -177,7 +199,9 @@ async function buildKnowledgeBlock({
     specializedSource,
   })
 
-  if (!retrievalPlan.includeKnowledge) return { block: null, profile: retrievalPlan.profile }
+  if (!retrievalPlan.includeKnowledge) {
+    return { block: null, profile: retrievalPlan.profile }
+  }
 
   const query = buildKnowledgeQuery({
     latestUserMessage,
@@ -189,27 +213,36 @@ async function buildKnowledgeBlock({
   })
 
   const knowledgeResults = await multiLayerRetrieval({
-  query: userMessage,
-  plan,
-  vectorStoreId: VECTOR_STORE_ID,
-  apiKey: openaiKey,
-  domainRoute
-})
+    query,
+    plan,
+    vectorStoreId: VECTOR_STORE_ID,
+    apiKey: openaiKey,
+    domainRoute,
+  })
 
-  if (!results.length) return { block: null, profile: retrievalPlan.profile }
+  if (!knowledgeResults.length) {
+    return { block: null, profile: retrievalPlan.profile }
+  }
 
   const config = getAdaptiveRetrievalConfig({ plan, domainRoute, query })
-  const compressed = compressKnowledgeContext(results.slice(0, retrievalPlan.topK), {
-    ...config,
-    maxDocsAfterDedup: Math.min(config.maxDocsAfterDedup, retrievalPlan.topK),
-    maxContextChars:
-      retrievalPlan.profile === 'minimal'
-        ? Math.min(config.maxContextChars, 4500)
-        : retrievalPlan.profile === 'balanced'
-        ? Math.min(config.maxContextChars, 9000)
-        : Math.min(config.maxContextChars, 15000),
-  })
-  if (!compressed.block) return { block: null, profile: retrievalPlan.profile }
+
+  const compressed = compressKnowledgeContext(
+    knowledgeResults.slice(0, retrievalPlan.topK),
+    {
+      ...config,
+      maxDocsAfterDedup: Math.min(config.maxDocsAfterDedup, retrievalPlan.topK),
+      maxContextChars:
+        retrievalPlan.profile === 'minimal'
+          ? Math.min(config.maxContextChars, 4500)
+          : retrievalPlan.profile === 'balanced'
+            ? Math.min(config.maxContextChars, 9000)
+            : Math.min(config.maxContextChars, 15000),
+    }
+  )
+
+  if (!compressed.block) {
+    return { block: null, profile: retrievalPlan.profile }
+  }
 
   return {
     profile: retrievalPlan.profile,
@@ -231,10 +264,12 @@ async function callRailway(path: string, payload: Record<string, unknown>) {
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(12000),
   })
+
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`Railway ${path} failed: ${res.status} ${text}`)
   }
+
   return res.json()
 }
 
@@ -250,9 +285,7 @@ async function runSpecializedModule({
   messages: ChatMessage[]
 }): Promise<SpecializedModuleResult | null> {
   const latestUserMessage = messages.filter((m) => m.role === 'user').at(-1)?.content ?? ''
-  const isGreeting = /^(bonjour|salut|hello|hey|bonsoir|coucou|yo)\s*$/i.test(
-  latestUserMessage.trim(),
-)
+
   if ((domainRoute === 'gps_kua' || domainRoute === 'neurokua') && birthData?.date && birthData?.place) {
     try {
       const kua = await callRailway('/kua', {
@@ -264,18 +297,21 @@ async function runSpecializedModule({
         question: latestUserMessage,
         practitioner_usage: practitionerUsage,
       })
+
       const summary =
-        typeof kua?.publicSummary === 'string' ? kua.publicSummary :
-        typeof kua?.summary === 'string' ? kua.summary :
-        `Utilise le calcul Kua/GPS fourni pour éclairer l'orientation, l'équilibre et la direction prioritaire.`
+        typeof kua?.publicSummary === 'string'
+          ? kua.publicSummary
+          : typeof kua?.summary === 'string'
+            ? kua.summary
+            : `Utilise le calcul Kua/GPS fourni pour éclairer l'orientation, l'équilibre et la direction prioritaire.`
+
       return {
         source: domainRoute === 'gps_kua' ? 'gps_kua' : 'neurokua',
         publicSummary: summary,
-        raw: kua && typeof kua === 'object' ? kua as Record<string, unknown> : null,
+        raw: kua && typeof kua === 'object' ? (kua as Record<string, unknown>) : null,
       }
-        } catch (error) {
+    } catch (error) {
       console.error('[runSpecializedModule:/kua] failed', error)
-      // continue to fallback
     }
   }
 
@@ -290,17 +326,21 @@ async function runSpecializedModule({
         question: latestUserMessage,
         practitioner_usage: practitionerUsage,
       })
+
       const summary =
-        typeof fusion?.publicSummary === 'string' ? fusion.publicSummary :
-        typeof fusion?.summary === 'string' ? fusion.summary :
-        `Utilise la synthèse fusionnée fournie comme signal dominant de la réponse finale.`
+        typeof fusion?.publicSummary === 'string'
+          ? fusion.publicSummary
+          : typeof fusion?.summary === 'string'
+            ? fusion.summary
+            : `Utilise la synthèse fusionnée fournie comme signal dominant de la réponse finale.`
+
       return {
         source: 'fusion',
         publicSummary: summary,
-        raw: fusion && typeof fusion === 'object' ? fusion as Record<string, unknown> : null,
+        raw: fusion && typeof fusion === 'object' ? (fusion as Record<string, unknown>) : null,
       }
-    } catch {
-      // continue to fallback
+    } catch (error) {
+      console.error('[runSpecializedModule:/chart/fusion] failed', error)
     }
   }
 
@@ -371,7 +411,11 @@ function buildMenuOnlyMessage(mode: ReturnType<typeof getModeForPlan>, language:
   const intro = language.startsWith('en')
     ? 'Choose the angle you want to explore:'
     : 'Choisis l’angle que tu veux explorer :'
-  const lines = items.slice(0, 9).map((item, index) => `${index + 1} — ${item.label} : ${item.description}`)
+
+  const lines = items.slice(0, 9).map(
+    (item, index) => `${index + 1} — ${item.label} : ${item.description}`
+  )
+
   return [intro, '', ...lines].join('\n')
 }
 
@@ -384,15 +428,20 @@ function isReadingRequest(args: {
 }): boolean {
   const msg = args.latestUserMessage.toLowerCase()
 
-  if (args.requestType === 'micro_profile' || args.requestType === 'micro_year' || args.requestType === 'micro_month') {
+  if (
+    args.requestType === 'micro_profile' ||
+    args.requestType === 'micro_year' ||
+    args.requestType === 'micro_month'
+  ) {
     return true
   }
 
   if (args.contextType === 'hexastraReading') return true
-
   if (args.selectedMenuKey || args.selectedSubmenuKey) return true
 
-  return /lecture|profil|analyse|scan|cycle|année|mois|portrait|lecture générale|lecture complete|lecture complète/i.test(msg)
+  return /lecture|profil|analyse|scan|cycle|année|mois|portrait|lecture générale|lecture complete|lecture complète/i.test(
+    msg
+  )
 }
 
 export async function runHexastraFlow(input: {
@@ -409,167 +458,411 @@ export async function runHexastraFlow(input: {
   messages: ChatMessage[]
   evolutionProfile?: Record<string, unknown> | null
 }): Promise<HexastraApiResponse> {
-  const supabase = await createSupabaseServer().catch(() => null as any)
-  const { data: authData } = supabase?.auth ? await supabase.auth.getUser() : { data: { user: null } }
-  const user = authData?.user ?? null
+  try {
+    const supabase = await createSupabaseServer().catch(() => null as any)
+    const { data: authData } = supabase?.auth
+      ? await supabase.auth.getUser()
+      : { data: { user: null } }
 
-  const fallbackLanguage = input.language ?? 'fr'
-  const fallbackPlan = normalizePlan(input.plan)
-  const userContext = await buildUserContext({
-    supabase,
-    user,
-    fallbackPlan,
-    fallbackLanguage,
-    birthData: input.birthData,
-    practitionerUsage: input.practitionerUsage,
-  })
+    const user = authData?.user ?? null
 
-  const plan = userContext.plan
-  const mode = getModeForPlan(plan)
-  const conversationId = input.conversationId ?? crypto.randomUUID()
-  const latestUserMessage = input.messages.filter((m) => m.role === 'user').at(-1)?.content ?? ''
+    const fallbackLanguage = input.language ?? 'fr'
+    const fallbackPlan = normalizePlan(input.plan)
 
-  const sessionContext = await buildSessionContext({
-    supabase,
-    conversationId,
-    message: latestUserMessage,
-    contextType: input.contextType,
-    selectedMenuKey: input.selectedMenuKey,
-    selectedSubmenuKey: input.selectedSubmenuKey,
-    practitioner: mode === 'praticien',
-  })
+    const userContext = await buildUserContext({
+      supabase,
+      user,
+      fallbackPlan,
+      fallbackLanguage,
+      birthData: input.birthData,
+      practitionerUsage: input.practitionerUsage,
+    })
 
-  const practitionerNeedsUsage = plan === 'practitioner' && !userContext.practitionerUsage && input.requestType === 'chat'
-  if (practitionerNeedsUsage) {
-    return {
-      message: buildPractitionerUsageMessage(userContext.language),
-      reply: buildPractitionerUsageMessage(userContext.language),
-      mode,
-      plan,
+    const plan = userContext.plan
+    const mode = getModeForPlan(plan)
+    const conversationId = input.conversationId ?? crypto.randomUUID()
+
+    const latestUserMessage =
+      input.messages.filter((m) => m.role === 'user').at(-1)?.content ?? ''
+
+    const isGreeting = /^(bonjour|salut|hello|hey|bonsoir|coucou|yo)\s*$/i.test(
+      latestUserMessage.trim()
+    )
+
+    const sessionContext = await buildSessionContext({
+      supabase,
       conversationId,
-      flowState: { step: 'practitioner_usage', completed: false },
-      metadata: { practitionerUsage: null, contextType: sessionContext.contextType, shouldPersistMemory: false },
-    }
-  }
+      message: latestUserMessage,
+      contextType: input.contextType,
+      selectedMenuKey: input.selectedMenuKey,
+      selectedSubmenuKey: input.selectedSubmenuKey,
+      practitioner: mode === 'praticien',
+    })
 
-  if (!isBirthComplete(userContext.birthData) && input.requestType === 'chat') {
-    return {
-      message: buildMissingBirthMessage(userContext.language),
-      reply: buildMissingBirthMessage(userContext.language),
+    const practitionerNeedsUsage =
+      plan === 'practitioner' &&
+      !userContext.practitionerUsage &&
+      input.requestType === 'chat'
+
+    if (practitionerNeedsUsage) {
+      return {
+        message: buildPractitionerUsageMessage(userContext.language),
+        reply: buildPractitionerUsageMessage(userContext.language),
+        mode,
+        plan,
+        conversationId,
+        flowState: { step: 'practitioner_usage', completed: false },
+        metadata: {
+          practitionerUsage: null,
+          contextType: sessionContext.contextType,
+          shouldPersistMemory: false,
+        },
+      }
+    }
+
+    if (!isBirthComplete(userContext.birthData) && input.requestType === 'chat') {
+      return {
+        message: buildMissingBirthMessage(userContext.language),
+        reply: buildMissingBirthMessage(userContext.language),
+        mode,
+        plan,
+        conversationId,
+        flowState: { step: 'birthdata', completed: false },
+        metadata: {
+          practitionerUsage: userContext.practitionerUsage,
+          contextType: sessionContext.contextType,
+          shouldPersistMemory: false,
+        },
+      }
+    }
+
+    const userMemory = userContext.memory
+    const profileDue = shouldGenerateMicroProfile(
+      userMemory?.last_profile_reading_at,
+      userContext.birthData
+    )
+    const yearDue = shouldGenerateYearReading(userMemory?.last_year_reading_at)
+    const monthDue = shouldGenerateMonthReading(userMemory?.last_month_reading_at)
+
+    let effectiveRequestType = input.requestType
+
+    if (input.requestType === 'chat') {
+      if (profileDue) effectiveRequestType = 'micro_profile'
+      else if (yearDue) effectiveRequestType = 'micro_year'
+      else if (monthDue) effectiveRequestType = 'micro_month'
+    }
+
+    const selectedMenu = findMenuItem(
       mode,
-      plan,
-      conversationId,
-      flowState: { step: 'birthdata', completed: false },
-      metadata: { practitionerUsage: userContext.practitionerUsage, contextType: sessionContext.contextType, shouldPersistMemory: false },
-    }
-  }
+      input.selectedSubmenuKey ?? input.selectedMenuKey ?? null
+    )
 
-  const userMemory = userContext.memory
-  const profileDue = shouldGenerateMicroProfile(userMemory?.last_profile_reading_at, userContext.birthData)
-  const yearDue = shouldGenerateYearReading(userMemory?.last_year_reading_at)
-  const monthDue = shouldGenerateMonthReading(userMemory?.last_month_reading_at)
+    const initialResolvedDomainRoute = resolveDomainRoute({
+      latestUserMessage,
+      selectedMenuDomainRoute: selectedMenu?.domainRoute ?? null,
+      sessionDomainRoute: sessionContext.domainRoute,
+      contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+    })
 
-  let effectiveRequestType = input.requestType
-  if (input.requestType === 'chat') {
-    if (profileDue) effectiveRequestType = 'micro_profile'
-    else if (yearDue) effectiveRequestType = 'micro_year'
-    else if (monthDue) effectiveRequestType = 'micro_month'
-  }
+    const readingRequest = isReadingRequest({
+      requestType: effectiveRequestType,
+      selectedMenuKey: input.selectedMenuKey,
+      selectedSubmenuKey: input.selectedSubmenuKey,
+      contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+      latestUserMessage,
+    })
 
-  const selectedMenu = findMenuItem(mode, input.selectedSubmenuKey ?? input.selectedMenuKey ?? null)
-  const initialResolvedDomainRoute = resolveDomainRoute({
-    latestUserMessage,
-    selectedMenuDomainRoute: selectedMenu?.domainRoute ?? null,
-    sessionDomainRoute: sessionContext.domainRoute,
-    contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-  })
-  
-  const readingRequest = isReadingRequest({
-    requestType: effectiveRequestType,
-    selectedMenuKey: input.selectedMenuKey,
-    selectedSubmenuKey: input.selectedSubmenuKey,
-    contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-    latestUserMessage,
-  })
-  
-  const resolvedDomainRoute: DomainRoute =
-    readingRequest ? 'fusion' : initialResolvedDomainRoute
+    const resolvedDomainRoute: DomainRoute = readingRequest
+      ? 'fusion'
+      : initialResolvedDomainRoute
 
-  const activeModules = getModulesForDomain(resolvedDomainRoute)
-  const hasBirthData = isBirthComplete(userContext.birthData)
-  const hasShownMicroReadings = Boolean(sessionContext.state?.has_shown_micro_readings)
+    const activeModules = getModulesForDomain(resolvedDomainRoute)
+    const hasBirthData = isBirthComplete(userContext.birthData)
+    const hasShownMicroReadings = Boolean(sessionContext.state?.has_shown_micro_readings)
 
-  const flowStep = computeFlowStep({
-    requestType: effectiveRequestType,
-    uiAction: input.uiAction,
-    latestUserMessage,
-    hasBirthData,
-    hasShownMicroReadings,
-    practitionerNeedsUsage,
-    selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
-    selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
-    emotionalState: sessionContext.emotionalState,
-    timing: sessionContext.timing,
-    precision: sessionContext.precision,
-  })
-
-  if (
-  (flowStep === 'menu' && !latestUserMessage.trim() && !input.selectedMenuKey && !input.selectedSubmenuKey) ||
-  (isGreeting && !input.selectedMenuKey && !input.selectedSubmenuKey)
-) {
-  const message = buildMenuOnlyMessage(mode, userContext.language)
-  return {
-    message,
-    reply: message,
-    mode,
-    plan,
-    conversationId,
-    flowState: { step: 'menu', completed: true },
-    menu: { visible: true, items: getMenuForMode(mode) },
-    suggestions: getMenuForMode(mode).slice(0, 4).map((item) => item.label),
-    metadata: {
-      contextType: sessionContext.contextType,
-      practitionerUsage: userContext.practitionerUsage,
-      shouldPersistMemory: false,
-      selectedMenuKey: null,
-      selectedSubmenuKey: null,
-      sessionStep: 'menu',
+    const flowStep = computeFlowStep({
+      requestType: effectiveRequestType,
+      uiAction: input.uiAction,
+      latestUserMessage,
+      hasBirthData,
+      hasShownMicroReadings,
+      practitionerNeedsUsage,
+      selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
+      selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
       emotionalState: sessionContext.emotionalState,
       timing: sessionContext.timing,
-    },
-    updatedEvolutionProfile: input.evolutionProfile ?? null,
-  }
-}
+      precision: sessionContext.precision,
+    })
 
-  const shouldRunSpecialized =
-    readingRequest &&
-    Boolean(userContext.birthData?.date && userContext.birthData?.place)
-  
-  const specializedResult = shouldRunSpecialized
-    ? await runSpecializedModule({
+    if (
+      (
+        flowStep === 'menu' &&
+        !latestUserMessage.trim() &&
+        !input.selectedMenuKey &&
+        !input.selectedSubmenuKey
+      ) ||
+      (isGreeting && !input.selectedMenuKey && !input.selectedSubmenuKey)
+    ) {
+      const message = buildMenuOnlyMessage(mode, userContext.language)
+
+      return {
+        message,
+        reply: message,
+        mode,
+        plan,
+        conversationId,
+        flowState: { step: 'menu', completed: true },
+        menu: { visible: true, items: getMenuForMode(mode) },
+        suggestions: getMenuForMode(mode).slice(0, 4).map((item) => item.label),
+        metadata: {
+          contextType: sessionContext.contextType,
+          practitionerUsage: userContext.practitionerUsage,
+          shouldPersistMemory: false,
+          selectedMenuKey: null,
+          selectedSubmenuKey: null,
+          sessionStep: 'menu',
+          emotionalState: sessionContext.emotionalState,
+          timing: sessionContext.timing,
+        },
+        updatedEvolutionProfile: input.evolutionProfile ?? null,
+      }
+    }
+
+    const shouldRunSpecialized =
+      readingRequest && Boolean(userContext.birthData?.date && userContext.birthData?.place)
+
+    const specializedResult = shouldRunSpecialized
+      ? await runSpecializedModule({
+          domainRoute: resolvedDomainRoute,
+          birthData: userContext.birthData,
+          practitionerUsage: userContext.practitionerUsage,
+          messages: input.messages,
+        })
+      : null
+
+    if (readingRequest && !specializedResult) {
+      const message = userContext.language.startsWith('en')
+        ? 'The HexAstra calculation service is temporarily unavailable. Please try again in a few moments.'
+        : 'Le service de calcul HexAstra est temporairement indisponible. Réessaie dans quelques instants.'
+
+      return {
+        message,
+        reply: message,
+        mode,
+        plan,
+        conversationId,
+        flowState: { step: flowStep, completed: false },
+        metadata: {
+          contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+          practitionerUsage: userContext.practitionerUsage,
+          shouldPersistMemory: false,
+          selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
+          selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
+          sessionStep: flowStep,
+          emotionalState: sessionContext.emotionalState,
+          timing: sessionContext.timing,
+        },
+        updatedEvolutionProfile: input.evolutionProfile ?? null,
+      }
+    }
+
+    const selectedMenuLabel = input.selectedMenuKey
+      ? findMenuItem(mode, input.selectedMenuKey)?.label ?? null
+      : null
+
+    const selectedSubmenuLabel = input.selectedSubmenuKey
+      ? findMenuItem(mode, input.selectedSubmenuKey)?.label ?? null
+      : null
+
+    const knowledgePayload =
+      effectiveRequestType === 'chat'
+        ? await buildKnowledgeBlock({
+            latestUserMessage,
+            plan,
+            selectedMenuLabel,
+            selectedSubmenuLabel,
+            contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+            domainRoute: resolvedDomainRoute,
+            flowStep,
+            specializedSource: specializedResult?.source ?? null,
+          })
+        : { block: null, profile: 'minimal' }
+
+    const systemPrompt = buildSystemPrompt({
+      plan,
+      mode,
+      language: userContext.language,
+      contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+      practitionerUsage: userContext.practitionerUsage,
+      selectedMenuLabel,
+      selectedSubmenuLabel,
+      requestType: effectiveRequestType,
+      domainRoute: resolvedDomainRoute,
+      specializedSource: specializedResult?.source ?? null,
+      flowStep,
+      emotionalState: sessionContext.emotionalState,
+      precision: sessionContext.precision,
+      retrievalProfile: knowledgePayload.profile,
+    })
+
+    const signalInputs = []
+
+    if (specializedResult) {
+      signalInputs.push(
+        buildSignalEnvelope({
+          module: specializedResult.source,
+          result: specializedResult.raw,
+          domainRoute: resolvedDomainRoute,
+        })
+      )
+    }
+
+    signalInputs.push(
+      buildSignalEnvelope({
+        module: 'context_engine',
+        result: {
+          readingLevel: sessionContext.readingLevel,
+          lifePhase: sessionContext.lifePhase,
+          dominantPotential: sessionContext.dominantPotential,
+          contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+          emotionalState: sessionContext.emotionalState,
+          precision: sessionContext.precision,
+          timing: sessionContext.timing,
+          flowStep,
+        },
         domainRoute: resolvedDomainRoute,
-        birthData: userContext.birthData,
-        practitionerUsage: userContext.practitionerUsage,
-        messages: input.messages,
       })
-    : null
+    )
 
-  if (readingRequest && !specializedResult) {
-    const message = userContext.language.startsWith('en')
-      ? 'The HexAstra calculation service is temporarily unavailable. Please try again in a few moments.'
-      : 'Le service de calcul HexAstra est temporairement indisponible. Réessaie dans quelques instants.'
-  
+    const fusedSignal = signalInputs.length ? fusionEngine(signalInputs) : null
+    const arbitration = fusedSignal ? arbiter(fusedSignal) : null
+
+    const menuInstruction =
+      input.uiAction === 'select_menu_item' || input.uiAction === 'select_submenu_item'
+        ? `${selectedMenu ? `L’utilisateur a choisi : ${selectedMenu.label}. ${selectedMenu.description}` : ''} ${selectedMenu?.promptHint ?? ''}`.trim()
+        : ''
+
+    const specializedInstruction = buildSpecializedContext(specializedResult)
+    const fusionInstruction = buildFusionInstruction({
+      resolvedDomainRoute,
+      activeModules,
+      fusedSignal,
+      arbitration,
+    })
+
+    const messages = [
+      ...input.messages,
+      ...(menuInstruction ? [{ role: 'user' as const, content: menuInstruction }] : []),
+      ...(specializedInstruction
+        ? [{ role: 'assistant' as const, content: specializedInstruction }]
+        : []),
+      ...(fusionInstruction
+        ? [{ role: 'assistant' as const, content: fusionInstruction }]
+        : []),
+    ]
+
+    const payload = buildChatPayload({
+      systemPrompt,
+      userContext,
+      sessionContext,
+      messages,
+      knowledgeBlock: knowledgePayload.block,
+      flowStep,
+    })
+
+    const rawMessage = await callOpenAI(payload)
+    const message = applySentinel(rawMessage)
+
+    const menuVisible =
+      effectiveRequestType === 'micro_month' ||
+      input.uiAction === 'open_menu' ||
+      input.uiAction === 'restart_flow' ||
+      flowStep === 'menu'
+
+    const menuItems = getMenuForMode(mode)
+
+    await persistConversationMessage(
+      supabase,
+      conversationId,
+      'user',
+      latestUserMessage || menuInstruction || `[${effectiveRequestType}]`
+    )
+
+    await persistConversationMessage(
+      supabase,
+      conversationId,
+      'assistant',
+      message,
+      {
+        flowStep,
+        mode,
+        contextType: selectedMenu?.contextType ?? sessionContext.contextType,
+        domainRoute: resolvedDomainRoute,
+        activeModule: specializedResult?.source ?? activeModules[0] ?? sessionContext.activeModule,
+        emotionalState: sessionContext.emotionalState,
+        timing: sessionContext.timing,
+        precision: sessionContext.precision,
+      }
+    )
+
+    await writeSessionState(supabase, conversationId, {
+      current_theme: selectedMenu?.label ?? sessionContext.currentTheme ?? null,
+      current_context_type: selectedMenu?.contextType ?? sessionContext.contextType,
+      menu_level: input.selectedSubmenuKey ? 'submenu' : 'main',
+      last_selected_menu_key: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
+      last_selected_submenu_key: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
+      active_flow: flowStep,
+      current_domain_route: resolvedDomainRoute,
+      active_module: specializedResult?.source ?? activeModules[0] ?? null,
+      has_shown_micro_readings:
+        effectiveRequestType === 'micro_month'
+          ? true
+          : sessionContext.state?.has_shown_micro_readings ?? false,
+      last_emotional_state: sessionContext.emotionalState,
+      last_timing: sessionContext.timing,
+      last_precision: sessionContext.precision,
+      last_reading_level: sessionContext.readingLevel,
+    })
+
+    const nowIso = new Date().toISOString()
+
+    if (user?.id) {
+      const memoryPatch: Record<string, string | null> = {
+        reading_level: sessionContext.readingLevel,
+        dominant_potential: sessionContext.dominantPotential,
+        life_phase: sessionContext.lifePhase,
+      }
+
+      if (effectiveRequestType === 'micro_profile') {
+        memoryPatch.last_profile_reading_at = nowIso
+      }
+
+      if (effectiveRequestType === 'micro_year') {
+        memoryPatch.last_year_reading_at = nowIso
+      }
+
+      if (effectiveRequestType === 'micro_month') {
+        memoryPatch.last_month_reading_at = nowIso
+      }
+
+      await writeUserMemory(supabase, user.id, memoryPatch)
+    }
+
     return {
       message,
       reply: message,
       mode,
       plan,
       conversationId,
-      flowState: { step: flowStep, completed: false },
+      flowState: { step: menuVisible ? 'menu' : flowStep, completed: true },
+      menu: { visible: menuVisible, items: menuItems },
+      suggestions: menuVisible
+        ? menuItems.slice(0, 4).map((item) => item.label)
+        : undefined,
       metadata: {
         contextType: selectedMenu?.contextType ?? sessionContext.contextType,
         practitionerUsage: userContext.practitionerUsage,
-        shouldPersistMemory: false,
+        shouldPersistMemory: true,
         selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
         selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
         sessionStep: flowStep,
@@ -578,173 +871,20 @@ export async function runHexastraFlow(input: {
       },
       updatedEvolutionProfile: input.evolutionProfile ?? null,
     }
-  }
+  } catch (error) {
+    console.error('[runHexastraFlow] fatal error', error)
 
-  const selectedMenuLabel = input.selectedMenuKey ? findMenuItem(mode, input.selectedMenuKey)?.label ?? null : null
-  const selectedSubmenuLabel = input.selectedSubmenuKey ? findMenuItem(mode, input.selectedSubmenuKey)?.label ?? null : null
-
-  const knowledgePayload = effectiveRequestType === 'chat'
-    ? await buildKnowledgeBlock({
-        latestUserMessage,
-        plan,
-        selectedMenuLabel,
-        selectedSubmenuLabel,
-        contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-        domainRoute: resolvedDomainRoute,
-        flowStep,
-        specializedSource: specializedResult?.source ?? null,
-      })
-    : { block: null, profile: 'minimal' }
-
-  const systemPrompt = buildSystemPrompt({
-    plan,
-    mode,
-    language: userContext.language,
-    contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-    practitionerUsage: userContext.practitionerUsage,
-    selectedMenuLabel,
-    selectedSubmenuLabel,
-    requestType: effectiveRequestType,
-    domainRoute: resolvedDomainRoute,
-    specializedSource: specializedResult?.source ?? null,
-    flowStep,
-    emotionalState: sessionContext.emotionalState,
-    precision: sessionContext.precision,
-    retrievalProfile: knowledgePayload.profile,
-  })
-
-  const signalInputs = []
-
-  if (specializedResult) {
-    signalInputs.push(
-      buildSignalEnvelope({
-        module: specializedResult.source,
-        result: specializedResult.raw,
-        domainRoute: resolvedDomainRoute,
-      })
-    )
-  }
-
-  signalInputs.push(
-    buildSignalEnvelope({
-      module: 'context_engine',
-      result: {
-        readingLevel: sessionContext.readingLevel,
-        lifePhase: sessionContext.lifePhase,
-        dominantPotential: sessionContext.dominantPotential,
-        contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-        emotionalState: sessionContext.emotionalState,
-        precision: sessionContext.precision,
-        timing: sessionContext.timing,
-        flowStep,
+    return {
+      message: 'Je n’ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.',
+      reply: 'Je n’ai pas pu terminer la lecture pour le moment. Réessaie dans quelques instants.',
+      mode: 'free',
+      plan: 'free' as PlanKey,
+      conversationId: input.conversationId ?? crypto.randomUUID(),
+      flowState: { step: 'error', completed: false },
+      metadata: {
+        shouldPersistMemory: false,
       },
-      domainRoute: resolvedDomainRoute,
-    })
-  )
-
-  const fusedSignal = signalInputs.length ? fusionEngine(signalInputs) : null
-  const arbitration = fusedSignal ? arbiter(fusedSignal) : null
-
-  const menuInstruction = input.uiAction === 'select_menu_item' || input.uiAction === 'select_submenu_item'
-    ? `${selectedMenu ? `L’utilisateur a choisi : ${selectedMenu.label}. ${selectedMenu.description}` : ''} ${selectedMenu?.promptHint ?? ''}`.trim()
-    : ''
-
-  const specializedInstruction = buildSpecializedContext(specializedResult)
-  const fusionInstruction = buildFusionInstruction({
-    resolvedDomainRoute,
-    activeModules,
-    fusedSignal,
-    arbitration,
-  })
-
-  const messages = [
-    ...input.messages,
-    ...(menuInstruction ? [{ role: 'user' as const, content: menuInstruction }] : []),
-    ...(specializedInstruction ? [{ role: 'assistant' as const, content: specializedInstruction }] : []),
-    ...(fusionInstruction ? [{ role: 'assistant' as const, content: fusionInstruction }] : []),
-  ]
-
-  const payload = buildChatPayload({
-    systemPrompt,
-    userContext,
-    sessionContext,
-    messages,
-    knowledgeBlock: knowledgePayload.block,
-    flowStep,
-  })
-
-  const rawMessage = await callOpenAI(payload)
-  const message = applySentinel(rawMessage)
-
-  const menuVisible = effectiveRequestType === 'micro_month' || input.uiAction === 'open_menu' || input.uiAction === 'restart_flow' || flowStep === 'menu'
-  const menuItems = getMenuForMode(mode)
-
-  await persistConversationMessage(supabase, conversationId, 'user', latestUserMessage || menuInstruction || `[${effectiveRequestType}]`)
-  await persistConversationMessage(
-    supabase,
-    conversationId,
-    'assistant',
-    message,
-    {
-      flowStep,
-      mode,
-      contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-      domainRoute: resolvedDomainRoute,
-      activeModule: specializedResult?.source ?? activeModules[0] ?? sessionContext.activeModule,
-      emotionalState: sessionContext.emotionalState,
-      timing: sessionContext.timing,
-      precision: sessionContext.precision,
-    }
-  )
-
-  await writeSessionState(supabase, conversationId, {
-    current_theme: selectedMenu?.label ?? sessionContext.currentTheme ?? null,
-    current_context_type: selectedMenu?.contextType ?? sessionContext.contextType,
-    menu_level: input.selectedSubmenuKey ? 'submenu' : 'main',
-    last_selected_menu_key: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
-    last_selected_submenu_key: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
-    active_flow: flowStep,
-    current_domain_route: resolvedDomainRoute,
-    active_module: specializedResult?.source ?? activeModules[0] ?? null,
-    has_shown_micro_readings: effectiveRequestType === 'micro_month' ? true : sessionContext.state?.has_shown_micro_readings ?? false,
-    last_emotional_state: sessionContext.emotionalState,
-    last_timing: sessionContext.timing,
-    last_precision: sessionContext.precision,
-    last_reading_level: sessionContext.readingLevel,
-  })
-
-  const nowIso = new Date().toISOString()
-  if (user?.id) {
-    const memoryPatch: Record<string, string | null> = {
-      reading_level: sessionContext.readingLevel,
-      dominant_potential: sessionContext.dominantPotential,
-      life_phase: sessionContext.lifePhase,
-    }
-    if (effectiveRequestType === 'micro_profile') memoryPatch.last_profile_reading_at = nowIso
-    if (effectiveRequestType === 'micro_year') memoryPatch.last_year_reading_at = nowIso
-    if (effectiveRequestType === 'micro_month') memoryPatch.last_month_reading_at = nowIso
-    await writeUserMemory(supabase, user.id, memoryPatch)
-  }
-
-  return {
-    message,
-    reply: message,
-    mode,
-    plan,
-    conversationId,
-    flowState: { step: menuVisible ? 'menu' : flowStep, completed: true },
-    menu: { visible: menuVisible, items: menuItems },
-    suggestions: menuVisible ? menuItems.slice(0, 4).map((item) => item.label) : undefined,
-    metadata: {
-      contextType: selectedMenu?.contextType ?? sessionContext.contextType,
-      practitionerUsage: userContext.practitionerUsage,
-      shouldPersistMemory: true,
-      selectedMenuKey: input.selectedMenuKey ?? sessionContext.selectedMenuKey,
-      selectedSubmenuKey: input.selectedSubmenuKey ?? sessionContext.selectedSubmenuKey,
-      sessionStep: flowStep,
-      emotionalState: sessionContext.emotionalState,
-      timing: sessionContext.timing,
-    },
-    updatedEvolutionProfile: input.evolutionProfile ?? null,
+      updatedEvolutionProfile: input.evolutionProfile ?? null,
+    } as HexastraApiResponse
   }
 }
