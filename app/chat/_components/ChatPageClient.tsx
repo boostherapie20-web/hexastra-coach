@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { useSearchParams } from 'next/navigation'
 import PremiumBackground from '@/app/components/PremiumBackground'
 import { createClient } from '@/lib/supabase/client'
@@ -84,6 +84,7 @@ const WELCOME_MESSAGE: Msg = {
 const API_TIMEOUT_MS = 30000
 const CONVERSATION_STORAGE_KEY = 'hexastra_conversation_id'
 const CACHE_LIMIT = 50
+const DUPLICATE_MESSAGE_WINDOW_MS = 1200
 
 function getInitials(email: string) {
   if (!email) return 'HX'
@@ -136,6 +137,25 @@ function setCacheEntry(
   }
 }
 
+function isDuplicateMessage(
+  lastMessageRef: MutableRefObject<string | null>,
+  message: string
+) {
+  if (lastMessageRef.current === message) {
+    return true
+  }
+
+  lastMessageRef.current = message
+
+  setTimeout(() => {
+    if (lastMessageRef.current === message) {
+      lastMessageRef.current = null
+    }
+  }, DUPLICATE_MESSAGE_WINDOW_MS)
+
+  return false
+}
+
 export default function ChatPageClient() {
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -183,6 +203,7 @@ export default function ChatPageClient() {
   const hasPrefilled = useRef(false)
   const microTriggerRef = useRef<string | null>(null)
   const requestAbortRef = useRef<AbortController | null>(null)
+  const lastMessageRef = useRef<string | null>(null)
 
   const mode = planLoaded ? getEntitlements(userPlan).chatMode : 'essentiel'
 
@@ -688,6 +709,7 @@ export default function ChatPageClient() {
       const content = baseContent + attachNote
 
       if (!content.trim() || isTyping) return
+      if (isDuplicateMessage(lastMessageRef, content)) return
       if (step !== 'conversation_ready') return
       if (!canContinueChat(userPlan, freeMessagesUsed)) return
 
@@ -862,6 +884,7 @@ export default function ChatPageClient() {
     setSelectedMenuKey(null)
     setSelectedSubmenuKey(null)
     microTriggerRef.current = null
+    lastMessageRef.current = null
     try {
       localStorage.removeItem(CONVERSATION_STORAGE_KEY)
     } catch {}
